@@ -1,7 +1,14 @@
 // DIFUSO — GLSL shader source strings (ported verbatim from the original tool).
 // Plain GLSL ES 1.0; JS-side wiring (createShader/setUniform) happens in the
 // effect modules (dither.js, ascii.js, halftone.js, gradient.js), not here.
-// Ported from reference/dithr/scripts/shader.js.
+// Ported from reference/dithr/scripts/shader.js. Grouped as: the 5 fragment
+// shaders in the reference's own order, then the 2 vertex shaders.
+//
+// Vertex/fragment pairings (see reference/dithr/scripts/main.js's
+// createShader calls) — a shader program is one vert + one frag, and these
+// pairings are many-to-one, not 1:1:
+//   DITHER_VERT   + ASCII_FRAG | DITHER_FRAG | HALFTONE_FRAG
+//   GRADIENT_VERT + GRADIENT_FRAG | CMYK_HALFTONE_FRAG
 
 // ASCII fragment is based on code made by Humanbydefinition
 // https://github.com/humanbydefinition/p5js-ascii-renderer/tree/main
