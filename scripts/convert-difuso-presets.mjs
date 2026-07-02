@@ -1,19 +1,30 @@
 // scripts/convert-difuso-presets.mjs — one-shot (but reproducible) converter:
 // reference/dithr/scripts/allpresets.js → public/assets/difuso/presets.json
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
+//
+// The reference file is a sequence of `var <name> = {...}` declarations (24
+// presets). We execute it in an isolated vm context and collect the results
+// keyed by the human-readable preset labels used throughout the app.
+//
+// PRESET_TYPES below MUST match src/difuso/js/state.js's PRESET_TYPES export
+// (same keys, same order) — that file is the source of truth for preset
+// naming/order in the ported app.
 
-const repoRoot = path.dirname(fileURLToPath(import.meta.url)) + '/..';
-const srcPath = path.join(repoRoot, 'reference/dithr/scripts/allpresets.js');
-const src = fs.readFileSync(srcPath, 'utf8');
+import fs from "node:fs";
+import path from "node:path";
+import vm from "node:vm";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, "..");
+
+const srcPath = path.join(repoRoot, "reference/dithr/scripts/allpresets.js");
+const src = fs.readFileSync(srcPath, "utf8");
 const ctx = {};
 vm.createContext(ctx);
-vm.runInContext(src, ctx);
+vm.runInContext(src, ctx, { filename: srcPath });
 
-// Must exactly match PRESET_TYPES in src/difuso/js/state.js (same keys, same
-// order) — copied verbatim from there.
+// Mirrors PRESET_TYPES from src/difuso/js/state.js (without the
+// '** User Preset **' sentinel, which has no corresponding data object).
 const PRESET_TYPES = {
   "ASCII8 Digital Future": "digitalFutureASCII8",
   "ASCII8 Blocky Grain": "blockyGrainASCII8",
@@ -38,7 +49,7 @@ const PRESET_TYPES = {
   "Noise64 Grainy Repetitive": "grainyRepetitiveNoise64",
   "Noise64 Blue Contrast": "blueContrastNoise64",
   "Noise128 Duotone Gradient": "duotoneGradientNoise128",
-  "Noise128 Rough Original": "roughOriginalNoise128"
+  "Noise128 Rough Original": "roughOriginalNoise128",
 };
 
 const out = {};
@@ -46,9 +57,8 @@ for (const [label, varName] of Object.entries(PRESET_TYPES)) {
   if (!(varName in ctx)) throw new Error(`preset ${varName} not found in allpresets.js`);
   out[label] = ctx[varName];
 }
-fs.mkdirSync(path.join(repoRoot, 'public/assets/difuso'), { recursive: true });
-fs.writeFileSync(
-  path.join(repoRoot, 'public/assets/difuso/presets.json'),
-  JSON.stringify(out, null, 2)
-);
+
+const outDir = path.join(repoRoot, "public/assets/difuso");
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(path.join(outDir, "presets.json"), JSON.stringify(out, null, 2));
 console.log(`Wrote ${Object.keys(out).length} presets`);
