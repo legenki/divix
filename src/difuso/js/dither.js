@@ -109,8 +109,12 @@ export function createDither({ p, state, buffer, noiseTextures }) {
 
   // Rebuild the generated pattern tile from current dither state. Releases the
   // previous tile first. 'custom' (makeCustomTexture / upload-custom-texture) is
-  // intentionally NOT ported — the panel (Task 9) excludes that UI. For matrix
-  // mode dither.matrix picks the tile; for noise mode dither.noise/texture do.
+  // intentionally NOT ported — the panel (Task 9) excludes that UI, so only
+  // 'matrix' and 'noise' are expected here. IMPORTANT: this is NOT called
+  // automatically when dither state changes — the caller (app.js, Task 10)
+  // must invoke it after any change to dither.matrix/scale/noise/texture, or
+  // apply() will keep drawing a stale tile. apply() only self-heals a NEVER-
+  // built tile (ditherTexture === null), it does not detect staleness.
   function buildDitherTexture() {
     if (ditherTexture && typeof ditherTexture.remove === 'function') {
       ditherTexture.remove();
@@ -119,9 +123,13 @@ export function createDither({ p, state, buffer, noiseTextures }) {
 
     if (state.dither.type === 'noise') {
       ditherTexture = makeNoiseTexture();
-    } else {
-      // 'matrix' (and any non-noise ordered-dither path) uses the matrix tile.
+    } else if (state.dither.type === 'matrix') {
       ditherTexture = makeBayerTexture();
+    } else {
+      // Not reachable via the ported panel (Task 9 excludes 'custom'), but
+      // fail loudly rather than silently rendering a Bayer tile for an
+      // unsupported/unexpected dither.type.
+      throw new Error(`buildDitherTexture: unsupported dither.type '${state.dither.type}'`);
     }
     return ditherTexture;
   }
@@ -166,5 +174,9 @@ export function createDither({ p, state, buffer, noiseTextures }) {
     drawFullBufferRect();
   }
 
+  // buildShader(): call once after `buffer` exists. buildDitherTexture(): call
+  // once up front AND again after any dither.matrix/scale/noise/texture change
+  // (not auto-detected — see its own comment). apply(sourceTexture): call every
+  // frame; self-heals a never-built tile but not a stale one.
   return { buildShader, buildDitherTexture, apply };
 }
