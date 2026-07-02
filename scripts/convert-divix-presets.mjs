@@ -1,4 +1,4 @@
-// scripts/convert-splitx-presets.mjs — one-shot (but reproducible) converter:
+// scripts/convert-divix-presets.mjs — one-shot (but reproducible) converter:
 // reference/splitx/scripts/allpresets.js → public/assets/divix/presets.json
 //
 // The reference file is a sequence of `var <name> = {...}` declarations (21
