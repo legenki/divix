@@ -1,0 +1,23 @@
+<div class="app-container">
+  <aside class="sidebar secuencia-panel right-sidebar">
+    <div class="sidebar-content" id="cl-controls"></div>
+    <footer class="sidebar-footer">
+      <button id="cl-btn-save-png" class="btn btn-accent">Export as PNG</button>
+      <div class="btn-group">
+        <button id="cl-btn-save-mp4" class="btn btn-secondary">Export as MP4</button>
+        <select id="cl-mp4-length" class="grafema-select" style="width: auto; min-width: 64px" title="Video length">
+          <option value="2">2s</option>
+          <option value="4" selected>4s</option>
+          <option value="6">6s</option>
+          <option value="8">8s</option>
+          <option value="10">10s</option>
+          <option value="15">15s</option>
+        </select>
+      </div>
+      <div id="cl-export-status" class="export-status"></div>
+    </footer>
+  </aside>
+  <main class="canvas-viewport" id="clon-canvas">
+    <!-- p5.js canvas injected here -->
+  </main>
+</div>
