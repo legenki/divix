@@ -340,6 +340,15 @@ export function divixSketch(p) {
     if (!gForm) {
       gForm = p.createGraphics(res.width, res.height);
       gForm.pixelDensity(cnv.density.base);
+      // Match the reference (system.js: gForm.angleMode(DEGREES)). All form
+      // rotations (cnv.rotation.value, per-form formData.transform.rotate) are
+      // authored in DEGREES; without this a fresh p5.Graphics defaults to
+      // RADIANS, so the forms are rotated ~57x too far and their content
+      // collapses toward gForm's center. For split.type 'none' the 1:1 copy
+      // still fills the canvas so it looked plausible, but any split that
+      // clips+mirrors gForm's quadrants then only fills the region the
+      // (mislaid) content actually reached — producing the compressed composite.
+      gForm.angleMode(p.DEGREES);
       gDraw = p.createGraphics(res.width, res.height);
       gDraw.pixelDensity(cnv.density.base);
       // Match the reference tool's gDraw render modes (system.js setupCanvas):
