@@ -32,5 +32,8 @@
   "bugs": {
     "url": "https://github.com/legenki/divix/issues"
   },
-  "homepage": "https://github.com/legenki/divix#readme"
+  "homepage": "https://github.com/legenki/divix#readme",
+  "dependencies": {
+    "p5": "^2.2.3"
+  }
 }
