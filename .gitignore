@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary test / screenshot files
+screenshot_*.png
+test_*.js
+check_*.js
+compare_*.js
+dist/
+dev-dist/
+scratch/
+
+# Reference sources of original tools (not ours to publish)
+reference/
