@@ -342,6 +342,13 @@ export function divixSketch(p) {
       gForm.pixelDensity(cnv.density.base);
       gDraw = p.createGraphics(res.width, res.height);
       gDraw.pixelDensity(cnv.density.base);
+      // Match the reference tool's gDraw render modes (system.js setupCanvas):
+      // the per-quadrant clip rects use CORNERS coords (rect(x1,y1,x2,y2)) and
+      // the composited image is centered at the translated origin. Without these
+      // the clip rect and the corner-anchored image never overlap, so gDraw
+      // composites out fully transparent for every split.type !== 'none'.
+      gDraw.rectMode(p.CORNERS);
+      gDraw.imageMode(p.CENTER);
       gAlpha = p.createGraphics(res.width, res.height);
       gAlpha.pixelDensity(cnv.density.base);
       buffers.gForm = gForm;
