@@ -121,7 +121,7 @@ export const SECTIONS = [
       { id: 'dx-canvas-reset', type: 'button', label: 'Reset to Default' },
     ],
   },
-  transformSection({ title: 'Scale Motion', key: 'scale', randomId: 'dx-rand-scale', ampMin: -1 }),
+  transformSection({ title: 'Scale', key: 'scale', randomId: 'dx-rand-scale', ampMin: -1 }),
   transformSection({ title: 'X Move', key: 'xmove', randomId: 'dx-rand-xmove', ampMin: 0.01 }),
   transformSection({ title: 'Y Move', key: 'ymove', randomId: 'dx-rand-ymove', ampMin: 0.01 }),
   transformSection({ title: 'Rotate', key: 'rotate', randomId: 'dx-rand-rotate', ampMin: 0.01 }),
