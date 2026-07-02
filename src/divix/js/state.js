@@ -2,6 +2,8 @@
 // State objects are mutated in place by the panel, presets and the sketch;
 // their initial values are the tool's default preset.
 
+// --- Runtime state (mutated by panel/presets/sketch) ---
+
 export const palette = {
   index: 0,
   array: ["#FFFFFF", "#D1D1D1", "#808080", "#585858", "#000000"],
@@ -163,6 +165,8 @@ export const rec = {
   }
 };
 
+// --- Option maps (read-only; label → value lookups for the panel UI) ---
+
 export const PRESET_TYPES = {
   "Split Vibration": "splitVibration",
   "Lotus Metamorphosis": "lotusMetamorphosis",
@@ -226,7 +230,13 @@ export const ORDER_TYPES = {
   Equal: "equal"
 };
 
-export const EXPORT_TYPES = { 'PNG File': 'image', 'MP4 File': 'mp4', 'SVG File': 'svg' };
+// Reduced from the source tool's exportTypes — no GIF or PNG/WEBP sequence
+// export in this port, only single-file PNG, MP4 and SVG.
+export const EXPORT_TYPES = {
+  "PNG File": "image",
+  "MP4 File": "mp4",
+  "SVG File": "svg"
+};
 
 export const SHAPE_TYPES = {
   Rectangle: "rect",
@@ -304,6 +314,8 @@ export const SHAPE_SIZE = {
   }
 };
 
+// `arrow` is carried over from the source tool's data as-is; it has no
+// SHAPE_TYPES entry so it isn't reachable from the shape picker.
 export const SHAPE_PATHS = {
   rect: `M0,360v-360h360v360z`,
   circle: `M0,180c0,-99.41125 80.58875,-180 180,-180c99.41125,0 180,80.58875 180,180c0,99.41125 -80.58875,180 -180,180c-99.41125,0 -180,-80.58875 -180,-180z`,
