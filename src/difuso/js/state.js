@@ -192,7 +192,11 @@ export const PRESET_TYPES = {
 // object, not a 0-indexed array) because `gradient.palette` is a 1..30 slider
 // value that must map directly onto these keys — `COLOR_PALETTES[gradient.palette]`
 // works with no off-by-one conversion anywhere else in the port (controls.js,
-// app.js). Each entry: { use: bool[5], color: hex[5], reverse: bool }.
+// app.js). NOTE: this is an intentional exception, not a repeat of an existing
+// pattern — divix/js/state.js's `palette.array`/`palette.index` is 0-indexed;
+// don't "fix" this to match that later. Being an object (not an array), it also
+// has no `.length` — use `Object.keys(COLOR_PALETTES).length` to count entries.
+// Each entry: { use: bool[5], color: hex[5], reverse: bool }.
 export const COLOR_PALETTES = {
   1: {
     use: [true, true, true, true, true],
