@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Divix</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="src/css/style.css">
+
+  <!-- LIBRARIES -->
+  <script src="/lib/p5.min.js"></script>
+
+  <!-- Small helpers shared by the workspaces (seeded noise, ~20 KB) -->
+  <script src="/lib/vendor/alea.js"></script>
+  <script src="/lib/vendor/simplex-noise.min.js"></script>
+  <script src="/lib/vendor/hsluv.min.js"></script>
+  <!-- Heavy vendor libs (paper, colorjs, h264 encoder) load on demand per
+       workspace — see shared/utils/lazyLibs.js -->
+</head>
+<body class="theme-light">
+
+  <!-- Top-Center Tab Switcher Capsule -->
+  <div style="position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:1000; display:flex; gap:8px;">
+    <div class="app-switcher" role="tablist">
+      <button id="tab-divix" class="switcher-tab active" data-target="divix" role="tab" aria-selected="true" aria-controls="app-divix">DIVIX</button>
+      <button id="tab-difuso" class="switcher-tab" data-target="difuso" role="tab" aria-selected="false" aria-controls="app-difuso">DIFUSO</button>
+      <button id="tab-bandada" class="switcher-tab" data-target="bandada" role="tab" aria-selected="false" aria-controls="app-bandada">BANDADA</button>
+      <button id="tab-deriva" class="switcher-tab" data-target="deriva" role="tab" aria-selected="false" aria-controls="app-deriva">DERIVA</button>
+      <button id="tab-sondeo" class="switcher-tab" data-target="sondeo" role="tab" aria-selected="false" aria-controls="app-sondeo">SONDEO</button>
+      <button id="tab-clon" class="switcher-tab" data-target="clon" role="tab" aria-selected="false" aria-controls="app-clon">CLON</button>
+    </div>
+    <div class="app-switcher" style="padding: 3px;">
+      <button id="btn-global-theme" class="switcher-tab" style="padding: 8px; display: flex; align-items: center; justify-content: center;" title="Toggle Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="apps-container" style="width:100vw; height:100vh; position:absolute; top:0; left:0; z-index:0; overflow:hidden;">
+
+    <div id="app-divix" class="app-view active" role="tabpanel" aria-labelledby="tab-divix" style="width:100%; height:100%;">
+      <!--#include file="src/divix/template.html"-->
+    </div>
+
+    <div id="app-difuso" class="app-view" role="tabpanel" aria-labelledby="tab-difuso" style="width:100%; height:100%; display:none;">
+      <!--#include file="src/difuso/template.html"-->
+    </div>
+
+    <div id="app-bandada" class="app-view" role="tabpanel" aria-labelledby="tab-bandada" style="width:100%; height:100%; display:none;">
+      <!--#include file="src/bandada/template.html"-->
+    </div>
+
+    <div id="app-deriva" class="app-view" role="tabpanel" aria-labelledby="tab-deriva" style="width:100%; height:100%; display:none;">
+      <!--#include file="src/deriva/template.html"-->
+    </div>
+
+    <div id="app-sondeo" class="app-view" role="tabpanel" aria-labelledby="tab-sondeo" style="width:100%; height:100%; display:none;">
+      <!--#include file="src/sondeo/template.html"-->
+    </div>
+
+    <div id="app-clon" class="app-view" role="tabpanel" aria-labelledby="tab-clon" style="width:100%; height:100%; display:none;">
+      <!--#include file="src/clon/template.html"-->
+    </div>
+  </div>
+
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>
