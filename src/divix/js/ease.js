@@ -21,8 +21,7 @@ export const easeFunctions = {
     const t1 = t - 1;
     return t1 * t1 * t1 + 1;
   },
-  'Cubic In Out': (t) =>
-    t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
+  'Cubic In Out': (t) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
 
   // Quart
   'Quart In': (t) => t * t * t * t,
@@ -112,9 +111,7 @@ export const easeFunctions = {
     const p = 1 - magnitude;
     const s = (p / (2 * Math.PI)) * Math.asin(1);
 
-    return -(
-      Math.pow(2, 10 * scaledTime1) * Math.sin(((scaledTime1 - s) * (2 * Math.PI)) / p)
-    );
+    return -(Math.pow(2, 10 * scaledTime1) * Math.sin(((scaledTime1 - s) * (2 * Math.PI)) / p));
   },
   'Elastic Out': (t) => {
     const magnitude = 0.7;
@@ -166,5 +163,5 @@ export const easeFunctions = {
   'Bounce In Out': (t) =>
     t < 0.5
       ? easeFunctions['Bounce In'](t * 2) * 0.5
-      : easeFunctions['Bounce Out'](t * 2 - 1) * 0.5 + 0.5
+      : easeFunctions['Bounce Out'](t * 2 - 1) * 0.5 + 0.5,
 };
