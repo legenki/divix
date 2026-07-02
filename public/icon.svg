@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Grafema">
+  <rect width="512" height="512" rx="96" fill="#f4f4f4"/>
+  <g fill="none" stroke="#111111" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Stylized "G" built from vector nodes, echoing the editor's skeletons -->
+    <path d="M344 168a112 112 0 1 0 0 176v-72h-72"/>
+    <!-- control nodes -->
+    <circle cx="344" cy="168" r="14" fill="#111111" stroke="none"/>
+    <circle cx="344" cy="344" r="14" fill="#111111" stroke="none"/>
+    <circle cx="272" cy="272" r="14" fill="#111111" stroke="none"/>
+  </g>
+</svg>
