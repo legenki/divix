@@ -315,7 +315,18 @@ export function buildPresetSection(root, { idPrefix, presets, proPresets = {}, i
   const select = el('select', { className: 'grafema-select', id: `${idPrefix}-preset` });
 
   function makeLabel(key) {
-    return key.replace(/Preset$/, '').replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).trim();
+    // Acronym-aware camelCase → Title Case. Insert a space only at a
+    // lowercase/digit→uppercase boundary and at an ACRONYM→Word boundary
+    // (e.g. `SVGHere` → `SVG Here`), so consecutive capitals stay grouped
+    // (`omgType` → `OMG Type`, `dropTheSVG` → `Drop The SVG`). Keys that are
+    // already space-separated (`"Drop The SVG"`) pass through unchanged
+    // instead of being split into `"Drop  The  S V G"`.
+    return key
+      .replace(/Preset$/, '')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .replace(/^./, (c) => c.toUpperCase())
+      .trim();
   }
 
   // Free presets — always rendered

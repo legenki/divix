@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "divix-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "3012"],
+      "port": 3012
+    }
+  ]
+}

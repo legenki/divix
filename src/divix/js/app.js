@@ -533,6 +533,22 @@ export function divixSketch(p) {
     if (preset.palette) deepMerge(palette, preset.palette);
     cnv.frame = preset.cnv?.frame ?? 0;
 
+    // A `custom`-shape preset carries its own SVG path/size payload in
+    // `form.shape`. switchForm() reads geometry from the static
+    // SHAPE_PATHS.custom / SHAPE_SIZE.custom slots (the same slots the live
+    // drag-and-drop importer writes), NOT from the merged `form.shape`, so we
+    // must propagate the preset payload into those slots before switchForm().
+    // Match the reference tool's preset-load convention (preset.js loadPreset):
+    // the path goes in verbatim (form.js wraps it in Path2D), and the stored
+    // size is ALREADY the half-extent the importer persists — it is copied
+    // straight into SHAPE_SIZE.custom with no further halving.
+    const presetShape = preset.form?.shape;
+    if (presetShape?.path && presetShape.size) {
+      state.SHAPE_PATHS.custom = presetShape.path;
+      state.SHAPE_SIZE.custom.width = presetShape.size.width;
+      state.SHAPE_SIZE.custom.height = presetShape.size.height;
+    }
+
     applySplitGrid();
     setupBuffers();
     formCtl.switchForm();
