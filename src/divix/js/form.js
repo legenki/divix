@@ -64,7 +64,6 @@ export function createForm({ p, state, buffers, noise }) {
 
     gForm.strokeWeight(form.stroke.width);
 
-    let count = 0;
     generateParameters(); // Generate all parameters for forms
 
     gForm.translate(formData.width, formData.height);
@@ -75,7 +74,7 @@ export function createForm({ p, state, buffers, noise }) {
     if (form.color.mode === 'xor' && form.color.type === 'fill') {
       gForm.drawingContext.globalCompositeOperation = 'xor';
     }
-    generateForm(count);
+    generateForm();
 
     gForm.pop();
   }
@@ -117,6 +116,10 @@ export function createForm({ p, state, buffers, noise }) {
     formData.shape = {};
     formData.shape.width = -form.shape.width;
     formData.shape.height = -form.shape.height;
+    // Left empty here — the split/clip draw loop (main.js in the reference)
+    // is the piece that pushes per-quadrant clip rects onto this array.
+    // svgExport.js iterates formData.clip to build its scene, so until a
+    // split module (not yet ported) populates it, exports render nothing.
     formData.clip = [];
     formData.color = [];
     formData.transform = {};
@@ -385,6 +388,10 @@ export function createForm({ p, state, buffers, noise }) {
     switchForm,
     drawForms,
     generateParameters,
+    // Returns the params from the last generateParameters() call (run inside
+    // drawForms()). Before the first drawForms(), formData is `{}` — callers
+    // that read into it (e.g. svgExport.js) must only run after at least one
+    // draw has happened.
     getFormData: () => formData,
   };
 }

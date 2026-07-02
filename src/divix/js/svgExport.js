@@ -25,7 +25,9 @@ import { timestamp } from '../../shared/utils/datetime.js';
  * @param {object}       deps.state        The whole state.js module (form, cnv, palette, rec, SHAPE_PATHS).
  * @param {object}       deps.buffers      Graphics buffers: `{ gForm }` (used for canvas dimensions).
  * @param {() => object} deps.getFormData  Returns form.js's current `formData` render state, so this
- *   module reuses the already-computed parameters instead of recomputing them.
+ *   module reuses the already-computed parameters instead of recomputing them. Only valid after
+ *   form.js's drawForms() has run at least once (formData is `{}` before the first draw) and after
+ *   its split/clip loop has populated `formData.clip` — export renders nothing until then.
  * @param {string}       [deps.filenamePrefix]  Prefix for the downloaded file (default 'divix').
  * @returns {{ startSvgExport: () => void }}
  */
