@@ -61,7 +61,9 @@ export function createSource({ p, state, defaultImageUrl, onUnsupported }) {
 
   /**
    * Loads the bundled default image as the initial source, before any user
-   * upload. Sets rec.type = 'image'.
+   * upload. Sets rec.type = 'image'. Rejects if the fetch/decode fails (e.g.
+   * network failure, missing/corrupt bundled asset) — the caller must catch
+   * this, since a failure here means the workspace has nothing to show yet.
    * @returns {Promise<void>}
    */
   async function loadDefaultImage() {
@@ -100,11 +102,15 @@ export function createSource({ p, state, defaultImageUrl, onUnsupported }) {
    * element (it's sampled as a WebGL texture by the shaders, not displayed
    * directly). Sets rec.type = 'video'. Removes any previously loaded video
    * element first, matching the reference's cleanup-before-replace behavior.
+   * Rejects if the video fails to load/decode (p5's createVideo() has no
+   * failure callback of its own, so this listens to the underlying <video>
+   * element's native 'error' event directly — without this, a corrupt file
+   * or unsupported codec would leave the returned promise pending forever).
    * @param {string} objectUrl
    * @returns {Promise<void>}
    */
   function loadVideoFile(objectUrl) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (rec.video !== undefined) rec.video.remove();
 
       rec.video = p.createVideo(objectUrl, () => {
@@ -113,6 +119,9 @@ export function createSource({ p, state, defaultImageUrl, onUnsupported }) {
         rec.video.hide();
         rec.type = 'video';
         resolve();
+      });
+      rec.video.elt.addEventListener('error', () => {
+        reject(rec.video.elt.error || new Error('Failed to load video'));
       });
     });
   }
