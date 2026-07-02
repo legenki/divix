@@ -348,6 +348,15 @@ export function divixSketch(p) {
       // still fills the canvas so it looked plausible, but any split that
       // clips+mirrors gForm's quadrants then only fills the region the
       // (mislaid) content actually reached — producing the compressed composite.
+      // Reference system.js also sets strokeWeight(0.5)+noStroke() on gForm
+      // here; form.js always overwrites strokeWeight before drawing so this
+      // has no visible effect today, but replicate it anyway — this file has
+      // twice now shipped a bug from a buffer mode call silently missing
+      // (see the angleMode/rectMode/imageMode comments above and below), so
+      // treat reference/splitx/scripts/system.js's buffer setup as the
+      // authoritative checklist rather than relying on incidental call order.
+      gForm.strokeWeight(0.5);
+      gForm.noStroke();
       gForm.angleMode(p.DEGREES);
       gDraw = p.createGraphics(res.width, res.height);
       gDraw.pixelDensity(cnv.density.base);
@@ -358,6 +367,8 @@ export function divixSketch(p) {
       // composites out fully transparent for every split.type !== 'none'.
       gDraw.rectMode(p.CORNERS);
       gDraw.imageMode(p.CENTER);
+      gDraw.strokeWeight(0.5);
+      gDraw.noStroke();
       gAlpha = p.createGraphics(res.width, res.height);
       gAlpha.pixelDensity(cnv.density.base);
       buffers.gForm = gForm;
