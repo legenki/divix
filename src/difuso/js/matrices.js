@@ -1,6 +1,10 @@
 // DIFUSO — ordered-dither matrix tables (ported verbatim from the original tool).
 // Each is a flat array of threshold values consumed by the dither texture
 // builder to produce a tileable ordered-dither pattern.
+//
+// Stored row-major (matrix[row * width + col]); width is 2 for PIXEL_MATRIX
+// and BAYER_MATRIX_2, 3 for GRID_MATRIX, 4 for CHECKER_MATRIX/DIAGONAL_MATRIX/
+// BAYER_MATRIX_4, 8 for BAYER_MATRIX_8, 16 for BAYER_MATRIX_16.
 
 export const PIXEL_MATRIX = [0.48, 0.49, 0.5, 0.51];
 
@@ -76,5 +80,6 @@ export const BAYER_MATRIX_16 = [
   40 / 257, 232 / 257, 24 / 257, 216 / 257, 34 / 257, 226 / 257, 18 / 257, 210 / 257,
   42 / 257, 234 / 257, 26 / 257, 218 / 257, 36 / 257, 230 / 257, 20 / 257, 212 / 257,
   168 / 257, 104 / 257, 152 / 257, 88 / 257, 162 / 257, 98 / 257, 146 / 257, 82 / 257,
+  // Last value is a bare 84 (not 84 / 257) in the source too — verbatim, not a typo.
   170 / 257, 106 / 257, 154 / 257, 90 / 257, 164 / 257, 100 / 257, 148 / 257, 84
 ];
