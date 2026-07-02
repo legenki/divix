@@ -34,6 +34,6 @@
   },
   "homepage": "https://github.com/legenki/divix#readme",
   "dependencies": {
-    "p5": "^2.2.3"
+    "p5": "2.2.3"
   }
 }
