@@ -174,11 +174,15 @@ export class Form {
       geom: { rate: map(anim.opacity.rate, 1, 10, MAPPING.opacity.rate.geom.min, MAPPING.opacity.rate.geom.max) }
     };
 
+    const tintColorSrc = anim.tint.color;
+    const tintColor = (tintColorSrc && typeof tintColorSrc === 'object' && 'r' in tintColorSrc)
+      ? p.color(tintColorSrc.r, tintColorSrc.g, tintColorSrc.b)
+      : p.color(tintColorSrc || '#FFFFFF');
     this.tint = {
       type: anim.tint.type,
       noise2D: createNoise2D(alea()),
       frame: 0,
-      color: p.color(anim.tint.color),
+      color: tintColor,
       level: map(anim.tint.level, 1, 100, MAPPING.tint.level.min, MAPPING.tint.level.max),
       noise: { rate: map(anim.tint.rate, 1, 10, MAPPING.tint.rate.noise.min, MAPPING.tint.rate.noise.max) },
       geom: { rate: map(anim.tint.rate, 1, 10, MAPPING.tint.rate.geom.min, MAPPING.tint.rate.geom.max) }
@@ -363,7 +367,12 @@ export class Form {
 
     if (this.tint.type !== "none") {
       this.buffer.push();
-      this.buffer.tint(this.tint.color.levels[0], this.tint.color.levels[1], this.tint.color.levels[2], _tint);
+      this.buffer.tint(
+        this.p.red(this.tint.color),
+        this.p.green(this.tint.color),
+        this.p.blue(this.tint.color),
+        _tint
+      );
       this.buffer.image(this.updBuffer, 0, 0);
       this.buffer.pop();
     }

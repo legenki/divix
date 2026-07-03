@@ -44,7 +44,7 @@ export function bandadaSketch(p) {
   const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
 
   function buildUI() {
-    const root = document.getElementById('dx-controls');
+    const root = document.getElementById('bn-controls');
     if (!root) return;
     root.innerHTML = '';
 
@@ -371,11 +371,13 @@ export function bandadaSketch(p) {
 
     syncGlobals();
 
-    if (cnv.animation) {
+    if (cnv.animation && flock) {
       flock.update();
     }
 
-    flock.draw();
+    if (flock) {
+      flock.draw();
+    }
   }
 
   function blitToVisible() {
@@ -484,7 +486,7 @@ export function bandadaSketch(p) {
 
   // --- p5 lifecycle ---
   p.setup = () => {
-    canvasContainer = document.getElementById('dx-canvas');
+    canvasContainer = document.getElementById('bandada-canvas');
     if (!canvasContainer) return;
 
     p.createCanvas(

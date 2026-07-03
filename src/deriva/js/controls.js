@@ -18,7 +18,7 @@ export const SECTIONS = [
   {
     id: "canvas",
     title: "CANVAS",
-    inputs: [
+    controls: [
       {
         id: "dr-img-upload",
         type: "button",
@@ -35,7 +35,7 @@ export const SECTIONS = [
         id: "dr-rendering",
         type: "select",
         label: "Rendering as",
-        target: "form.rendering",
+        path: "form.rendering",
         options: [
           { value: "canvas", label: "Single Canvas" },
           { value: "layer", label: "Separate Layers" }
@@ -44,15 +44,15 @@ export const SECTIONS = [
       },
       {
         id: "dr-show-img",
-        type: "checkbox",
+        type: 'check',
         label: "Image Display (I)",
-        target: "cnv.show"
+        path: "cnv.show"
       },
       {
         id: "dr-bg-mode",
         type: "select",
         label: "Background",
-        target: "cnv.bg.mode",
+        path: "cnv.bg.mode",
         options: Object.keys(BG_MODES).map((k) => ({ label: k, value: BG_MODES[k] })),
         regen: "ui"
       },
@@ -60,7 +60,7 @@ export const SECTIONS = [
         id: "dr-bg-color",
         type: "color",
         label: "Canvas Color",
-        target: "cnv.bg.custom"
+        path: "cnv.bg.custom"
       },
       {
         id: "dr-clear",
@@ -73,12 +73,12 @@ export const SECTIONS = [
   {
     id: "forms",
     title: "FORMS",
-    inputs: [
+    controls: [
       {
         id: "dr-form-content",
         type: "select",
         label: "Use Content",
-        target: "form.content",
+        path: "form.content",
         options: [
           { value: "preview", label: "Preview Image" },
           { value: "live", label: "Live Image" }
@@ -88,7 +88,7 @@ export const SECTIONS = [
         id: "dr-form-type",
         type: "select",
         label: "Mask Type (M)",
-        target: "form.type",
+        path: "form.type",
         options: [
           { value: "rect", label: "Rectangle" },
           { value: "ellipse", label: "Ellipse" }
@@ -99,7 +99,7 @@ export const SECTIONS = [
         id: "dr-form-amount",
         type: "range",
         label: "Maximum Forms",
-        target: "form.amount.num",
+        path: "form.amount.num",
         min: 1,
         max: 100,
         step: 1,
@@ -109,7 +109,7 @@ export const SECTIONS = [
         id: "dr-form-sizex",
         type: "range",
         label: "Horizontal Size",
-        target: "form.size.x",
+        path: "form.size.x",
         min: 10,
         max: 100,
         step: 1
@@ -118,7 +118,7 @@ export const SECTIONS = [
         id: "dr-form-sizey",
         type: "range",
         label: "Vertical Size",
-        target: "form.size.y",
+        path: "form.size.y",
         min: 10,
         max: 100,
         step: 1
@@ -127,7 +127,7 @@ export const SECTIONS = [
         id: "dr-form-frame",
         type: "select",
         label: "Frame",
-        target: "form.frame.value",
+        path: "form.frame.value",
         options: [
           { value: "off", label: "Off" },
           { value: "on", label: "On" }
@@ -138,7 +138,7 @@ export const SECTIONS = [
         id: "dr-form-frame-w",
         type: "range",
         label: "Frame Width",
-        target: "form.frame.width",
+        path: "form.frame.width",
         min: 0.5,
         max: 10,
         step: 0.1
@@ -147,7 +147,7 @@ export const SECTIONS = [
         id: "dr-form-frame-c",
         type: "color",
         label: "Frame Color",
-        target: "form.frame.color"
+        path: "form.frame.color"
       },
       {
         id: "dr-form-add",
@@ -166,12 +166,12 @@ export const SECTIONS = [
   {
     id: "anim_move",
     title: "ANIM: MOVE",
-    inputs: [
+    controls: [
       {
         id: "dr-mx-type",
         type: "select",
         label: "Horiz Type",
-        target: "anim.move.x.type",
+        path: "anim.move.x.type",
         options: MOVE_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -179,21 +179,21 @@ export const SECTIONS = [
         id: "dr-mx-level",
         type: "range",
         label: "Horiz Level",
-        target: "anim.move.x.level",
+        path: "anim.move.x.level",
         min: 1, max: 200, step: 1
       },
       {
         id: "dr-mx-rate",
         type: "range",
         label: "Horiz Rate",
-        target: "anim.move.x.rate",
+        path: "anim.move.x.rate",
         min: 1, max: 10, step: 0.1
       },
       {
         id: "dr-my-type",
         type: "select",
         label: "Vert Type",
-        target: "anim.move.y.type",
+        path: "anim.move.y.type",
         options: MOVE_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -201,14 +201,14 @@ export const SECTIONS = [
         id: "dr-my-level",
         type: "range",
         label: "Vert Level",
-        target: "anim.move.y.level",
+        path: "anim.move.y.level",
         min: 1, max: 200, step: 1
       },
       {
         id: "dr-my-rate",
         type: "range",
         label: "Vert Rate",
-        target: "anim.move.y.rate",
+        path: "anim.move.y.rate",
         min: 1, max: 10, step: 0.1
       }
     ]
@@ -216,12 +216,12 @@ export const SECTIONS = [
   {
     id: "anim_offset",
     title: "ANIM: OFFSET",
-    inputs: [
+    controls: [
       {
         id: "dr-ox-type",
         type: "select",
         label: "Horiz Offset Type",
-        target: "anim.offset.x.type",
+        path: "anim.offset.x.type",
         options: OFFSET_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -229,21 +229,21 @@ export const SECTIONS = [
         id: "dr-ox-level",
         type: "range",
         label: "Horiz Level",
-        target: "anim.offset.x.level",
+        path: "anim.offset.x.level",
         min: 1, max: 25, step: 0.5
       },
       {
         id: "dr-ox-rate",
         type: "range",
         label: "Horiz Rate",
-        target: "anim.offset.x.rate",
+        path: "anim.offset.x.rate",
         min: 1, max: 10, step: 0.1
       },
       {
         id: "dr-oy-type",
         type: "select",
         label: "Vert Offset Type",
-        target: "anim.offset.y.type",
+        path: "anim.offset.y.type",
         options: OFFSET_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -251,14 +251,14 @@ export const SECTIONS = [
         id: "dr-oy-level",
         type: "range",
         label: "Vert Level",
-        target: "anim.offset.y.level",
+        path: "anim.offset.y.level",
         min: 1, max: 25, step: 0.5
       },
       {
         id: "dr-oy-rate",
         type: "range",
         label: "Vert Rate",
-        target: "anim.offset.y.rate",
+        path: "anim.offset.y.rate",
         min: 1, max: 10, step: 0.1
       }
     ]
@@ -266,12 +266,12 @@ export const SECTIONS = [
   {
     id: "anim_transform",
     title: "ANIM: ROTATE/SCALE",
-    inputs: [
+    controls: [
       {
         id: "dr-r-type",
         type: "select",
         label: "Rotate Type",
-        target: "anim.rotate.type",
+        path: "anim.rotate.type",
         options: ROTATE_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -279,21 +279,21 @@ export const SECTIONS = [
         id: "dr-r-level",
         type: "range",
         label: "Rotate Level",
-        target: "anim.rotate.level",
+        path: "anim.rotate.level",
         min: 5, max: 180, step: 5
       },
       {
         id: "dr-r-rate",
         type: "range",
         label: "Rotate Rate",
-        target: "anim.rotate.rate",
+        path: "anim.rotate.rate",
         min: 1, max: 10, step: 0.1
       },
       {
         id: "dr-s-type",
         type: "select",
         label: "Scale Type",
-        target: "anim.scale.type",
+        path: "anim.scale.type",
         options: SCALE_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -301,14 +301,14 @@ export const SECTIONS = [
         id: "dr-s-level",
         type: "range",
         label: "Scale Level",
-        target: "anim.scale.level",
+        path: "anim.scale.level",
         min: 1.1, max: 2, step: 0.01
       },
       {
         id: "dr-s-rate",
         type: "range",
         label: "Scale Rate",
-        target: "anim.scale.rate",
+        path: "anim.scale.rate",
         min: 1, max: 10, step: 0.1
       }
     ]
@@ -316,12 +316,12 @@ export const SECTIONS = [
   {
     id: "anim_color",
     title: "ANIM: STYLE",
-    inputs: [
+    controls: [
       {
         id: "dr-op-type",
         type: "select",
         label: "Opacity Type",
-        target: "anim.opacity.type",
+        path: "anim.opacity.type",
         options: OPACITY_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -329,21 +329,21 @@ export const SECTIONS = [
         id: "dr-op-level",
         type: "range",
         label: "Opacity Level",
-        target: "anim.opacity.level",
+        path: "anim.opacity.level",
         min: 10, max: 100, step: 1
       },
       {
         id: "dr-op-rate",
         type: "range",
         label: "Opacity Rate",
-        target: "anim.opacity.rate",
+        path: "anim.opacity.rate",
         min: 1, max: 10, step: 0.1
       },
       {
         id: "dr-t-type",
         type: "select",
         label: "Tint Type",
-        target: "anim.tint.type",
+        path: "anim.tint.type",
         options: TINT_TYPES.map(k => ({ label: `(${k})`, value: k })),
         regen: "ui"
       },
@@ -351,20 +351,20 @@ export const SECTIONS = [
         id: "dr-t-color",
         type: "color",
         label: "Tint Color",
-        target: "anim.tint.color"
+        path: "anim.tint.color"
       },
       {
         id: "dr-t-level",
         type: "range",
         label: "Tint Level",
-        target: "anim.tint.level",
+        path: "anim.tint.level",
         min: 1, max: 100, step: 1
       },
       {
         id: "dr-t-rate",
         type: "range",
         label: "Tint Rate",
-        target: "anim.tint.rate",
+        path: "anim.tint.rate",
         min: 1, max: 10, step: 0.1
       }
     ]
@@ -372,12 +372,12 @@ export const SECTIONS = [
   {
     id: "export",
     title: "EXPORT",
-    inputs: [
+    controls: [
       {
         id: "dr-export-len",
         type: "range",
         label: "Export Length (s)",
-        target: "rec.length.value",
+        path: "rec.length.value",
         min: 1, max: 60, step: 1
       },
       {

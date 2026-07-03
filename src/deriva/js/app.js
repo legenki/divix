@@ -34,7 +34,7 @@ export function derivaSketch(p) {
   const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
 
   function buildUI() {
-    const root = document.getElementById('dx-controls');
+    const root = document.getElementById('dr-controls');
     if (!root) return;
     root.innerHTML = '';
 
@@ -86,27 +86,31 @@ export function derivaSketch(p) {
 
   // --- Buffers ---
   function setupBuffers() {
-    if (!g.ctx) {
-      g.ctx = p.createGraphics(cnv.image.size, cnv.image.size);
-      g.ctx.pixelDensity(1);
-      g.ctx.imageMode(p.CENTER);
-      g.ctx.rectMode(p.CENTER);
-      g.ctx.noStroke();
-      
-      g.preview = p.createGraphics(cnv.image.size, cnv.image.size);
-      g.preview.pixelDensity(1);
-      g.preview.imageMode(p.CENTER);
-      g.preview.rectMode(p.CENTER);
-      
-      g.alphaImg = createAlphaImage(cnv.image.size, cnv.image.size, 1);
-    } else {
-      g.ctx.resizeCanvas(g.texture.data.width, g.texture.data.height);
-      g.preview.resizeCanvas(g.texture.data.width, g.texture.data.height);
-      g.alphaImg = createAlphaImage(g.texture.data.width, g.texture.data.height, 1);
+    let w = cnv.image.size;
+    let h = cnv.image.size;
+    
+    if (g.texture.data && g.texture.data.width > 0) {
+      w = g.texture.data.width;
+      h = g.texture.data.height;
     }
+    
+    g.ctx = p.createGraphics(w, h);
+    g.ctx.pixelDensity(1);
+    // g.ctx.imageMode(p.CENTER); // REMOVED
+    g.ctx.rectMode(p.CENTER);
+    g.ctx.noStroke();
+    
+    g.preview = p.createGraphics(w, h);
+    g.preview.pixelDensity(1);
+    g.preview.imageMode(p.CENTER);
+    g.preview.rectMode(p.CENTER);
+    
+    g.alphaImg = createAlphaImage(w, h, 1);
     
     form.size.max.width = g.ctx.width;
     form.size.max.height = g.ctx.height;
+    form.coords.x = g.ctx.width / 2;
+    form.coords.y = g.ctx.height / 2;
   }
 
   function createAlphaImage(width, height, density) {
@@ -148,6 +152,7 @@ export function derivaSketch(p) {
 
   // --- Rendering ---
   function drawScene() {
+    if (!g.ctx) return;
     g.ctx.clear();
     
     if (cnv.bg.mode === 'transparent') {
@@ -164,13 +169,13 @@ export function derivaSketch(p) {
 
     if (cnv.mouseOver) translateCoords();
     if (cnv.show && g.texture.data) {
-      g.ctx.image(g.texture.data, g.ctx.width/2, g.ctx.height/2, g.ctx.width, g.ctx.height);
+      g.ctx.image(g.texture.data, 0, 0, g.ctx.width, g.ctx.height);
     }
 
     if (form.run) {
       for (let f of formArray) {
         f.run();
-        g.ctx.image(f.graphics, g.ctx.width/2, g.ctx.height/2);
+        g.ctx.image(f.graphics, g.ctx.width / 2, g.ctx.height / 2);
       }
     }
 
@@ -207,6 +212,7 @@ export function derivaSketch(p) {
   }
 
   function blitToVisible() {
+    if (!g.ctx) return;
     p.clear();
     const scale = getCanvasScale();
     const w = g.ctx.width * scale;
@@ -240,6 +246,7 @@ export function derivaSketch(p) {
   }
 
   function getCanvasScale() {
+    if (!g.ctx) return 1;
     const margin = cnv.settings.margin || 0.9;
     const uiSize = 340;
     const maxW = (p.width - (window.innerWidth > 768 ? uiSize : 0)) * margin;
@@ -365,6 +372,15 @@ export function derivaSketch(p) {
     }
   );
 
+  function generateForms() {
+    clearAllForms();
+    let count = form.amount.num;
+    for (let i = 0; i < count; i++) {
+      formArray.push(new Form(p, true));
+    }
+    activeFormsState();
+  }
+
   function applyPreset(preset) {
     if (!preset) return;
     deepMerge(cnv, preset.cnv);
@@ -372,6 +388,7 @@ export function derivaSketch(p) {
     deepMerge(anim, preset.anim);
     deepMerge(rec, preset.rec);
     clearAllForms();
+    generateForms();
     syncUIFromState();
     saveState();
   }
@@ -409,7 +426,7 @@ export function derivaSketch(p) {
 
   // --- p5 lifecycle ---
   p.setup = () => {
-    canvasContainer = document.getElementById('dx-canvas');
+    canvasContainer = document.getElementById('deriva-canvas');
     if (!canvasContainer) return;
     p.createCanvas(canvasContainer.clientWidth, canvasContainer.clientHeight);
     p.pixelDensity(1);
@@ -438,34 +455,74 @@ export function derivaSketch(p) {
       document.body.appendChild(fileInput);
     }
 
-    const restored = loadState();
-
+    let restored = loadState();
+    
+    // We load the texture.
+    // If it fails or is not provided, we fallback to a dummy image
     p.loadImage(g.texture.default, (img) => {
       g.texture.data = img;
       setupBuffers();
       isLoadImage = false;
+      
+      // Load presets and setup UI AFTER texture is loaded and buffers are created
+      fetch(`${import.meta.env.BASE_URL}assets/deriva/presets.json`)
+        .then((r) => r.json())
+        .then((d) => { PRESETS = d; })
+        .catch((e) => console.warn('[deriva] presets load failed:', e))
+        .finally(() => {
+          buildUI();
+          if (restored) {
+            syncUIFromState();
+          } else if (Object.keys(PRESETS).length) {
+            const keys = Object.keys(PRESETS);
+            applyPreset(PRESETS[keys[Math.floor(Math.random() * keys.length)]]);
+          } else {
+            syncUIFromState();
+            generateForms();
+          }
+          
+          document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
+          document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
+          
+          isReady = true;
+        });
+    }, (err) => {
+      console.warn("Failed to load default texture, using fallback.", err);
+      let dummy = p.createImage(800, 800);
+      dummy.loadPixels();
+      for (let i = 0; i < dummy.pixels.length; i += 4) {
+        dummy.pixels[i] = 100;
+        dummy.pixels[i+1] = 150;
+        dummy.pixels[i+2] = 200;
+        dummy.pixels[i+3] = 255;
+      }
+      dummy.updatePixels();
+      g.texture.data = dummy;
+      setupBuffers();
+      isLoadImage = false;
+      
+      fetch(`${import.meta.env.BASE_URL}assets/deriva/presets.json`)
+        .then((r) => r.json())
+        .then((d) => { PRESETS = d; })
+        .catch((e) => console.warn('[deriva] presets load failed:', e))
+        .finally(() => {
+          buildUI();
+          if (restored) {
+            syncUIFromState();
+          } else if (Object.keys(PRESETS).length) {
+            const keys = Object.keys(PRESETS);
+            applyPreset(PRESETS[keys[Math.floor(Math.random() * keys.length)]]);
+          } else {
+            syncUIFromState();
+            generateForms();
+          }
+          
+          document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
+          document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
+          
+          isReady = true;
+        });
     });
-
-    fetch(`${import.meta.env.BASE_URL}assets/deriva/presets.json`)
-      .then((r) => r.json())
-      .then((d) => { PRESETS = d; })
-      .catch((e) => console.warn('[deriva] presets load failed:', e))
-      .finally(() => {
-        buildUI();
-        if (restored) {
-          syncUIFromState();
-        } else if (Object.keys(PRESETS).length) {
-          const keys = Object.keys(PRESETS);
-          applyPreset(PRESETS[keys[Math.floor(Math.random() * keys.length)]]);
-        } else {
-          syncUIFromState();
-        }
-        
-        document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
-        document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
-        
-        isReady = true;
-      });
   };
 
   p.draw = () => {

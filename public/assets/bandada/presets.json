@@ -1,0 +1,1080 @@
+{
+  "Default Preset": {
+    "cnv": {
+      "ratio": "4:3",
+      "bg": {
+        "mode": "image",
+        "color": "#e5e5e5ff"
+      }
+    },
+    "seed": {
+      "value": 6169
+    },
+    "params": {
+      "render": "vector",
+      "shape": "triangle",
+      "edge": {
+        "mode": "repel",
+        "offset": {
+          "value": 0.1
+        },
+        "ease": {
+          "value": 0.5
+        }
+      },
+      "fill": {
+        "0": "#ff5700ff",
+        "1": "#ff6565ff",
+        "style": "single",
+        "reaction": 0.5
+      },
+      "stroke": {
+        "0": "#ffffffff",
+        "1": "#7400ffff",
+        "style": "none",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 2500
+      },
+      "scale": {
+        "value": 0.5,
+        "random": {
+          "value": 0
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.5,
+        "reaction": 0.11
+      },
+      "accuracy": {
+        "value": 6
+      },
+      "vision": {
+        "value": 2.5
+      },
+      "alignment": {
+        "value": 0.6
+      },
+      "bias": {
+        "value": 1.35
+      },
+      "cohesion": {
+        "value": 0.3
+      },
+      "separation": {
+        "value": 0.6
+      },
+      "steering": {
+        "value": 0.09,
+        "reaction": 0.4
+      },
+      "speed": {
+        "value": {
+          "min": 0.8,
+          "max": 1.4
+        }
+      },
+      "drag": {
+        "value": 0.01
+      },
+      "angle": {
+        "value": 1
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/boids-default.webp",
+      "data": null
+    }
+  },
+  "Custom Texture": {
+    "cnv": {
+      "ratio": "4:3",
+      "bg": {
+        "mode": "image",
+        "color": "#e2e0daff"
+      }
+    },
+    "seed": {
+      "value": 7799
+    },
+    "params": {
+      "render": "vector",
+      "shape": "mixed",
+      "edge": {
+        "mode": "wrap",
+        "offset": {
+          "value": 0.1
+        },
+        "ease": {
+          "value": 0.5
+        }
+      },
+      "fill": {
+        "0": "#ff9d02cb",
+        "1": "#ff0909d8",
+        "style": "random",
+        "reaction": 0.09
+      },
+      "stroke": {
+        "0": "#db0000ff",
+        "1": "#7400ffff",
+        "style": "single",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 500
+      },
+      "scale": {
+        "value": 4,
+        "random": {
+          "value": 1
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.6,
+        "reaction": 0.1
+      },
+      "accuracy": {
+        "value": 0.2
+      },
+      "vision": {
+        "value": 1.5
+      },
+      "alignment": {
+        "value": 4
+      },
+      "bias": {
+        "value": 0.65
+      },
+      "cohesion": {
+        "value": 0.25
+      },
+      "separation": {
+        "value": 1.15
+      },
+      "steering": {
+        "value": 0.04,
+        "reaction": 0.05
+      },
+      "speed": {
+        "value": {
+          "min": 0.55,
+          "max": 1.5
+        }
+      },
+      "drag": {
+        "value": 0.02
+      },
+      "angle": {
+        "value": 0
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/custom-texture.webp",
+      "data": null
+    }
+  },
+  "Coral Stream": {
+    "cnv": {
+      "ratio": "3:2",
+      "bg": {
+        "mode": "color",
+        "color": "#0f0655"
+      }
+    },
+    "seed": {
+      "value": 6340
+    },
+    "params": {
+      "render": "vector",
+      "shape": "rect",
+      "edge": {
+        "mode": "wrap",
+        "offset": {
+          "value": 0.07
+        },
+        "ease": {
+          "value": 1
+        }
+      },
+      "fill": {
+        "0": "#9100ffff",
+        "1": "#ff6565ff",
+        "style": "speed",
+        "reaction": 0.5
+      },
+      "stroke": {
+        "0": "#000000ff",
+        "1": "#7400ffff",
+        "style": "none",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 2200
+      },
+      "scale": {
+        "value": 1.65,
+        "random": {
+          "value": 0
+        }
+      },
+      "skew": {
+        "mode": "speed",
+        "value": 0.85,
+        "reaction": 0.25
+      },
+      "accuracy": {
+        "value": 4.8
+      },
+      "vision": {
+        "value": 2
+      },
+      "alignment": {
+        "value": 1.25
+      },
+      "bias": {
+        "value": 0.55
+      },
+      "cohesion": {
+        "value": 0.15
+      },
+      "separation": {
+        "value": 0.5
+      },
+      "steering": {
+        "value": 0.23,
+        "reaction": 0.17
+      },
+      "speed": {
+        "value": {
+          "min": 0.65,
+          "max": 2.3
+        }
+      },
+      "drag": {
+        "value": 0.02
+      },
+      "angle": {
+        "value": 0.5
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/texture.webp",
+      "data": null
+    }
+  },
+  "Kate's Magic": {
+    "cnv": {
+      "ratio": "1:1",
+      "bg": {
+        "mode": "image",
+        "color": "#FFFFFF"
+      }
+    },
+    "seed": {
+      "value": 4710
+    },
+    "params": {
+      "render": "image",
+      "shape": "ellipse",
+      "edge": {
+        "mode": "repel",
+        "offset": {
+          "value": 0.38
+        },
+        "ease": {
+          "value": 0.5
+        }
+      },
+      "fill": {
+        "0": "#faff6dff",
+        "1": "#9339ffff",
+        "style": "angle",
+        "reaction": 0.05
+      },
+      "stroke": {
+        "0": "#ffffffff",
+        "1": "#000000ff",
+        "style": "none",
+        "width": {
+          "value": 1
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 1400
+      },
+      "scale": {
+        "value": 1,
+        "random": {
+          "value": 0.7
+        }
+      },
+      "skew": {
+        "mode": "angle",
+        "value": 0.5,
+        "reaction": 0.15
+      },
+      "accuracy": {
+        "value": 3.2
+      },
+      "vision": {
+        "value": 10
+      },
+      "alignment": {
+        "value": 0.8
+      },
+      "bias": {
+        "value": 2.05
+      },
+      "cohesion": {
+        "value": 0.9
+      },
+      "separation": {
+        "value": 2.25
+      },
+      "steering": {
+        "value": 0.12,
+        "reaction": 0.27
+      },
+      "speed": {
+        "value": {
+          "min": 0.5,
+          "max": 2
+        }
+      },
+      "drag": {
+        "value": 0.065
+      },
+      "angle": {
+        "value": 7
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/kate.webp",
+      "data": null
+    }
+  },
+  "Jelly Geometry": {
+    "cnv": {
+      "ratio": "1:1",
+      "bg": {
+        "mode": "color",
+        "color": "#ffb7b7ff"
+      }
+    },
+    "seed": {
+      "value": 4281
+    },
+    "params": {
+      "render": "image",
+      "shape": "mixed",
+      "edge": {
+        "mode": "repel",
+        "offset": {
+          "value": 0
+        },
+        "ease": {
+          "value": 0.98
+        }
+      },
+      "fill": {
+        "0": "#faff6dff",
+        "1": "#9339ffff",
+        "style": "angle",
+        "reaction": 0.05
+      },
+      "stroke": {
+        "0": "#ffffffff",
+        "1": "#000000ff",
+        "style": "none",
+        "width": {
+          "value": 1
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 1200
+      },
+      "scale": {
+        "value": 7,
+        "random": {
+          "value": 1
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.5,
+        "reaction": 0.08
+      },
+      "accuracy": {
+        "value": 10
+      },
+      "vision": {
+        "value": 15
+      },
+      "alignment": {
+        "value": 0.9
+      },
+      "bias": {
+        "value": 0.7
+      },
+      "cohesion": {
+        "value": 0.45
+      },
+      "separation": {
+        "value": 0.95
+      },
+      "steering": {
+        "value": 0.09,
+        "reaction": 0
+      },
+      "speed": {
+        "value": {
+          "min": 0.1,
+          "max": 0.75
+        }
+      },
+      "drag": {
+        "value": 0.065
+      },
+      "angle": {
+        "value": 1
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/shadow.webp",
+      "data": null
+    }
+  },
+  "A Bit Of Serenity": {
+    "cnv": {
+      "ratio": "3:4",
+      "bg": {
+        "mode": "image",
+        "color": "#e5e5e5ff"
+      }
+    },
+    "seed": {
+      "value": 6169
+    },
+    "params": {
+      "render": "vector",
+      "shape": "triangle",
+      "edge": {
+        "mode": "repel",
+        "offset": {
+          "value": 0.3
+        },
+        "ease": {
+          "value": 0.99
+        }
+      },
+      "fill": {
+        "0": "#000000ff",
+        "1": "#ff6565ff",
+        "style": "single",
+        "reaction": 0.5
+      },
+      "stroke": {
+        "0": "#ffffffff",
+        "1": "#7400ffff",
+        "style": "none",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 2400
+      },
+      "scale": {
+        "value": 0.4,
+        "random": {
+          "value": 0
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.5,
+        "reaction": 0.11
+      },
+      "accuracy": {
+        "value": 6
+      },
+      "vision": {
+        "value": 2.5
+      },
+      "alignment": {
+        "value": 0.6
+      },
+      "bias": {
+        "value": 1.35
+      },
+      "cohesion": {
+        "value": 0.3
+      },
+      "separation": {
+        "value": 0.6
+      },
+      "steering": {
+        "value": 0.09,
+        "reaction": 0.4
+      },
+      "speed": {
+        "value": {
+          "min": 0.8,
+          "max": 1.4
+        }
+      },
+      "drag": {
+        "value": 0.01
+      },
+      "angle": {
+        "value": 1
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/serenity.webp",
+      "data": null
+    }
+  },
+  "Diffusion Burst": {
+    "cnv": {
+      "ratio": "1:1",
+      "bg": {
+        "mode": "color",
+        "color": "#595c6500"
+      }
+    },
+    "seed": {
+      "value": 5740
+    },
+    "params": {
+      "render": "image",
+      "shape": "ellipse",
+      "edge": {
+        "mode": "wrap",
+        "offset": {
+          "value": 0.07
+        },
+        "ease": {
+          "value": 0.5
+        }
+      },
+      "fill": {
+        "0": "#9100ffff",
+        "1": "#ff6565ff",
+        "style": "random",
+        "reaction": 0.19
+      },
+      "stroke": {
+        "0": "#000000ff",
+        "1": "#7400ffff",
+        "style": "none",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 2000
+      },
+      "scale": {
+        "value": 3.5,
+        "random": {
+          "value": 0.9
+        }
+      },
+      "skew": {
+        "mode": "speed",
+        "value": 0.5,
+        "reaction": 0.1
+      },
+      "accuracy": {
+        "value": 6
+      },
+      "vision": {
+        "value": 10
+      },
+      "alignment": {
+        "value": 0.9
+      },
+      "bias": {
+        "value": 0.1
+      },
+      "cohesion": {
+        "value": 0.9
+      },
+      "separation": {
+        "value": 1.5
+      },
+      "steering": {
+        "value": 0.02,
+        "reaction": 0.02
+      },
+      "speed": {
+        "value": {
+          "min": 0.4,
+          "max": 1.8
+        }
+      },
+      "drag": {
+        "value": 0.02
+      },
+      "angle": {
+        "value": 1
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/diffusion.webp",
+      "data": null
+    }
+  },
+  "Chain Reaction": {
+    "cnv": {
+      "ratio": "1:1",
+      "bg": {
+        "mode": "color",
+        "color": "#ffffff19"
+      }
+    },
+    "seed": {
+      "value": 4796
+    },
+    "params": {
+      "render": "vector",
+      "shape": "mixed",
+      "edge": {
+        "mode": "repel",
+        "offset": {
+          "value": 0.02
+        },
+        "ease": {
+          "value": 0
+        }
+      },
+      "fill": {
+        "0": "#fff7f7ff",
+        "1": "#008ee5ff",
+        "style": "speed",
+        "reaction": 0.04
+      },
+      "stroke": {
+        "0": "#ffffffff",
+        "1": "#00b1ffff",
+        "style": "none",
+        "width": {
+          "value": 0.65
+        },
+        "reaction": 0.06
+      },
+      "boids": {
+        "value": 2500
+      },
+      "scale": {
+        "value": 2.1,
+        "random": {
+          "value": 0.9
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.9,
+        "reaction": 0.27
+      },
+      "accuracy": {
+        "value": 4
+      },
+      "vision": {
+        "value": 1
+      },
+      "alignment": {
+        "value": 1.75
+      },
+      "bias": {
+        "value": 1.05
+      },
+      "cohesion": {
+        "value": 0
+      },
+      "separation": {
+        "value": 0.85
+      },
+      "steering": {
+        "value": 0.28,
+        "reaction": 0.15
+      },
+      "speed": {
+        "value": {
+          "min": 0.05,
+          "max": 1.55
+        }
+      },
+      "drag": {
+        "value": 0.095
+      },
+      "angle": {
+        "value": 5.5
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/texture.webp",
+      "data": null
+    }
+  },
+  "Mirrors Drift": {
+    "cnv": {
+      "ratio": "3:4",
+      "bg": {
+        "mode": "image",
+        "color": "#000000ff"
+      }
+    },
+    "seed": {
+      "value": 1249
+    },
+    "params": {
+      "render": "image",
+      "shape": "ellipse",
+      "edge": {
+        "mode": "wrap",
+        "offset": {
+          "value": 0.19
+        },
+        "ease": {
+          "value": 0.1
+        }
+      },
+      "fill": {
+        "0": "#02fff4c4",
+        "1": "#7400ffff",
+        "style": "none",
+        "reaction": 0.1
+      },
+      "stroke": {
+        "0": "#ff0000ff",
+        "1": "#7400ffff",
+        "style": "stroke",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 1200
+      },
+      "scale": {
+        "value": 6.5,
+        "random": {
+          "value": 0.8
+        }
+      },
+      "skew": {
+        "mode": "speed",
+        "value": 0.6,
+        "reaction": 0.06
+      },
+      "accuracy": {
+        "value": 4
+      },
+      "vision": {
+        "value": 3
+      },
+      "alignment": {
+        "value": 1.35
+      },
+      "bias": {
+        "value": 0.45
+      },
+      "cohesion": {
+        "value": 0.9
+      },
+      "separation": {
+        "value": 1.65
+      },
+      "steering": {
+        "value": 0.05,
+        "reaction": 0.02
+      },
+      "speed": {
+        "value": {
+          "min": 0.05,
+          "max": 1.35
+        }
+      },
+      "drag": {
+        "value": 0.005
+      },
+      "angle": {
+        "value": 1.5
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 5
+      }
+    },
+    "texture": {
+      "url": "assets/mirrors-drift.webp",
+      "data": null
+    }
+  },
+  "Severance Effect": {
+    "cnv": {
+      "ratio": "1:1",
+      "bg": {
+        "mode": "color",
+        "color": "#ffffffff"
+      }
+    },
+    "seed": {
+      "value": 4538
+    },
+    "params": {
+      "render": "image",
+      "shape": "rect",
+      "edge": {
+        "mode": "repel",
+        "offset": {
+          "value": 0.03
+        },
+        "ease": {
+          "value": 0
+        }
+      },
+      "fill": {
+        "0": "#494e52ff",
+        "1": "#249c00ff",
+        "style": "speed",
+        "reaction": 0.09
+      },
+      "stroke": {
+        "0": "#000000ff",
+        "1": "#249c00ff",
+        "style": "single",
+        "width": {
+          "value": 1
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 200
+      },
+      "scale": {
+        "value": 10,
+        "random": {
+          "value": 0.5
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.6,
+        "reaction": 0.05
+      },
+      "accuracy": {
+        "value": 8
+      },
+      "vision": {
+        "value": 10
+      },
+      "alignment": {
+        "value": 0.35
+      },
+      "bias": {
+        "value": 1.6
+      },
+      "cohesion": {
+        "value": 0.4
+      },
+      "separation": {
+        "value": 0.65
+      },
+      "steering": {
+        "value": 0.05,
+        "reaction": 0
+      },
+      "speed": {
+        "value": {
+          "min": 0,
+          "max": 0.15
+        }
+      },
+      "drag": {
+        "value": 0.01
+      },
+      "angle": {
+        "value": 0
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/severance.webp",
+      "data": null
+    }
+  },
+  "Bubble Flow": {
+    "cnv": {
+      "ratio": "1:1",
+      "bg": {
+        "mode": "color",
+        "color": "#ff2600ff"
+      }
+    },
+    "seed": {
+      "value": 7027
+    },
+    "params": {
+      "render": "vector",
+      "shape": "ellipse",
+      "edge": {
+        "mode": "wrap",
+        "offset": {
+          "value": 0.1
+        },
+        "ease": {
+          "value": 0.5
+        }
+      },
+      "fill": {
+        "0": "#ffffffd8",
+        "1": "#000000ff",
+        "style": "single",
+        "reaction": 0.1
+      },
+      "stroke": {
+        "0": "#ff2600ff",
+        "1": "#7400ffff",
+        "style": "single",
+        "width": {
+          "value": 0.75
+        },
+        "reaction": 0.1
+      },
+      "boids": {
+        "value": 1000
+      },
+      "scale": {
+        "value": 2,
+        "random": {
+          "value": 1
+        }
+      },
+      "skew": {
+        "mode": "none",
+        "value": 0.6,
+        "reaction": 0.25
+      },
+      "accuracy": {
+        "value": 5
+      },
+      "vision": {
+        "value": 4.5
+      },
+      "alignment": {
+        "value": 1
+      },
+      "bias": {
+        "value": 2
+      },
+      "cohesion": {
+        "value": 0.9
+      },
+      "separation": {
+        "value": 1.5
+      },
+      "steering": {
+        "value": 0.15,
+        "reaction": 0.2
+      },
+      "speed": {
+        "value": {
+          "min": 0.1,
+          "max": 2
+        }
+      },
+      "drag": {
+        "value": 0.02
+      },
+      "angle": {
+        "value": 2.5
+      }
+    },
+    "rec": {
+      "type": "mp4",
+      "length": {
+        "value": 10
+      }
+    },
+    "texture": {
+      "url": "assets/texture.webp",
+      "data": null
+    }
+  }
+}
