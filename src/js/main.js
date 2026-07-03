@@ -44,20 +44,13 @@ function showUpdateToast(onUpdate) {
  * @property {string}   [shortcut]  KeyboardEvent.code that activates it with Alt.
  * @property {string[]} [libs]      Vendor globals the sketch needs (see lazyLibs.js);
  *                                  loaded in parallel with the chunk, ready before setup().
- * @property {boolean}  [usesOwnP5] When true, load() resolves to `{ sketch, P5 }`
- *                                  (an npm-imported p5 constructor bundled into the
- *                                  workspace's own chunk) instead of a bare sketch
- *                                  function; the instance is built with that P5
- *                                  rather than the global `p5`. DIFUSO uses this to
- *                                  run p5 2.x while the rest of Divix uses the global
- *                                  1.x — the two never share a constructor.
  * @property {p5|null}  instance    Lazily created p5 instance (mutated at runtime).
  * @property {Promise<void>|null} pending  In-flight init promise; null when idle.
  */
 /** @type {Workspace[]} */
 const workspaces = [
   { name: 'divix',   load: () => import('../divix/js/app.js').then((m) => m.divixSketch),     containerId: 'divix-canvas',   animated: true, shortcut: 'KeyD', libs: ['paper'] },
-  { name: 'difuso',  load: () => import('../difuso/js/app.js').then((m) => m.difuso),          containerId: 'difuso-canvas',  animated: true, shortcut: 'KeyF', usesOwnP5: true },
+  { name: 'difuso',  load: () => import('../difuso/js/app.js').then((m) => m.difusoSketch),   containerId: 'difuso-canvas',  animated: true, shortcut: 'KeyF' },
   { name: 'bandada', load: () => import('../bandada/js/app.js').then((m) => m.bandadaSketch), containerId: 'bandada-canvas', animated: true, shortcut: 'KeyB' },
   { name: 'deriva',  load: () => import('../deriva/js/app.js').then((m) => m.derivaSketch),   containerId: 'deriva-canvas',  animated: true, shortcut: 'KeyR' },
   { name: 'sondeo',  load: () => import('../sondeo/js/app.js').then((m) => m.sondeoSketch),   containerId: 'sondeo-canvas',  animated: true, shortcut: 'KeyS' },
@@ -83,17 +76,13 @@ function initApp(ws) {
   }
   if (ws.pending) return ws.pending;
 
-  // Vendor globals download in parallel with the sketch chunk; both must be
-  // ready before the instance is created (sketches touch globals in setup()).
-  ws.pending = Promise.all([loadSketchChunk(ws), ensureVendorLibs(...(ws.libs || []))])
-    .then(([sketch]) => {
+  // Vendor globals download in parallel with the sketch chunk and p5 constructor;
+  // all must be ready before the instance is created (sketches touch globals in setup()).
+  ws.pending = Promise.all([ws.load(), import('p5'), ensureVendorLibs(...(ws.libs || []))])
+    .then(([sketch, { default: p5 }]) => {
       const container = document.getElementById(ws.containerId);
       if (container) {
-        // usesOwnP5 workspaces resolve to `{ sketch, P5 }` and are constructed
-        // with their own bundled p5 constructor; the rest use the global `p5`.
-        ws.instance = ws.usesOwnP5
-          ? new sketch.P5(sketch.sketch, container)
-          : new p5(sketch, container);
+        ws.instance = new p5(sketch, container);
       }
       if (currentTheme === 'dark') applyThemeToInstance(ws, currentTheme);
     })
@@ -103,45 +92,6 @@ function initApp(ws) {
     });
 
   return ws.pending;
-}
-
-/**
- * Loads a workspace's sketch chunk. For `usesOwnP5` workspaces (DIFUSO runs
- * p5 2.x from npm) the global `p5` — which is the 1.x build loaded via
- * index.html's <script> tag — is hidden for the duration of the dynamic import.
- * p5 2.x's module has legacy global-mode shims (`if (typeof p5 !== 'undefined')
- * addon(p5, p5.prototype)`) that fire against whatever `window.p5` is at eval
- * time; if the 1.x global is visible they call 2.x addon fns with the wrong
- * prototype and a missing `lifecycles` arg, throwing "Cannot set properties of
- * undefined (setting 'presetup')". Hiding the global only during the import
- * (then restoring it) lets 2.x initialize cleanly without disturbing the five
- * workspaces that rely on the 1.x global. The import is memoized by the module
- * system, so this hide/restore only matters on the first (evaluating) load.
- * @param {Workspace} ws
- * @returns {Promise<*>}
- */
-function loadSketchChunk(ws) {
-  if (!ws.usesOwnP5) return ws.load();
-  const savedGlobalP5 = window.p5;
-  const hadGlobalP5 = 'p5' in window;
-  try {
-    delete window.p5;
-  } catch {
-    window.p5 = undefined;
-  }
-  const restore = () => {
-    if (hadGlobalP5) window.p5 = savedGlobalP5;
-  };
-  return ws.load().then(
-    (mod) => {
-      restore();
-      return mod;
-    },
-    (err) => {
-      restore();
-      throw err;
-    }
-  );
 }
 
 /**

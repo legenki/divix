@@ -5,12 +5,6 @@
 // into dithBuffer; gradBuffer then either gradient-maps dithBuffer or copies it
 // through; the visible p5 canvas displays gradBuffer fitted to the viewport.
 //
-// Dual-p5 note: unlike the other five workspaces (which use the global p5 1.x
-// loaded via index.html's <script>), DIFUSO imports p5 2.x from npm and exports
-// the `{ sketch, P5 }` shape main.js's `usesOwnP5` contract expects. The two p5
-// versions never share a constructor.
-
-import p5 from 'p5';
 
 import * as state from './state.js';
 import { createSource } from './source.js';
@@ -740,4 +734,4 @@ function difusoSketch(p) {
   };
 }
 
-export const difuso = { sketch: difusoSketch, P5: p5 };
+export { difusoSketch };

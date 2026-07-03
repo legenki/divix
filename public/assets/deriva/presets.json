@@ -1,0 +1,2586 @@
+{
+  "memoryFragments": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#000000"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "on",
+        "width": 1,
+        "color": "#FFFFFFAA"
+      },
+      "size": {
+        "uniform": false,
+        "x": 16,
+        "y": 10
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "none",
+          "level": 53,
+          "rate": 6.3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "off",
+            "level": "off",
+            "rate": "off"
+          }
+        },
+        "y": {
+          "type": "none",
+          "level": 86,
+          "rate": 2.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 3,
+          "rate": 1.2,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 1,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 175,
+        "rate": 2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "off",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "noise",
+        "level": 1.2,
+        "rate": 1,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 60,
+        "rate": 2,
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 4,
+        "color": {
+          "r": 31,
+          "g": 32,
+          "b": 90
+        },
+        "rate": 1.6,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "mentalFlow": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 12,
+        "y": 12
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "const",
+          "level": 10,
+          "rate": 4.5,
+          "trend": {
+            "type": "pos"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 92,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "random"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "cos",
+          "level": 6,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 25,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "noise",
+        "level": 45,
+        "rate": 1,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "none",
+        "level": 1.1,
+        "rate": 8.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 81,
+        "rate": 10,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 87,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 5.7,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "squareSnapper": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 8,
+        "y": 8
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "noise",
+          "level": 100,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 50,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 6,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 10,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "noise",
+        "level": 15,
+        "rate": 3,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "noise",
+        "level": 1.43,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 75,
+        "rate": 3,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 25,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "blendingDroplets": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "canvas",
+      "content": "live",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 9,
+        "y": 9
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "noise",
+          "level": 100,
+          "rate": 4.9,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 100,
+          "rate": 3.2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 2,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 2,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "noise",
+        "level": 5,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "noise",
+        "level": 1.75,
+        "rate": 8.9,
+        "trend": {
+          "type": "neg"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "opacity": {
+        "type": "noise",
+        "level": 90,
+        "rate": 1.5,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "tint": {
+        "type": "noise",
+        "level": 25,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 1,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "soaringMetablobs": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 10,
+        "y": 10
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "const",
+          "level": 200,
+          "rate": 1.2,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 150,
+          "rate": 2.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "sin",
+          "level": 5,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 3,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "sin",
+        "level": 20,
+        "rate": 1,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "sin",
+        "level": 1.8,
+        "rate": 3,
+        "trend": {
+          "type": "toggle"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "noise",
+        "level": 100,
+        "rate": 2,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "cos",
+        "level": 10,
+        "color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "rate": 3,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "refreshingWallpapers": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#0000007F"
+      },
+      "size": {
+        "uniform": false,
+        "x": 16.8,
+        "y": 6.98
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "none",
+          "level": 100,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 100,
+          "rate": 6,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 1,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 12,
+          "rate": 8,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 45,
+        "rate": 2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "none",
+        "level": 1.2,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "noise",
+        "level": 75,
+        "rate": 6.3,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 25,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "clockworkFans": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFFFF"
+      },
+      "size": {
+        "uniform": false,
+        "x": 35,
+        "y": 1
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "none",
+          "level": 100,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "none",
+          "level": 100,
+          "rate": 2.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "none",
+          "level": 10,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 10,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "sin",
+        "level": 180,
+        "rate": 9.9,
+        "trend": {
+          "type": "toggle"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "scale": {
+        "type": "none",
+        "level": 1.2,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 75,
+        "rate": 5,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 25,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "localTreats": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#3B8CE8"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 15,
+        "y": 15
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "none",
+          "level": 155,
+          "rate": 3.9,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 20,
+          "rate": 4.2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "sin",
+          "level": 6,
+          "rate": 7.9,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "cos",
+          "level": 3,
+          "rate": 3.8,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 145,
+        "rate": 4.1,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "noise",
+        "level": 1.13,
+        "rate": 3.2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 47,
+        "rate": 5.1,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 61,
+        "color": {
+          "r": 188,
+          "g": 21,
+          "b": 167
+        },
+        "rate": 2,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "ochreMagnetism": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#A36005"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 20,
+        "y": 20
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "noise",
+          "level": 15,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 15,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 6,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "cos",
+          "level": 6,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "noise",
+        "level": 15,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "sin",
+        "level": 1.2,
+        "rate": 1.5,
+        "trend": {
+          "type": "toggle"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "cos",
+        "level": 80,
+        "rate": 2.2,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "tint": {
+        "type": "cos",
+        "level": 85,
+        "color": {
+          "r": 162,
+          "g": 96,
+          "b": 5
+        },
+        "rate": 2.2,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      }
+    }
+  },
+  "portalFrames": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "on",
+        "width": 2,
+        "color": "#0077FF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 18,
+        "y": 18
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "noise",
+          "level": 100,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "const",
+          "level": 86,
+          "rate": 2.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "cos",
+          "level": 4,
+          "rate": 1.4,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "none",
+          "level": 2,
+          "rate": 1.6,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "cos",
+        "level": 85,
+        "rate": 2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "cos",
+        "level": 1.2,
+        "rate": 2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 49,
+        "rate": 2,
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 4,
+        "color": {
+          "r": 31,
+          "g": 32,
+          "b": 90
+        },
+        "rate": 1.6,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "continuousScanning": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "canvas",
+      "content": "live",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": false,
+        "x": 25,
+        "y": 10
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "none",
+          "level": 100,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "const",
+          "level": 100,
+          "rate": 1.8,
+          "trend": {
+            "type": "pos"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 8,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 6,
+          "rate": 2.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 45,
+        "rate": 2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "none",
+        "level": 1.2,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "noise",
+        "level": 50,
+        "rate": 10,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 25,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "recursiveEntropy": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": false,
+        "x": 1,
+        "y": 17
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "cos",
+          "level": 50,
+          "rate": 2.2,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "none",
+          "level": 100,
+          "rate": 6.2,
+          "trend": {
+            "type": "pos"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 4,
+          "rate": 6.3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "none",
+          "level": 4,
+          "rate": 1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 80,
+        "rate": 2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "none",
+        "level": 1.2,
+        "rate": 1.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "const",
+        "level": 96,
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 15,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "messingAround": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 15,
+        "y": 15
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "const",
+          "level": 191,
+          "rate": 1.1,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 53,
+          "rate": 2,
+          "trend": {
+            "type": "pos"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "sin",
+          "level": 5,
+          "rate": 1.8,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "cos",
+          "level": 5,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "cos",
+        "level": 180,
+        "rate": 2.2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "random"
+        }
+      },
+      "scale": {
+        "type": "cos",
+        "level": 1.5,
+        "rate": 2.2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 35,
+        "rate": 4.5,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 10,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 1.9,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "spawningFantasy": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": false,
+        "x": 20,
+        "y": 8
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "const",
+          "level": 165,
+          "rate": 3.1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 100,
+          "rate": 3.6,
+          "trend": {
+            "type": "pos"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "cos",
+          "level": 3,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 5,
+          "rate": 1.8,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "sin",
+        "level": 140,
+        "rate": 1.9,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "cos",
+        "level": 1.9,
+        "rate": 5,
+        "trend": {
+          "type": "neg"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "cos",
+        "level": 100,
+        "rate": 3,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 100,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 5.4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "unstableRegeneration": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "layer",
+      "content": "live",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": false,
+        "x": 30,
+        "y": 15
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "sin",
+          "level": 10,
+          "rate": 3.1,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 50,
+          "rate": 2.8,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "sin",
+          "level": 3,
+          "rate": 2.8,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "cos",
+          "level": 3,
+          "rate": 5.3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 125,
+        "rate": 2.3,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "noise",
+        "level": 1.1,
+        "rate": 8.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 81,
+        "rate": 10,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 87,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 5.7,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "redLoops": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "on",
+        "width": 10,
+        "color": "#FF00001A"
+      },
+      "size": {
+        "uniform": true,
+        "x": 11,
+        "y": 11
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "noise",
+          "level": 157,
+          "rate": 3,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 200,
+          "rate": 1.2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 15,
+          "rate": 2.6,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "random"
+          }
+        },
+        "y": {
+          "type": "none",
+          "level": 4,
+          "rate": 1.9,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 15,
+        "rate": 3,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "cos",
+        "level": 1.5,
+        "rate": 7.6,
+        "trend": {
+          "type": "neg"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "opacity": {
+        "type": "noise",
+        "level": 75,
+        "rate": 6.3,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 50,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 3,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "flyingCarpets": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "rect",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": false,
+        "x": 33,
+        "y": 1
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "const",
+          "level": 100,
+          "rate": 1.2,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "cos",
+          "level": 100,
+          "rate": 2,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 3,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 4,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "noise",
+        "level": 45,
+        "rate": 3.2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "noise",
+        "level": 1.5,
+        "rate": 2.2,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "none",
+        "level": 75,
+        "rate": 3,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 25,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "spinningTherapy": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "layer",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 12.5,
+        "y": 12.5
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "none",
+          "level": 167,
+          "rate": 6.4,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "const",
+          "level": 100,
+          "rate": 3,
+          "trend": {
+            "type": "toggle"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "cos",
+          "level": 8,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "sin",
+          "level": 2,
+          "rate": 1.5,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "random",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "const",
+        "level": 135,
+        "rate": 2.5,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "scale": {
+        "type": "none",
+        "level": 1.1,
+        "rate": 1.6,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "noise",
+        "level": 100,
+        "rate": 3.5,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 31,
+        "color": {
+          "r": 161,
+          "g": 85,
+          "b": 11
+        },
+        "rate": 3.1,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  },
+  "prismWalker": {
+    "cnv": {
+      "bg": {
+        "mode": "custom",
+        "custom": "#FFFFFF"
+      }
+    },
+    "form": {
+      "amount": {
+        "num": 20
+      },
+      "type": "ellipse",
+      "rendering": "canvas",
+      "content": "preview",
+      "frame": {
+        "value": "off",
+        "width": 2,
+        "color": "#FFFFFF7F"
+      },
+      "size": {
+        "uniform": true,
+        "x": 18,
+        "y": 18
+      }
+    },
+    "anim": {
+      "move": {
+        "x": {
+          "type": "noise",
+          "level": 5,
+          "rate": 4,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "const",
+          "level": 50,
+          "rate": 2,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "offset": {
+        "x": {
+          "type": "noise",
+          "level": 4,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        },
+        "y": {
+          "type": "noise",
+          "level": 4,
+          "rate": 3,
+          "trend": {
+            "type": "random"
+          },
+          "random": {
+            "type": "button",
+            "level": "button",
+            "rate": "button"
+          }
+        }
+      },
+      "rotate": {
+        "type": "none",
+        "level": 40,
+        "rate": 7.6,
+        "trend": {
+          "type": "random"
+        },
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      },
+      "scale": {
+        "type": "cos",
+        "level": 1.61,
+        "rate": 1.5,
+        "trend": {
+          "type": "neg"
+        },
+        "random": {
+          "type": "button",
+          "level": "random",
+          "rate": "button"
+        }
+      },
+      "opacity": {
+        "type": "cos",
+        "level": 90,
+        "rate": 5.3,
+        "random": {
+          "type": "button",
+          "level": "button",
+          "rate": "random"
+        }
+      },
+      "tint": {
+        "type": "none",
+        "level": 7,
+        "color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "rate": 1.4,
+        "random": {
+          "type": "button",
+          "color": "button",
+          "level": "button",
+          "rate": "button"
+        }
+      }
+    }
+  }
+}
