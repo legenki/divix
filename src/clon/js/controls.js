@@ -9,11 +9,11 @@ export const SECTIONS = [
         type: 'select',
         label: 'Select Data (S)',
         path: 'mode.select',
-        options: [
-          { value: SELECT_MODES.Free, label: 'Get From Selection' },
-          { value: 'buffer', label: 'Make And Use Buffer' },
-          { value: 'erase', label: 'Erase Mode (E)' }
-        ],
+        options: {
+          'Get From Selection': SELECT_MODES.Free,
+          'Make And Use Buffer': 'buffer',
+          'Erase Mode (E)': 'erase'
+        },
         regen: 'tooltips'
       },
       {
@@ -37,10 +37,10 @@ export const SECTIONS = [
         type: 'select',
         label: 'Draw Mode (M)',
         path: 'mode.draw',
-        options: [
-          { value: DRAW_MODES.Canvas, label: 'Use Source Image Data' },
-          { value: 'result', label: 'Use Canvas Data' }
-        ],
+        options: {
+          'Use Source Image Data': DRAW_MODES.Canvas,
+          'Use Canvas Data': 'result'
+        },
         regen: 'tooltips'
       },
       {
@@ -65,10 +65,10 @@ export const SECTIONS = [
         type: 'select',
         label: 'Background',
         path: 'cnv.bg.mode',
-        options: [
-          { value: BG_MODES.Custom, label: 'Custom' },
-          { value: BG_MODES.Transparent, label: 'Transparent' }
-        ],
+        options: {
+          'Custom': BG_MODES.Custom,
+          'Transparent': BG_MODES.Transparent
+        },
         regen: 'visibility'
       },
       {
@@ -83,11 +83,11 @@ export const SECTIONS = [
         type: 'select',
         label: 'Shape Type (T)',
         path: 'mode.shape',
-        options: [
-          { value: SHAPE_TYPES.Rectangle, label: 'Rectangle' },
-          { value: SHAPE_TYPES.Ellipse, label: 'Ellipse' },
-          { value: SHAPE_TYPES.Triangle, label: 'Triangle' }
-        ],
+        options: {
+          'Rectangle': SHAPE_TYPES.Rectangle,
+          'Ellipse': SHAPE_TYPES.Ellipse,
+          'Triangle': SHAPE_TYPES.Triangle
+        },
         regen: 'clipBuffer'
       },
       {
@@ -173,12 +173,12 @@ export const SECTIONS = [
         type: 'select',
         label: 'Grid Color',
         path: 'grid.color',
-        options: [
-          { value: GRID_COLORS.Black, label: 'Black' },
-          { value: GRID_COLORS.White, label: 'White' },
-          { value: GRID_COLORS.Red, label: 'Red' },
-          { value: GRID_COLORS.Blue, label: 'Blue' }
-        ],
+        options: {
+          'Black': GRID_COLORS.Black,
+          'White': GRID_COLORS.White,
+          'Red': GRID_COLORS.Red,
+          'Blue': GRID_COLORS.Blue
+        },
         regen: 'grid'
       }
     ]

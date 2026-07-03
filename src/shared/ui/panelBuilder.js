@@ -53,6 +53,13 @@ function chevronSVG() {
   return svg;
 }
 
+// Select options come in two authored shapes: { label: value } objects and
+// [{ value, label }] arrays. Both render; pick whichever reads better.
+function optionEntries(options) {
+  if (Array.isArray(options)) return options.map((o) => [o.label, o.value]);
+  return Object.entries(options);
+}
+
 function sliderAttrs(ctrl, val) {
   return { type: 'range', class: 'custom-slider', id: ctrl.id, min: ctrl.min, max: ctrl.max, step: ctrl.step, value: val };
 }
@@ -125,7 +132,7 @@ export function createPanelBuilder({
         el('span', { className: 'parameter-label', textContent: ctrl.label }),
       );
       const select = el('select', { className: 'grafema-select', id: ctrl.id });
-      for (const [label, v] of Object.entries(ctrl.options)) {
+      for (const [label, v] of optionEntries(ctrl.options)) {
         const opt = el('option', { value: v }, label);
         if (v === val) opt.selected = true;
         select.appendChild(opt);
