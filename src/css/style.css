@@ -219,6 +219,13 @@ body.theme-dark .switcher-tab.active {
   height: 100% !important;
 }
 
+/* Clon resizes its canvas to the loaded image (like the original klon
+   centerCanvas()); centre it in the space left of the control panel. */
+#clon-canvas canvas {
+  inset: 0 calc(var(--panel-width) + var(--margin-xlarge) * 2) 0 0;
+  margin: auto;
+}
+
 /* Base Panel Layout (Floating panels styled like Secuencia inspector) */
 .secuencia-panel,
 .sidebar {

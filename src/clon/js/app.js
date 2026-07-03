@@ -114,6 +114,16 @@ export function clonSketch(p) {
     }
   }
 
+  // Mirrors klon's setMaxWindowResolution(): the display canvas budget
+  // follows the window, minus the control panel (panel 260px + margins).
+  function setMaxWindowResolution() {
+    const uiOffset = 300;
+    const maxWidth = Math.min(1280, (window.innerWidth - uiOffset) * 0.85);
+    const maxHeight = Math.min(800, window.innerHeight * 0.9);
+    cnv.maxWidth = maxWidth - (maxWidth % 10);
+    cnv.maxHeight = maxHeight - (maxHeight % 10);
+  }
+
   function canvasAdjust(loadedImage) {
     let width, height, density;
     if (loadedImage.width < cnv.maxWidth && loadedImage.height < cnv.maxHeight) {
@@ -138,7 +148,7 @@ export function clonSketch(p) {
   function getMult(side) {
     let i;
     let mult = 0;
-    let size = 0;
+    let size;
     do {
       i = Math.pow(2, 3 + mult);
       size = side / i;
@@ -726,6 +736,15 @@ export function clonSketch(p) {
       deepMerge(area, data.area);
       deepMerge(mode, data.mode);
       deepMerge(grid, data.grid);
+      // Transient interaction state must not survive a reload: stale
+      // preview coords draw a phantom clone-stamp at the last cursor spot.
+      preview.coords.x1 = 0;
+      preview.coords.y1 = 0;
+      preview.coords.x2 = 0;
+      preview.coords.y2 = 0;
+      preview.select = false;
+      preview.ready = true;
+      cnv.mouseOver = false;
     }
   );
 
@@ -770,7 +789,8 @@ export function clonSketch(p) {
   p.setup = () => {
     canvasContainer = document.getElementById('clon-canvas');
     if (!canvasContainer) return;
-    
+
+    setMaxWindowResolution();
     p.createCanvas(canvasContainer.clientWidth, canvasContainer.clientHeight);
     p.rectMode(p.CORNERS);
     p.ellipseMode(p.CORNERS);
@@ -877,6 +897,12 @@ export function clonSketch(p) {
     if (p.keyCode === p.SHIFT) {
       SYS.shiftLocked = false;
     }
+  };
+
+  p.windowResized = () => {
+    // Canvas keeps its size (like the original); CSS re-centres it. Only
+    // the budget for the next image load follows the window.
+    setMaxWindowResolution();
   };
 }
 
