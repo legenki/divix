@@ -157,7 +157,9 @@ export function derivaSketch(p) {
     
     if (cnv.bg.mode === 'transparent') {
       if (!rec.capture && g.alphaImg) {
-        g.ctx.image(g.alphaImg, g.ctx.width/2, g.ctx.height/2, g.ctx.width, g.ctx.height);
+        // imageMode is CORNER here (only rectMode is CENTER), so this must
+        // draw from (0,0) — the reference's image(alphaImg, 0, 0, w, h).
+        g.ctx.image(g.alphaImg, 0, 0, g.ctx.width, g.ctx.height);
       }
     } else {
       g.ctx.push();
@@ -175,7 +177,13 @@ export function derivaSketch(p) {
     if (form.run) {
       for (let f of formArray) {
         f.run();
-        g.ctx.image(f.graphics, g.ctx.width / 2, g.ctx.height / 2);
+        // f.graphics is a full-canvas-sized buffer with the form already
+        // positioned inside it via this.graphics.translate(...) — it must be
+        // blitted at its native (0,0) corner, not re-centered. g.ctx uses the
+        // default CORNER imageMode (see setupBuffers below), so drawing at
+        // (g.ctx.width/2, g.ctx.height/2) shifted every form half a canvas
+        // right and down from where it was actually placed.
+        g.ctx.image(f.graphics, 0, 0);
       }
     }
 
@@ -183,7 +191,8 @@ export function derivaSketch(p) {
 
     if (cnv.mouseOver && !isLoadImage) {
       drawPreview();
-      g.ctx.image(g.preview, g.ctx.width/2, g.ctx.height/2, g.ctx.width, g.ctx.height);
+      // Same CORNER-imageMode reasoning as above — reference draws at (0,0).
+      g.ctx.image(g.preview, 0, 0, g.ctx.width, g.ctx.height);
       // We'll draw preview graphics directly onto the visible canvas in blitToVisible
     }
   }
@@ -573,7 +582,7 @@ export function derivaSketch(p) {
 
   p.draw = () => {
     if (!isReady) return;
-    
+
     // Check mouse bounds manually
     if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       cnv.mouseOver = true;
@@ -581,7 +590,7 @@ export function derivaSketch(p) {
     } else {
       cnv.mouseOver = false;
     }
-    
+
     drawScene();
     blitToVisible();
   };
