@@ -651,7 +651,12 @@ function difusoSketch(p) {
       p.WEBGL
     );
     canvas.parent(canvasContainer);
-    p.pixelDensity(1);
+    // Must match cnv.density.base (setupBuffers() below): the dither/halftone
+    // shaders read p.pixelDensity() to size their UV grid against the effect
+    // buffers. A mismatch here doesn't error, it just makes the shader think
+    // the buffer is a different resolution than it really is, which makes
+    // its pattern wrap and tile across the canvas.
+    p.pixelDensity(cnv.density.base);
     p.imageMode(p.CENTER);
     p.noStroke();
     p.frameRate(rec.frameRate);
