@@ -879,6 +879,20 @@ select:focus {
   background: var(--accent-hover);
 }
 
+/* Square icon-only action button (e.g. "randomize") paired with a wide
+   button alongside it — see the Canvas section's Random/Upload row. */
+.btn-square {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-square svg {
+  width: 14px;
+  height: 14px;
+}
+
 .btn-secondary {
   background: var(--bg-input);
   color: var(--text-secondary);

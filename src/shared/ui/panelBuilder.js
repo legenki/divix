@@ -234,7 +234,11 @@ export function createPanelBuilder({
       });
 
     } else if (ctrl.type === 'icon-button') {
-      const btn = el('button', { id: ctrl.id, className: 'btn btn-icon', title: ctrl.label });
+      // 'square' variant renders a visible, fixed-width button (paired next
+      // to a wide button via ctrl.pair) instead of the default borderless
+      // inline icon button.
+      const className = ctrl.variant === 'square' ? 'btn btn-secondary btn-square' : 'btn btn-icon';
+      const btn = el('button', { id: ctrl.id, className, title: ctrl.label });
       btn.innerHTML = ctrl.icon; // ctrl.icon is trusted SVG from our own controls.js
       row.appendChild(btn);
       btn.addEventListener('click', () => {
