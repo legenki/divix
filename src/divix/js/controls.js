@@ -62,7 +62,7 @@ export const SECTIONS = [
     controls: [
       // PNG/MP4/SVG trigger buttons and the export-status monitor live in the
       // footer (template.html), not here.
-      { id: 'dx-export-size', type: 'slider', label: 'Export Size', path: 'cnv.density.export', min: 2, max: 10, step: 0.25 },
+      { id: 'dx-export-size', type: 'slider', label: 'Export Size (px)', path: 'cnv.density.export', min: 500, max: 4000, step: 100 },
       { id: 'dx-export-quality', type: 'slider', label: 'Export Quality', path: 'rec.quality', min: 0, max: 100, step: 5 },
     ],
   },

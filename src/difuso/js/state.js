@@ -15,7 +15,7 @@ export const cnv = {
   preset: "User Preset",
   density: {
     base: 2,
-    export: 3
+    export: 2000
   },
   sens: {
     x: 0.5,

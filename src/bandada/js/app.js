@@ -453,25 +453,50 @@ export function bandadaSketch(p) {
     if (el) el.innerText = msg;
   }
 
+  async function withHighResExport(fn) {
+    const savedBase = cnv.density.base;
+    try {
+      const maxScreen = Math.max(p.width, p.height);
+      const targetEdge = cnv.density.export || 1000;
+      const exportDensity = Math.max(1, targetEdge / maxScreen);
+      
+      cnv.density.base = exportDensity;
+      p.pixelDensity(exportDensity);
+      setupBuffers();
+      
+      await fn();
+    } finally {
+      cnv.density.base = savedBase;
+      p.pixelDensity(1);
+      setupBuffers();
+      drawScene();
+      blitToVisible();
+    }
+  }
+
   function doExportPNG() {
-    drawScene();
-    blitToVisible();
-    exportPNG(p, 'bandada');
+    withHighResExport(() => {
+      drawScene();
+      blitToVisible();
+      exportPNG(p, 'bandada');
+    });
   }
 
   function doExportMP4() {
     recVideo.seconds = rec.length.value;
-    return exportMP4({
-      p,
-      prefix: 'bandada',
-      cnv,
-      rec,
-      recVideo,
-      drawComposite: () => {
-        drawScene();
-        blitToVisible();
-      },
-      setStatus,
+    return withHighResExport(() => {
+      return exportMP4({
+        p,
+        prefix: 'bandada',
+        cnv,
+        rec,
+        recVideo,
+        drawComposite: () => {
+          drawScene();
+          blitToVisible();
+        },
+        setStatus,
+      });
     });
   }
 

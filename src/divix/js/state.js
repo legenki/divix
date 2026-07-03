@@ -37,7 +37,7 @@ export const cnv = {
   },
   density: {
     base: 2,
-    export: 4
+    export: 2000
   },
   color: {
     mode: "custom",

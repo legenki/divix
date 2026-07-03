@@ -513,21 +513,45 @@ function difusoSketch(p) {
     if (el) el.innerText = msg;
   }
 
+  async function withHighResExport(fn) {
+    const savedBase = cnv.density.base;
+    try {
+      const maxScreen = Math.max(p.width, p.height);
+      const targetEdge = cnv.density.export || 1000;
+      const exportDensity = Math.max(1, targetEdge / maxScreen);
+      
+      cnv.density.base = exportDensity;
+      p.pixelDensity(exportDensity);
+      setupBuffers();
+      
+      await fn();
+    } finally {
+      cnv.density.base = savedBase;
+      p.pixelDensity(1);
+      setupBuffers();
+      drawCanvas();
+    }
+  }
+
   function doExportPNG() {
-    drawCanvas();
-    exportPNG(p, 'difuso');
+    withHighResExport(() => {
+      drawCanvas();
+      exportPNG(p, 'difuso');
+    });
   }
 
   function doExportMP4() {
     recVideo.seconds = readMp4Length();
-    return exportMP4({
-      p,
-      prefix: 'difuso',
-      cnv,
-      rec,
-      recVideo,
-      drawComposite: drawCanvas,
-      setStatus,
+    return withHighResExport(() => {
+      return exportMP4({
+        p,
+        prefix: 'difuso',
+        cnv,
+        rec,
+        recVideo,
+        drawComposite: drawCanvas,
+        setStatus,
+      });
     });
   }
 

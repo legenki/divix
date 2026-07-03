@@ -73,7 +73,8 @@ export async function exportMP4({
   encoder.width = w;
   encoder.height = h;
   encoder.frameRate = rec.frameRate;
-  encoder.quantizationParameter = 22;
+  // rec.quality (0-100), where 100 is best quality (quantization parameter 10) and 0 is worst (51)
+  encoder.quantizationParameter = Math.round(p.map(rec.quality ?? 80, 0, 100, 51, 10));
   encoder.groupOfPictures = 1;
   encoder.initialize();
 
@@ -84,7 +85,7 @@ export async function exportMP4({
 
   try {
     for (let f = 0; f < totalFrames; f++) {
-      cnv.frame = Math.round((f / totalFrames) * (rec.length.value * rec.frameRate));
+      cnv.frame = f % Math.max(1, (rec.length.value * rec.frameRate));
       drawComposite();
       copyCtx.clearRect(0, 0, w, h);
       copyCtx.drawImage(p.canvas, 0, 0, w, h);

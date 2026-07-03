@@ -616,27 +616,52 @@ export function divixSketch(p) {
     p.image(gDraw, p.width / 2, p.height / 2, gDraw.width * scale, gDraw.height * scale);
   }
 
+  async function withHighResExport(fn) {
+    const savedBase = cnv.density.base;
+    try {
+      const maxScreen = Math.max(p.width, p.height);
+      const targetEdge = cnv.density.export || 1000;
+      const exportDensity = Math.max(1, targetEdge / maxScreen);
+      
+      cnv.density.base = exportDensity;
+      p.pixelDensity(exportDensity);
+      setupBuffers();
+      
+      await fn();
+    } finally {
+      cnv.density.base = savedBase;
+      p.pixelDensity(1);
+      setupBuffers();
+      drawScene();
+      blitToVisible();
+    }
+  }
+
   function doExportPNG() {
-    // Render one frame and blit to the visible canvas so the shared exportPNG
-    // (which saves p.canvas) captures the current composite.
-    drawScene();
-    blitToVisible();
-    exportPNG(p, 'divix');
+    withHighResExport(() => {
+      // Render one frame and blit to the visible canvas so the shared exportPNG
+      // (which saves p.canvas) captures the current composite.
+      drawScene();
+      blitToVisible();
+      exportPNG(p, 'divix');
+    });
   }
 
   function doExportMP4() {
     recVideo.seconds = readMp4Length();
-    return exportMP4({
-      p,
-      prefix: 'divix',
-      cnv,
-      rec,
-      recVideo,
-      drawComposite: () => {
-        drawScene();
-        blitToVisible();
-      },
-      setStatus,
+    return withHighResExport(() => {
+      return exportMP4({
+        p,
+        prefix: 'divix',
+        cnv,
+        rec,
+        recVideo,
+        drawComposite: () => {
+          drawScene();
+          blitToVisible();
+        },
+        setStatus,
+      });
     });
   }
 

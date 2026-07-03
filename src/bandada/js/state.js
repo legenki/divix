@@ -92,7 +92,7 @@ export const cnv = {
   preset: "User Preset",
   density: {
     base: 3,
-    export: 4
+    export: 2000
   },
   ratio: "1:1",
   animation: true,

@@ -119,13 +119,6 @@ const FONT_NAME_OPTIONS = Object.fromEntries(
 
 export const SECTIONS = [
   {
-    title: 'Canvas',
-    controls: [
-      { id: 'df-ratio', type: 'select', label: 'Canvas Ratio', path: 'cnv.ratio', options: RATIO_TYPES, regen: 'canvas' },
-      { id: 'df-scale', type: 'slider', label: 'Canvas Scale', path: 'cnv.scale', min: 0.5, max: 1, step: 0.002 },
-    ],
-  },
-  {
     title: 'Dither',
     controls: [
       { id: 'df-dither-type', type: 'select', label: 'Dither Type', path: 'dither.type', options: DITHER_TYPES, regen: 'ditherType' },
@@ -208,7 +201,7 @@ export const SECTIONS = [
       // monitor live in the footer (template.html), not here.
       // Export Size range (min 1, max 5, step 1) is DIFUSO's own (ui.js:895-897) —
       // deliberately NOT DIVIX's 2-10/0.25 range.
-      { id: 'df-export-size', type: 'slider', label: 'Export Size', path: 'cnv.density.export', min: 1, max: 5, step: 1 },
+      { id: 'df-export-size', type: 'slider', label: 'Export Size (px)', path: 'cnv.density.export', min: 500, max: 4000, step: 100 },
       { id: 'df-export-quality', type: 'slider', label: 'Export Quality', path: 'rec.quality', min: 0, max: 100, step: 5 },
     ],
   },
