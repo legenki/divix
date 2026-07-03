@@ -523,12 +523,14 @@ function difusoSketch(p) {
       cnv.density.base = exportDensity;
       p.pixelDensity(exportDensity);
       setupBuffers();
+      wireFactories();
       
       await fn();
     } finally {
       cnv.density.base = savedBase;
       p.pixelDensity(1);
       setupBuffers();
+      wireFactories();
       drawCanvas();
     }
   }

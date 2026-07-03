@@ -129,7 +129,9 @@ export function bandadaSketch(p) {
       gAlpha.pixelDensity(cnv.density.base);
     } else {
       g.ctx.resizeCanvas(targetWidth, targetHeight);
+      g.ctx.pixelDensity(cnv.density.base);
       gAlpha.resizeCanvas(targetWidth, targetHeight);
+      gAlpha.pixelDensity(cnv.density.base);
     }
 
     g.width = g.ctx.width;
