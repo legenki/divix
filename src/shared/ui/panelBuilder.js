@@ -86,14 +86,19 @@ export function createPanelBuilder({
   onSliderInput,
 }) {
   function buildControl(ctrl, compact = false) {
+    // Deriva and Sondeo author their sliders as type: 'range' (matching the
+    // <input type=range> it becomes); every other workspace uses 'slider'.
+    // Both mean the same control — normalize here instead of forking the
+    // renderer.
+    const isSlider = ctrl.type === 'slider' || ctrl.type === 'range';
     const row = el('div', {
-      className: compact && ctrl.type === 'slider' ? 'parameter-row compact' : 'parameter-row',
+      className: compact && isSlider ? 'parameter-row compact' : 'parameter-row',
       'data-control-id': ctrl.id,
       ...(ctrl.group ? { 'data-group': ctrl.group } : {}),
     });
     const val = ctrl.path ? getByPath(state, ctrl.path) : undefined;
 
-    if (ctrl.type === 'slider') {
+    if (isSlider) {
       const slide = el('input', sliderAttrs(ctrl, val));
       const numWrap = el('div', { className: 'num-input-wrapper' }, el('input', numAttrs(ctrl, val)));
       const num = numWrap.querySelector('input');
@@ -284,7 +289,7 @@ export function createPanelBuilder({
         const el = document.getElementById(ctrl.id);
         if (!el) continue;
         const val = ctrl.path ? getByPath(state, ctrl.path) : undefined;
-        if (ctrl.type === 'slider') {
+        if (ctrl.type === 'slider' || ctrl.type === 'range') {
           el.value = val;
           const num = document.getElementById(`${ctrl.id}-num`);
           if (num) num.value = val;

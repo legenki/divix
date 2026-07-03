@@ -387,6 +387,23 @@ export function derivaSketch(p) {
     deepMerge(form, preset.form);
     deepMerge(anim, preset.anim);
     deepMerge(rec, preset.rec);
+
+    // Presets store form.size.x/y as a 1-100 percentage of the current
+    // image's size range (see the reference's presetChange()), not raw
+    // pixels — map them into form.size.min..max AFTER the merge above,
+    // using the range for the image that's actually loaded right now.
+    if (preset.form?.size?.x !== undefined) {
+      form.size.x = Math.round(p.map(preset.form.size.x, 1, 100, form.size.min, form.size.max.width));
+    }
+    if (preset.form?.size?.y !== undefined) {
+      form.size.y = Math.round(p.map(preset.form.size.y, 1, 100, form.size.min, form.size.max.height));
+    }
+    if (preset.form?.size?.uniform) {
+      const s = Math.min(form.size.x, form.size.y);
+      form.size.x = s;
+      form.size.y = s;
+    }
+
     clearAllForms();
     generateForms();
     syncUIFromState();
@@ -394,7 +411,14 @@ export function derivaSketch(p) {
   }
 
   function exportPreset() {
-    downloadPresetJSON(`deriva-preset-${timestamp()}.json`, serializeState());
+    // Presets store form.size.x/y as a 1-100 percentage (see applyPreset),
+    // so invert the pixel value back to a percentage on the way out —
+    // otherwise re-importing this file would shrink the forms again.
+    const data = serializeState();
+    data.form.size.x = Math.round(p.map(form.size.x, form.size.min, form.size.max.width, 1, 100) * 100) / 100;
+    data.form.size.y = Math.round(p.map(form.size.y, form.size.min, form.size.max.height, 1, 100) * 100) / 100;
+    data.form.size.uniform = form.size.x === form.size.y;
+    downloadPresetJSON(`deriva-preset-${timestamp()}.json`, data);
   }
 
   function importPreset() {
