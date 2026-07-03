@@ -8,11 +8,9 @@ import { startScanning, prepareShade } from './scan.js';
 import { shiftXMode, shiftYMode, restartShiftXAnimation, restartShiftYAnimation } from './shift.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
-import { timestamp } from '../../shared/utils/datetime.js';
-import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG, exportMP4 } from '../../shared/utils/exportMedia.js';
-import { createPanelBuilder, buildPresetSection, openSections } from '../../shared/ui/panelBuilder.js';
+import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
 const STORAGE_KEY = 'sondeo-tool';
 
@@ -81,24 +79,19 @@ export function scanArea(p) {
 export function sondeoSketch(p) {
   let canvasContainer;
   let isReady = false;
-  let PRESETS = {};
-  
+
   const recVideo = { active: false, seconds: 10 };
-  
+
   const fullState = { cnv, maask, scan, shade, grain, params, layout, shift, scaling, rotation, maap, ...pickOptionMaps(state) };
   const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
 
+  // Sondeo has no factory presets — the panel starts straight at the
+  // workspace's own sections, no Preset List / Export / Import section.
   function buildUI() {
     const root = document.getElementById('sn-controls');
     if (!root) return;
     root.innerHTML = '';
 
-    buildPresetSection(root, {
-      idPrefix: 'sn',
-      presets: PRESETS,
-      onExport: exportPreset,
-      onImport: importPreset,
-    });
     panel.buildSections(root, SECTIONS);
     openSections(root, [0, 1]);
     refreshVisibility();
@@ -431,44 +424,13 @@ export function sondeoSketch(p) {
     }
   );
 
-  function applyPreset(preset) {
-    if (!preset) return;
-    deepMerge(cnv, preset.cnv);
-    deepMerge(maask, preset.maask);
-    deepMerge(scan, preset.scan);
-    deepMerge(shade, preset.shade);
-    deepMerge(grain, preset.grain);
-    deepMerge(params, preset.params);
-    deepMerge(layout, preset.layout);
-    deepMerge(shift, preset.shift);
-    deepMerge(scaling, preset.scaling);
-    deepMerge(rotation, preset.rotation);
-    
-    changeLayout();
-    syncUIFromState();
-    saveState();
-  }
-
-  function exportPreset() {
-    downloadPresetJSON(`sondeo-preset-${timestamp()}.json`, serializeState());
-  }
-
-  function importPreset() {
-    openPresetFile((data) => applyPreset(data), () => setStatus('Invalid preset file'));
-  }
-
-  function setStatus(msg) {
-    const el = document.getElementById('sn-export-status');
-    if (el) el.innerText = msg;
-  }
-
   function doExportPNG() {
     if (!g.result) return;
     let s = p.createGraphics(g.result.width, g.result.height);
     s.pixelDensity(1);
     s.background(cnv.bgResult);
     s.image(g.result, 0, 0);
-    exportPNG(s, 'sondeo');
+    exportPNG(p, 'sondeo', s);
     s.remove();
   }
   
@@ -490,7 +452,7 @@ export function sondeoSketch(p) {
     );
     s.background(cnv.bgResult);
     s.image(img, 0, 0);
-    exportPNG(s, 'sondeo-mask');
+    exportPNG(p, 'sondeo-mask', s);
     s.remove();
   }
 
@@ -524,31 +486,17 @@ export function sondeoSketch(p) {
       document.body.appendChild(fileInput);
     }
 
-    const restored = loadState();
+    loadState();
 
     p.loadImage(`${import.meta.env.BASE_URL}assets/sondeo/default.jpg`, (img) => {
       imageReadytoUse(img);
       isReady = true;
     });
 
-    fetch(`${import.meta.env.BASE_URL}assets/sondeo/presets.json`)
-      .then((r) => r.json())
-      .then((d) => { PRESETS = d; })
-      .catch((e) => console.warn('[sondeo] presets load failed:', e))
-      .finally(() => {
-        buildUI();
-        if (restored) {
-          syncUIFromState();
-        } else if (Object.keys(PRESETS).length) {
-          const keys = Object.keys(PRESETS);
-          applyPreset(PRESETS[keys[0]]);
-        } else {
-          syncUIFromState();
-        }
-        
-        document.getElementById('sn-btn-save-png')?.addEventListener('click', doExportPNG);
-        document.getElementById('sn-btn-save-mask')?.addEventListener('click', doExportMask);
-      });
+    buildUI();
+    syncUIFromState();
+    document.getElementById('sn-btn-save-png')?.addEventListener('click', doExportPNG);
+    document.getElementById('sn-btn-save-mask')?.addEventListener('click', doExportMask);
   };
 
   p.draw = () => {

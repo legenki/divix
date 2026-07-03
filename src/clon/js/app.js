@@ -2,11 +2,9 @@ import * as state from './state.js';
 import { SECTIONS } from './controls.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
-import { timestamp } from '../../shared/utils/datetime.js';
-import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG } from '../../shared/utils/exportMedia.js';
-import { createPanelBuilder, buildPresetSection, openSections } from '../../shared/ui/panelBuilder.js';
+import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
 const STORAGE_KEY = 'klon-tool';
 
@@ -15,22 +13,17 @@ const { cnv, preview, form, area, mode, grid, g, SYS } = state;
 export function clonSketch(p) {
   let canvasContainer;
   let isReady = false;
-  let PRESETS = {};
-  
+
   const fullState = { cnv, preview, form, area, mode, grid, ...pickOptionMaps(state) };
   const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
 
+  // Klon has no factory presets — the panel starts straight at the
+  // workspace's own sections, no Preset List / Export / Import section.
   function buildUI() {
     const root = document.getElementById('cl-controls');
     if (!root) return;
     root.innerHTML = '';
 
-    buildPresetSection(root, {
-      idPrefix: 'cl',
-      presets: PRESETS,
-      onExport: exportPreset,
-      onImport: importPreset,
-    });
     panel.buildSections(root, SECTIONS);
     openSections(root, [0, 1]);
     refreshVisibility();
@@ -748,32 +741,6 @@ export function clonSketch(p) {
     }
   );
 
-  function applyPreset(preset) {
-    if (!preset) return;
-    deepMerge(cnv, preset.cnv);
-    deepMerge(preview, preset.preview);
-    deepMerge(form, preset.form);
-    deepMerge(area, preset.area);
-    deepMerge(mode, preset.mode);
-    deepMerge(grid, preset.grid);
-    
-    syncUIFromState();
-    saveState();
-  }
-
-  function exportPreset() {
-    downloadPresetJSON(`clon-preset-${timestamp()}.json`, serializeState());
-  }
-
-  function importPreset() {
-    openPresetFile((data) => applyPreset(data), () => setStatus('Invalid preset file'));
-  }
-
-  function setStatus(msg) {
-    const el = document.getElementById('cl-export-status');
-    if (el) el.innerText = msg;
-  }
-
   function doExportPNG() {
     if (!g.result) return;
     let s = p.createGraphics(g.result.width, g.result.height);
@@ -781,7 +748,7 @@ export function clonSketch(p) {
     if (cnv.bg.mode === 'custom') s.background(cnv.bg.custom);
     if (cnv.source) s.image(g.imgSource, 0, 0);
     if (cnv.result) s.image(g.result, 0, 0);
-    exportPNG(s, 'clon');
+    exportPNG(p, 'clon', s);
     s.remove();
   }
 
@@ -815,30 +782,16 @@ export function clonSketch(p) {
       document.body.appendChild(fileInput);
     }
 
-    const restored = loadState();
+    loadState();
 
     p.loadImage(`${import.meta.env.BASE_URL}assets/clon/default.jpg`, (img) => {
       imageReadytoUse(p, img);
       isReady = true;
-    });
 
-    fetch(`${import.meta.env.BASE_URL}assets/clon/presets.json`)
-      .then((r) => r.json())
-      .then((d) => { PRESETS = d; })
-      .catch((e) => console.warn('[clon] presets load failed:', e))
-      .finally(() => {
-        buildUI();
-        if (restored) {
-          syncUIFromState();
-        } else if (Object.keys(PRESETS).length) {
-          const keys = Object.keys(PRESETS);
-          applyPreset(PRESETS[keys[0]]);
-        } else {
-          syncUIFromState();
-        }
-        
-        document.getElementById('cl-btn-save-png')?.addEventListener('click', doExportPNG);
-      });
+      buildUI();
+      syncUIFromState();
+      document.getElementById('cl-btn-save-png')?.addEventListener('click', doExportPNG);
+    });
   };
 
   p.draw = () => {
