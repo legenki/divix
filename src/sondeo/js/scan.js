@@ -11,8 +11,7 @@ export function startScanning(p) {
       mod = size % scan.speed;
       if (scan.position <= scan.area.x2 - mod) {
         let c = g.source.get(scan.position, scan.area.y1, scan.speed, scan.area.y2 - scan.area.y1);
-        if (shade.apply === "none" && grain.type === "none") {
-        } else c = modifyScan(p, c);
+        if (shade.apply !== "none" || grain.type !== "none") c = modifyScan(p, c);
         g.result.set(scan.position, scan.area.y1, c);
         scan.position += scan.speed;
       } else {
@@ -25,8 +24,7 @@ export function startScanning(p) {
       mod = size % scan.speed;
       if (scan.position <= scan.area.y2 - mod) {
         let c = g.source.get(scan.area.x1, scan.position, scan.area.x2 - scan.area.x1, scan.speed);
-        if (shade.apply === "none" && grain.type === "none") {
-        } else c = modifyScan(p, c);
+        if (shade.apply !== "none" || grain.type !== "none") c = modifyScan(p, c);
         g.result.set(scan.area.x1, scan.position, c);
         scan.position += scan.speed;
       } else {

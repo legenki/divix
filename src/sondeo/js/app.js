@@ -107,21 +107,72 @@ export function sondeoSketch(p) {
   function applyChange(ctrl) {
     if (ctrl.regen === 'layout') {
       changeLayout();
+    } else if (ctrl.regen === 'scan') {
+      // Scan direction changed — recompute ratio/frame for the new axis.
+      scan.action = false;
+      scanArea(p);
     } else if (ctrl.action === 'resetScan') {
       resetScan();
     } else if (ctrl.action === 'startScan') {
-      scan.action = !scan.action;
-      if (!scan.action) scanComplete(p);
-    } else if (ctrl.action === 'copyResult') {
+      startScan();
+    } else if (ctrl.action === 'useResult') {
       copyResult();
+    } else if (ctrl.action === 'toggleMask') {
+      changeMode();
     } else if (ctrl.action === 'resetMask') {
       resetMask();
+    } else if (ctrl.action === 'resetTransform') {
+      resetTransform();
+    } else if (ctrl.action === 'stopAnimations') {
+      stopAnimations();
+    } else if (ctrl.action === 'exportPNG') {
+      doExportPNG();
     } else if (ctrl.action === 'upload') {
       const el = document.getElementById('sn-hidden-file-input');
       if (el) el.click();
+    } else if (ctrl.action === 'randomImage') {
+      loadRandomImage();
     }
     refreshVisibility();
     saveState();
+  }
+
+  function startScan() {
+    if (params.mode !== "scan") changeMode();
+    scan.action = !scan.action;
+  }
+
+  function changeMode() {
+    scan.action = false;
+    params.mode === "mask" ? (params.mode = "scan") : (params.mode = "mask");
+  }
+
+  function resetTransform() {
+    shift.base.x = 0;
+    shift.base.y = 0;
+    scaling.base = 100;
+    rotation.base = 0;
+    syncUIFromState();
+  }
+
+  function stopAnimations() {
+    shift.type.x = "none";
+    shift.type.y = "none";
+    scaling.type = "none";
+    rotation.type = "none";
+    restartShiftXAnimation();
+    restartShiftYAnimation();
+    restartScalingAnimation();
+    restartRotationAnimation();
+    syncUIFromState();
+  }
+
+  function loadRandomImage() {
+    isReady = false;
+    p.loadImage(g.texture.default, (img) => {
+      imageReadytoUse(img);
+      isReady = true;
+    }, () => { isReady = true; });
   }
 
   function changeLayout() {
@@ -258,26 +309,84 @@ export function sondeoSketch(p) {
     scanArea(p);
   }
 
-  function drawScene() {
-    if (scan.action && params.frame % params.skip === 0) {
-      if (g.source) {
-        g.source.clear();
-        g.source.push();
-        g.source.translate(g.source.width / 2, g.source.height / 2);
-        shiftXMode(p);
-        shiftYMode(p);
-        scalingMode(p);
-        rotationMode(p);
-        if (g.imgSource) g.source.image(g.imgSource, 0, 0);
-        g.source.pop();
-        startScanning(p);
-      }
+  // Mirrors the original skaaan drawCanvas(): the source buffer is rebuilt
+  // every frame (so mouse drag and animations preview live, not only while
+  // scanning), then the scan head advances, then the layout is composited
+  // around the window centre.
+  function drawCanvas() {
+    p.push();
+    p.translate(p.width / 2 - cnv.width / 2, p.height / 2 - cnv.height / 2);
+
+    g.source.clear();
+    g.source.push();
+    g.source.translate(g.source.width / 2, g.source.height / 2);
+
+    translateMouse();
+
+    if (params.mode === "scan") maapUse(p);
+
+    g.source.translate(maap.translate.x, maap.translate.y);
+
+    shiftXMode(p);
+    shiftYMode(p);
+    scalingMode(p);
+    rotationMode(p);
+
+    g.source.image(g.imgSource, 0, 0, g.imgSource.width, g.imgSource.height);
+    g.source.pop();
+
+    if (scan.action) {
+      params.frame += scan.speed;
+      startScanning(p);
     }
-  
-    if (scan.action) params.frame++;
-  
-    p.background(220); // Default background if needed, will be covered by layoutMode
+
     layoutMode(p);
+    p.pop();
+  }
+
+  // Maps the window-space mouse into source-image coordinates (params.mouse)
+  // and display coordinates (params.cmouse); mask drawing depends on this.
+  function translateMouse() {
+    let posX = 0;
+    let posY = 0;
+
+    if (layout.mode === "side") {
+      posX = p.constrain(
+        posX,
+        p.mouseX - (p.width / 2 - cnv.width - cnv.offSide + cnv.uiSize),
+        p.width / 2 - cnv.offSide
+      );
+    } else if (layout.mode === "layer") {
+      posX = p.constrain(
+        posX,
+        p.mouseX - (p.width / 2 - cnv.width / 2 - cnv.offSide + cnv.uiSize),
+        p.width / 2 - cnv.offSide
+      );
+    }
+
+    posY = p.constrain(posY, p.mouseY - (p.height / 2 - cnv.height / 2), p.height / 2 + cnv.height / 2);
+    posX = p.map(posX, 0, cnv.width, 0, g.source.width);
+    posY = p.map(posY, 0, cnv.height, 0, g.source.height);
+    posX = Math.floor(p.constrain(posX, 0, g.source.width));
+    posY = Math.floor(p.constrain(posY, 0, g.source.height));
+
+    params.mouse.x = posX;
+    params.mouse.y = posY;
+    params.cmouse.x = posX / cnv.density;
+    params.cmouse.y = posY / cnv.density;
+  }
+
+  function loadingImageText() {
+    p.push();
+    p.translate(p.width / 2, p.height / 2);
+    p.noStroke();
+    p.textSize(18);
+    p.textAlign(p.CENTER);
+    p.fill(0);
+    p.text("LOADING IMAGE", 0, 0);
+    p.fill(220, p.map(p.sin(p.frameCount / 10), -1, 1, 0, 255));
+    p.text("LOADING IMAGE", 0, 0);
+    p.pop();
   }
 
   // --- Persistence ---
@@ -311,6 +420,14 @@ export function sondeoSketch(p) {
       deepMerge(shift, data.shift);
       deepMerge(scaling, data.scaling);
       deepMerge(rotation, data.rotation);
+      // Transient runtime flags must not survive a reload: a persisted
+      // scan.action=true would autostart scanning into a stale buffer.
+      scan.action = false;
+      scan.position = 0;
+      params.mode = "scan";
+      params.frame = 0;
+      maask.first = true;
+      maask.draw = false;
     }
   );
 
@@ -381,9 +498,13 @@ export function sondeoSketch(p) {
   p.setup = () => {
     canvasContainer = document.getElementById('sondeo-canvas');
     if (!canvasContainer) return;
-    p.createCanvas(canvasContainer.clientWidth, canvasContainer.clientHeight);
-    p.pixelDensity(1);
-    p.imageMode(p.CENTER);
+    const canvasEl = p.createCanvas(canvasContainer.clientWidth, canvasContainer.clientHeight);
+    canvasEl.mouseOver(() => { cnv.canvasOver = true; });
+    canvasEl.mouseOut(() => { cnv.canvasOver = false; });
+    // Original skaaan runs the display canvas at density 2 and rectMode
+    // CORNERS everywhere (layout.js draws rects as x1,y1,x2,y2).
+    p.pixelDensity(2);
+    p.rectMode(p.CORNERS);
 
     let fileInput = document.getElementById('sn-hidden-file-input');
     if (!fileInput) {
@@ -431,19 +552,76 @@ export function sondeoSketch(p) {
   };
 
   p.draw = () => {
-    if (!isReady) return;
-    
-    if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      cnv.mouseOver = true;
-      params.mouse.x = p.mouseX;
-      params.mouse.y = p.mouseY;
-    } else {
-      cnv.mouseOver = false;
+    p.clear();
+    // Mask mode dims the page behind the canvas with translucent red,
+    // exactly like the original (params.bg alpha 0.5 vs 0).
+    if (params.mode === "mask") p.background(255, 0, 0, 127);
+
+    if (!isReady || !g.imgSource || !g.source) {
+      loadingImageText();
+      return;
     }
-    
+
     p.cursor(p.CROSS);
-    maapUse(p);
-    drawScene();
+    drawCanvas();
+  };
+
+  // Original gates mask interaction on a press that starts inside the
+  // canvas area, not on hover.
+  p.mousePressed = () => {
+    if (
+      params.cmouse.x > 1 &&
+      params.cmouse.x < cnv.width - 1 &&
+      params.cmouse.y > 1 &&
+      params.cmouse.y < cnv.height - 1
+    ) {
+      cnv.mouseOver = true;
+    } else if (params.mode === "mask" && cnv.canvasOver) {
+      cnv.mouseOver = true;
+    }
+  };
+
+  p.mouseReleased = () => {
+    cnv.mouseOver = false;
+  };
+
+  p.keyPressed = (e) => {
+    // Only react while the Sondeo tab is active and focus is not in a field.
+    const view = document.getElementById('app-sondeo');
+    if (!view || !view.classList.contains('active')) return;
+    const t = document.activeElement;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+    if (e && (e.altKey || e.metaKey || e.ctrlKey)) return;
+
+    switch (p.keyCode) {
+      case 32: // Space — start/stop scan
+        startScan();
+        e?.preventDefault();
+        break;
+      case 68: // D — download result
+        doExportPNG();
+        break;
+      case 82: // R — restart scan
+        resetScan();
+        break;
+      case 84: // T — reset transformations
+        resetTransform();
+        break;
+      case 77: // M / Shift+M — mask mode / reset mask
+        p.keyIsDown(p.SHIFT) ? resetMask() : changeMode();
+        break;
+      case 76: // L — toggle layout
+        layout.mode = layout.mode === "side" ? "layer" : "side";
+        changeLayout();
+        syncUIFromState();
+        break;
+      case 83: // S — toggle scan direction
+        scan.type = scan.type === "horizontal" ? "vertical" : "horizontal";
+        scan.action = false;
+        scanArea(p);
+        syncUIFromState();
+        break;
+    }
   };
 
   p.windowResized = () => {

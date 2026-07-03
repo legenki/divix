@@ -26,6 +26,18 @@ export const SECTIONS = [
         action: "useResult"
       },
       {
+        id: "sn-start-scan",
+        type: "button",
+        label: "Start / Stop Scan (Space)",
+        action: "startScan"
+      },
+      {
+        id: "sn-reset-scan",
+        type: "button",
+        label: "Restart Scan (R)",
+        action: "resetScan"
+      },
+      {
         id: "sn-scan-dir",
         type: "select",
         label: "Scan Direction",

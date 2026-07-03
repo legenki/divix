@@ -232,10 +232,9 @@ function checkBoard(p, width, height, frameOffset) {
   p.noStroke();
   p.fill(cnv.bgSource);
   p.rect(-frameOffset, -frameOffset, cnv.width + frameOffset, cnv.height + frameOffset);
-  let i = 0;
   let size = 11;
   let xBool = true;
-  let yBool = true;
+  let yBool;
 
   let modY = height % size;
   let modX = width % size;
@@ -244,7 +243,7 @@ function checkBoard(p, width, height, frameOffset) {
 
   for (let y = 0; y < height - modY; y += size + divY) {
     xBool = !xBool;
-    xBool ? (yBool = false) : (yBool = true);
+    yBool = !xBool;
     for (let x = 0; x < width - modX; x += size + divX) {
       yBool = !yBool;
       yBool ? p.fill(255) : p.fill(220);
