@@ -1,7 +1,6 @@
 import { anim, form, g, MOVE_TYPES, OFFSET_TYPES, ROTATE_TYPES, SCALE_TYPES, OPACITY_TYPES, TINT_TYPES, MAPPING } from './state.js';
 
 export function randomFormCoords(p, xSize, ySize) {
-  console.log('g.ctx in randomFormCoords:', !!g.ctx);
   let x = Math.round(p.random(xSize / 3, g.ctx.width - xSize / 3));
   let y = Math.round(p.random(ySize / 3, g.ctx.height - ySize / 3));
   return [x, y];

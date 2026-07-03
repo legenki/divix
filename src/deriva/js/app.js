@@ -381,12 +381,35 @@ export function derivaSketch(p) {
     activeFormsState();
   }
 
+  // Preset JSON carries some colors as "#RRGGBB[AA]" strings and others as
+  // {r,g,b[,a]} objects (see the reference's presetChange()) — deepMerge
+  // copies whichever shape shows up straight into state, so an {r,g,b}
+  // preset color reaches the <input type=color> as an object and fails
+  // silently (Chrome logs a format warning, the swatch just doesn't update).
+  function rgbaToHex({ r, g, b, a = 1 }) {
+    const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+    const toHex = (v) => clamp(v).toString(16).padStart(2, '0');
+    const alpha = clamp(a * 255);
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}${alpha < 255 ? toHex(alpha) : ''}`.toUpperCase();
+  }
+
+  function normalizePresetColor(obj, path) {
+    const keys = path.split('.');
+    const last = keys.pop();
+    const target = keys.reduce((o, k) => o?.[k], obj);
+    const c = target?.[last];
+    if (c && typeof c === 'object') target[last] = rgbaToHex(c);
+  }
+
   function applyPreset(preset) {
     if (!preset) return;
     deepMerge(cnv, preset.cnv);
     deepMerge(form, preset.form);
     deepMerge(anim, preset.anim);
     deepMerge(rec, preset.rec);
+
+    normalizePresetColor(form, 'frame.color');
+    normalizePresetColor(anim, 'tint.color');
 
     // Presets store form.size.x/y as a 1-100 percentage of the current
     // image's size range (see the reference's presetChange()), not raw
@@ -568,11 +591,21 @@ export function derivaSketch(p) {
   };
 
   p.mousePressed = () => {
-    if (cnv.mouseOver) addFormPreview();
+    // Recompute form.coords right now instead of trusting the last draw()
+    // frame's value — mouse DOM events aren't synchronized with the draw
+    // loop, so a fast click could otherwise place the form where the
+    // cursor was up to one frame ago.
+    if (cnv.mouseOver) {
+      translateCoords();
+      addFormPreview();
+    }
   };
 
   p.mouseReleased = () => {
-    if (cnv.mouseOver) addForm(false);
+    if (cnv.mouseOver) {
+      translateCoords();
+      addForm(false);
+    }
   };
 
   p.mouseDragged = () => {
