@@ -45,7 +45,7 @@ export function clonSketch(p) {
       grid.update = true;
     } else if (ctrl.regen === 'gridUpdate') {
       if (grid.sync) {
-        if (ctrl.statePath.includes('x')) {
+        if (ctrl.path.includes('x')) {
           grid.ui.y = grid.ui.x;
         } else {
           grid.ui.x = grid.ui.y;
@@ -776,7 +776,7 @@ export function clonSketch(p) {
           const url = URL.createObjectURL(e.target.files[0]);
           p.loadImage(url, (img) => {
             imageReadytoUse(p, img);
-          });
+          }, () => {});
         }
       };
       document.body.appendChild(fileInput);

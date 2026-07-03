@@ -128,11 +128,32 @@ document.addEventListener('DOMContentLoaded', () => {
  * Switches the active app, updating the UI and initializing the app if necessary.
  * @param {string} appName The name of the app to switch to
  */
+let activeViewTransition = null;
+
 function switchApp(appName) {
   if (!workspaceByName.has(appName) || currentApp === appName) return;
 
   if (document.startViewTransition) {
-    document.startViewTransition(() => executeSwitchApp(appName));
+    // A transition that's still snapshotting suppresses ALL page rendering
+    // (including every sketch's requestAnimationFrame). If one is in flight,
+    // skip it before starting the next, and swallow the "aborted" rejection
+    // it throws — otherwise a fast tab double-click can freeze the page.
+    if (activeViewTransition) activeViewTransition.skipTransition();
+    const transition = document.startViewTransition(() => executeSwitchApp(appName));
+    activeViewTransition = transition;
+    transition.ready.catch(() => {});
+    transition.updateCallbackDone.catch(() => {});
+    transition.finished
+      .catch(() => {})
+      .finally(() => {
+        if (activeViewTransition === transition) activeViewTransition = null;
+      });
+    // Watchdog: if the transition hasn't finished shortly after the expected
+    // animation time, force-skip it. A hung transition (seen in automated /
+    // headless contexts, and possible on aborts) otherwise freezes rendering
+    // for the whole page indefinitely. skipTransition() on a finished
+    // transition is a no-op, so this is safe.
+    setTimeout(() => transition.skipTransition(), 400);
   } else {
     executeSwitchApp(appName);
   }

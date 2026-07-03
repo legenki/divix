@@ -6,6 +6,7 @@ import { rotationMode } from './rotate.js';
 import { scalingMode } from './scale.js';
 import { startScanning, prepareShade } from './scan.js';
 import { shiftXMode, shiftYMode, restartShiftXAnimation, restartShiftYAnimation } from './shift.js';
+import { randomSystem } from './random.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
@@ -467,6 +468,11 @@ export function sondeoSketch(p) {
     // CORNERS everywhere (layout.js draws rects as x1,y1,x2,y2).
     p.pixelDensity(2);
     p.rectMode(p.CORNERS);
+
+    // Seed the simplex generators (the original's newSimplex*() calls in
+    // setup). Without this every randomSystem.simplex* stays null and the
+    // first noise-based animation or shade/grain scan crashes on .noise2D.
+    randomSystem.init(state);
 
     let fileInput = document.getElementById('sn-hidden-file-input');
     if (!fileInput) {

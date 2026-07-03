@@ -27,3 +27,4 @@ scratch/
 
 # Reference sources of original tools (not ours to publish)
 reference/
+stress_log_*.json
