@@ -1,6 +1,6 @@
 # Divix
 
-**Divix** is a generative graphics studio with six p5.js workspaces sharing the [Grafema](https://github.com/legenki/grafema) architecture and design system.
+**Divix** is a generative graphics studio with five p5.js workspaces sharing the [Grafema](https://github.com/legenki/grafema) architecture and design system.
 
 Live: [legenki.github.io/divix](https://legenki.github.io/divix/)
 
@@ -15,9 +15,6 @@ Split-mirror generative graphics on custom and built-in SVG shapes — rect, cir
 Coming soon.
 
 ### BANDADA
-Coming soon.
-
-### DERIVA
 Coming soon.
 
 ### SONDEO

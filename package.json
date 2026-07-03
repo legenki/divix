@@ -1,7 +1,7 @@
 {
   "name": "divix",
   "version": "1.0.0",
-  "description": "Divix is a generative graphics studio with six p5.js workspaces — Divix, Difuso, Bandada, Deriva, Sondeo and Clon — sharing the Grafema architecture and design system.",
+  "description": "Divix is a generative graphics studio with five p5.js workspaces — Divix, Difuso, Bandada, Sondeo and Clon — sharing the Grafema architecture and design system.",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.4.1",

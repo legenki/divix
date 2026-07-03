@@ -52,7 +52,6 @@ const workspaces = [
   { name: 'divix',   load: () => import('../divix/js/app.js').then((m) => m.divixSketch),     containerId: 'divix-canvas',   animated: true, shortcut: 'KeyD', libs: ['paper'] },
   { name: 'difuso',  load: () => import('../difuso/js/app.js').then((m) => m.difusoSketch),   containerId: 'difuso-canvas',  animated: true, shortcut: 'KeyF' },
   { name: 'bandada', load: () => import('../bandada/js/app.js').then((m) => m.bandadaSketch), containerId: 'bandada-canvas', animated: true, shortcut: 'KeyB' },
-  { name: 'deriva',  load: () => import('../deriva/js/app.js').then((m) => m.derivaSketch),   containerId: 'deriva-canvas',  animated: true, shortcut: 'KeyR' },
   { name: 'sondeo',  load: () => import('../sondeo/js/app.js').then((m) => m.sondeoSketch),   containerId: 'sondeo-canvas',  animated: true, shortcut: 'KeyS' },
   { name: 'clon',    load: () => import('../clon/js/app.js').then((m) => m.clonSketch),       containerId: 'clon-canvas',    animated: true, shortcut: 'KeyC' },
 ].map((w) => ({ ...w, instance: null }));

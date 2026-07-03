@@ -86,7 +86,7 @@ export function createPanelBuilder({
   onSliderInput,
 }) {
   function buildControl(ctrl, compact = false) {
-    // Deriva and Sondeo author their sliders as type: 'range' (matching the
+    // Sondeo authors its sliders as type: 'range' (matching the
     // <input type=range> it becomes); every other workspace uses 'slider'.
     // Both mean the same control — normalize here instead of forking the
     // renderer.

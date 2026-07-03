@@ -59,7 +59,7 @@ export default defineConfig({
       manifest: {
         name: 'Divix Design Studio',
         short_name: 'Divix',
-        description: 'Generative graphics studio: Divix, Difuso, Bandada, Deriva, Sondeo, Clon',
+        description: 'Generative graphics studio: Divix, Difuso, Bandada, Sondeo, Clon',
         theme_color: '#f4f4f4',
         background_color: '#f4f4f4',
         display: 'standalone',

@@ -1,7 +1,7 @@
 // test_all.cjs — Automated console error checker for all workspaces.
 const puppeteer = require('puppeteer');
 
-const WORKSPACES = ['divix', 'difuso', 'bandada', 'deriva', 'sondeo', 'clon'];
+const WORKSPACES = ['divix', 'difuso', 'bandada', 'sondeo', 'clon'];
 const BASE_URL = 'http://localhost:3001/divix/';
 const WAIT_MS = 8000;
 const SCREENSHOT_DIR = '/Users/andy/.gemini/antigravity/brain/853399b6-d641-4447-8deb-3c27042ebc33';

@@ -13,7 +13,6 @@ const fs = require('fs');
 
   const tools = [
     { name: 'bandada', url: 'https://antlii.github.io/boids-tool/' },
-    { name: 'deriva', url: 'https://antlii.github.io/drift-tool/' },
     { name: 'sondeo', url: 'https://antlii.github.io/skaaan-tool/' },
     { name: 'clon', url: 'https://antlii.github.io/klon-tool/' }
   ];

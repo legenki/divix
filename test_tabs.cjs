@@ -11,7 +11,7 @@ const fs = require('fs');
     }
   });
 
-  const tools = ['divix', 'difuso', 'deriva', 'sondeo', 'bandada', 'clon'];
+  const tools = ['divix', 'difuso', 'sondeo', 'bandada', 'clon'];
 
   await page.goto('http://localhost:3001/divix/', { waitUntil: 'networkidle0' });
 
