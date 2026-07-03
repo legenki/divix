@@ -50,9 +50,13 @@ export async function exportMP4({
   recVideo.active = true;
   setStatus('Preparing video…');
 
-  const { w, h } = getSize
+  let { w, h } = getSize
     ? getSize()
-    : { w: p.width * (cnv.density?.base ?? 1), h: p.height * (cnv.density?.base ?? 1) };
+    : { w: Math.floor(p.width * (cnv.density?.base ?? 1)), h: Math.floor(p.height * (cnv.density?.base ?? 1)) };
+
+  // H264 encoder requires width and height to be multiples of 2
+  w = w % 2 === 0 ? w : w - 1;
+  h = h % 2 === 0 ? h : h - 1;
 
   const copy = document.createElement('canvas');
   copy.width = w;
@@ -86,7 +90,10 @@ export async function exportMP4({
 
   try {
     for (let f = 0; f < totalFrames; f++) {
-      cnv.frame = f % Math.max(1, (rec.length.value * rec.frameRate));
+      const recLength = typeof rec.length === 'object' ? rec.length.value : (rec.length || recVideo.seconds || 4);
+      const frameNum = f % Math.max(1, (recLength * rec.frameRate));
+      if (cnv) cnv.frame = frameNum;
+      if (rec) rec.frame = frameNum;
       drawComposite();
       copyCtx.clearRect(0, 0, w, h);
       const targetCanvas = getCanvas ? getCanvas() : p.canvas;
