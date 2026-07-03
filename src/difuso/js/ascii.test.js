@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { createAscii } from './ascii.js';
 
 // Minimal stubs — hexToShader touches none of p/state/buffer, so bare objects
@@ -26,16 +26,13 @@ describe('ascii hexToShader', () => {
     expect(hexToShader('#AABBCC')).toEqual(hexToShader('#aabbcc'));
   });
 
-  it('falls back to black (not NaN) on malformed hex, with a warning', () => {
+  it('falls back to black (not NaN) on malformed hex, silently', () => {
     const { hexToShader } = makeAscii();
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     for (const bad of ['', '#fff', '#gggggg', 'ffffff', '#12345', '#1234567', null, undefined]) {
       const result = hexToShader(bad);
       expect(result).toEqual([0, 0, 0]);
       expect(result.some(Number.isNaN)).toBe(false);
     }
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
   });
 });
 

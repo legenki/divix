@@ -6,15 +6,20 @@ import { describe, it, expect } from 'vitest';
 // wraps this in 2D-canvas drawing, which isn't unit-testable without a DOM.
 
 function colorStops(useColor) {
+  // Mirrors buildGradientTexture()'s single `enabled` predicate (Boolean(v)),
+  // used consistently for the count, the flat-fallback pick, and stop emission
+  // — a single source of truth so all three agree even on malformed data.
+  const enabled = useColor.map((v) => Boolean(v));
+
   let colorAmount = 0;
-  for (const u of useColor) if (u === true) colorAmount++;
+  for (const e of enabled) if (e) colorAmount++;
 
   if (colorAmount <= 1) return { flat: true, stops: [] };
 
   const stops = [];
   let index = 0;
   for (let i = 0; i < useColor.length; i++) {
-    if (useColor[i] !== false) {
+    if (enabled[i]) {
       stops.push(index);
       index += 1 / (colorAmount - 1);
     }
@@ -59,5 +64,18 @@ describe('gradient color-stop math', () => {
       const { stops } = colorStops(use);
       expect(stops.every(Number.isFinite)).toBe(true);
     }
+  });
+
+  it('agrees on malformed-but-plausible use values (count and stops in sync)', () => {
+    // A corrupted preset could plausibly ship non-boolean `use` entries. The
+    // count, the flat-fallback pick, and the stop loop must all treat these
+    // identically — a prior bug used `=== true` for the count and `!== false`
+    // for stops, which disagreed here and could desync colorAmount from the
+    // actual number of emitted stops.
+    const { flat, stops } = colorStops([true, undefined, 0, '', true]);
+    expect(flat).toBe(false);
+    expect(stops).toHaveLength(2);
+    expect(stops[0]).toBeCloseTo(0);
+    expect(stops[1]).toBeCloseTo(1);
   });
 });

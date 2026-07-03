@@ -166,15 +166,16 @@ export function createAscii({ p, state, buffer }) {
    * the shader uniforms. Following dither.js's "fail loudly on genuinely-
    * impossible internal state" vs. "graceful fallback for malformed-but-plausible
    * input" split: a bad hex here is malformed *input* (user/preset colour), not
-   * an impossible internal state, so we fall back to black [0, 0, 0] with a
-   * console.warn rather than throwing — a wrong colour is recoverable, a crashed
-   * render loop is not.
+   * an impossible internal state, so we fall back to black [0, 0, 0] — silently,
+   * matching DIVIX's form.js hexToRgb precedent (no console.warn: a warn here
+   * would fire every frame apply() runs against bad state, which is worse than
+   * either staying silent or surfacing the problem through the actual rendered
+   * colour going black).
    * @param {string} hex e.g. '#ffcc00'
    * @returns {[number, number, number]}
    */
   function hexToShader(hex) {
     if (typeof hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(hex)) {
-      console.warn(`ascii.hexToShader: invalid hex '${hex}', falling back to black`);
       return [0, 0, 0];
     }
     const r = parseInt(hex.slice(1, 3), 16);
@@ -213,7 +214,10 @@ export function createAscii({ p, state, buffer }) {
     let bgMode = true;
     if (ascii.color.mode === 'chars') bgMode = false;
     if (ascii.color.mode === 'background') charMode = false;
-    // mode === 'duotone' leaves both true.
+    // mode === 'duotone' leaves both true — as does any other/unrecognized
+    // value (intentional fall-through, matching the reference; unlike
+    // dither.js's dither.type this isn't guarded/thrown on, since an
+    // unexpected mode here just renders both colors instead of crashing).
 
     let scaleX = ascii.scale;
     const scaleY = ascii.scale;

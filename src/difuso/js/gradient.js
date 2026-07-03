@@ -37,7 +37,11 @@ export function createGradient({ p, state, palettes }) {
    * gradBuffer specifically, so — matching dither.js/halftone.js's convention of
    * receiving their draw buffer rather than inventing a new one — this takes the
    * target (gradient) buffer as a param. Pass the same buffer you later hand to
-   * apply()'s targetBuffer.
+   * apply()'s targetBuffer. The shader is compiled against whichever buffer is
+   * passed on the FIRST call and cached forever — calling this again with a
+   * DIFFERENT buffer (e.g. after a resize recreates the gradient buffer) does
+   * NOT recompile; it silently keeps using the stale one. If the target buffer
+   * is ever recreated, construct a fresh createGradient(...) instance instead.
    * @param {import('p5').Graphics} targetBuffer WEBGL buffer (the reference's gradBuffer).
    */
   function buildShader(targetBuffer) {
@@ -107,10 +111,18 @@ export function createGradient({ p, state, palettes }) {
     const { gradient } = state;
     const paletteColors = Object.values(gradient.color);
     const useColor = Object.values(gradient.use);
+    // Single truthy predicate used everywhere below (count, flat-fallback pick,
+    // stop emission). The reference used a plain truthy check throughout; this
+    // module previously mixed `=== true` (count) with `!== false` (stop loop),
+    // which disagree on malformed-but-plausible data (e.g. `use[i]` being
+    // `undefined`/`0`/`""` from a corrupted preset) — exactly the input this
+    // guard exists to defend against. Compute `enabled` once so all three
+    // consumers agree.
+    const enabled = useColor.map((v) => Boolean(v));
 
     let colorAmount = 0;
     for (let i = 0; i < paletteColors.length; i++) {
-      if (useColor[i] === true) colorAmount++;
+      if (enabled[i]) colorAmount++;
     }
 
     if (gradientTexture && typeof gradientTexture.remove === 'function') {
@@ -122,7 +134,7 @@ export function createGradient({ p, state, palettes }) {
     // clamped to a minimum of 16 (one swatch's worth) so the strip is non-empty.
     if (colorAmount <= 1) {
       const flatColor =
-        paletteColors.find((c, i) => useColor[i] === true) || paletteColors[0] || '#000000';
+        paletteColors.find((c, i) => enabled[i]) || paletteColors[0] || '#000000';
       gradientTexture = p.createGraphics(16, 1);
       hideGraphicsCanvas(gradientTexture);
       gradientTexture.pixelDensity(1);
@@ -148,7 +160,7 @@ export function createGradient({ p, state, palettes }) {
 
     let index = 0;
     for (let i = 0; i < paletteColors.length; i++) {
-      if (useColor[i] !== false) {
+      if (enabled[i]) {
         grad.addColorStop(index, paletteColors[i]);
         index += 1 / (colorAmount - 1);
       }
