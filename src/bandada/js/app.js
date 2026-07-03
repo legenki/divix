@@ -283,7 +283,6 @@ export function bandadaSketch(p) {
 
     if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       g.mouse.over = true;
-      const res = state.RESOLUTIONS[cnv.ratio];
       const scale = Math.min((p.width * 0.85) / g.ctx.width, (p.height * 0.85) / g.ctx.height);
       const gw = g.ctx.width * scale;
       const gh = g.ctx.height * scale;

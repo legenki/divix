@@ -18,7 +18,7 @@ import { createPersistence } from '../../shared/utils/persistence.js';
 import { timestamp } from '../../shared/utils/datetime.js';
 import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
-import { exportPNG, exportMP4 } from '../../shared/utils/exportMedia.js';
+import { exportMP4 } from '../../shared/utils/exportMedia.js';
 import {
   createPanelBuilder,
   buildPresetSection,

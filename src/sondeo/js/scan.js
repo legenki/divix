@@ -1,7 +1,7 @@
-import { params, scan, maask, shade, grain, shift, scaling, rotation, maap, cnv, g } from './state.js';
+import { scan, shade, grain, shift, scaling, rotation, maap, g } from './state.js';
 import { randomSystem } from './random.js';
 import { map2 } from './map2.js';
-import { scanArea, scanComplete } from './app.js'; 
+import { scanComplete } from './app.js';
 
 export function startScanning(p) {
   let size, mod;
@@ -15,7 +15,7 @@ export function startScanning(p) {
         g.result.set(scan.position, scan.area.y1, c);
         scan.position += scan.speed;
       } else {
-        scanComplete(p);
+        scanComplete();
       }
       break;
 
@@ -28,7 +28,7 @@ export function startScanning(p) {
         g.result.set(scan.area.x1, scan.position, c);
         scan.position += scan.speed;
       } else {
-        scanComplete(p);
+        scanComplete();
       }
       break;
   }
@@ -46,20 +46,17 @@ function modifyScan(p, c) {
     shadeOffset,
     grainShading,
     grainNoise,
-    grainOpacity,
-    coarseRandom;
+    grainOpacity;
   let linearType = 0;
 
   grain.type === "none" ? (grainOpacity = 0) : (grainOpacity = grain.opacity);
   let coarseLevel = getCoarse(p);
 
   if (scan.type === "horizontal") {
-    let scaleStart;
     width = c.width;
     height = c.height;
     shadeOffset = c.height;
   } else if (scan.type === "vertical") {
-    let scaleStart;
     width = c.height;
     height = c.width;
     shadeOffset = c.width;

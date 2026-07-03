@@ -1,6 +1,6 @@
 import { params, rotation, scan, g } from './state.js';
 import { randomSystem } from './random.js';
-import { map2, IN, OUT, BOTH } from './map2.js';
+import { map2 } from './map2.js';
 
 export function rotationMode(p) {
   if (rotation.type === "none") {

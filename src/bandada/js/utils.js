@@ -1,4 +1,4 @@
-import { g, params } from './state.js';
+import { g } from './state.js';
 
 export function lerpAngle(a, b, t) {
   const TAU = Math.PI * 2;

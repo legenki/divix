@@ -38,7 +38,7 @@
 //   - Export Length (rec.length) — mirrored as the footer df-mp4-length <select>
 //     (template.html), matching DIVIX's dx-mp4-length pattern, NOT a slider.
 
-import { RATIO_TYPES, FONT_TYPES } from './state.js';
+import { FONT_TYPES } from './state.js';
 
 // Local UI-only option maps with no direct state.js export (matches DIVIX's
 // BG_MODES local-constant convention). Values match the state fields they drive.

@@ -57,9 +57,9 @@ export function clonSketch(p) {
         grid.update = true;
       }
     } else if (ctrl.action === 'undo') {
-      undoCanvas(p);
+      undoCanvas();
     } else if (ctrl.action === 'clear') {
-      clearCanvas(p);
+      clearCanvas();
     } else if (ctrl.action === 'upload') {
       const el = document.getElementById('cl-hidden-file-input');
       if (el) el.click();
@@ -445,11 +445,11 @@ export function clonSketch(p) {
     clipAreaBuffer(p);
   }
 
-  function clearCanvas(p) {
+  function clearCanvas() {
     if (g.result) g.result.clear();
   }
 
-  function undoCanvas(p) {
+  function undoCanvas() {
     if (g.result && g.backup) {
       g.result.clear();
       g.result.drawingContext.globalCompositeOperation = "source-over";

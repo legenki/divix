@@ -104,20 +104,6 @@ export const rec = {
 
 // --- Option maps (read-only; label → value lookups for the panel UI) ---
 
-export const RATIO_TYPES = {
-  "2:1": "2:1",
-  "16:9": "16:9",
-  "3:2": "3:2",
-  "4:3": "4:3",
-  "5:4": "5:4",
-  "1:1": "1:1",
-  "4:5": "4:5",
-  "3:4": "3:4",
-  "2:3": "2:3",
-  "9:16": "9:16",
-  "1:2": "1:2"
-};
-
 export const RESOLUTIONS = {
   "2:1": { width: 1920, height: 960 },
   "16:9": { width: 1920, height: 1080 },

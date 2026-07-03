@@ -1,5 +1,5 @@
 import { V2D } from './v2d.js';
-import { g, params, debug } from './state.js';
+import { g } from './state.js';
 import { lerpAngle } from './utils.js';
 
 export class Boid extends V2D {

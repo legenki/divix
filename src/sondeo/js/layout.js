@@ -1,7 +1,5 @@
 import { params, scan, maask, cnv, layout, shift, scaling, rotation, g } from './state.js';
-import { restartShiftXAnimation, restartShiftYAnimation } from './shift.js';
-import { scanArea, restartRotationAnimation, restartScalingAnimation } from './app.js'; 
-import { maapClear } from './maap.js';
+import { scanArea } from './app.js';
 
 export function layoutMode(p) {
   switch (layout.mode) {
@@ -271,7 +269,7 @@ function showTransformArea(p, areaMin, areaMax) {
 }
 
 function showBoundaries(p, min, max, duration) {
-  let start, end, mod, frame, value, freq;
+  let start, end, mod;
   start = p.round(duration * min);
   end = p.round(duration - duration * max);
   mod = start % scan.speed;
@@ -297,7 +295,7 @@ export function maskMode(p) {
       maask.draw = false;
       if (maask.x1 - maask.x2 > 0) [maask.x1, maask.x2] = [maask.x2, maask.x1];
       if (maask.y1 - maask.y2 > 0) [maask.y1, maask.y2] = [maask.y2, maask.y1];
-      scanArea(p);
+      scanArea();
     }
   }
 }

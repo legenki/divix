@@ -10,7 +10,7 @@ import { randomSystem } from './random.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
-import { exportPNG, exportMP4 } from '../../shared/utils/exportMedia.js';
+import { exportPNG } from '../../shared/utils/exportMedia.js';
 import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
 const STORAGE_KEY = 'sondeo-tool';
@@ -27,18 +27,18 @@ export function restartScalingAnimation() {
   scaling.value = 0;
 }
 
-export function scanComplete(p) {
+export function scanComplete() {
   scan.action = false;
   params.frame = 0;
   shade.frame = 0;
-  scanType(p);
+  scanType();
   restartRotationAnimation();
   restartScalingAnimation();
   restartShiftXAnimation();
   restartShiftYAnimation();
 }
 
-export function scanType(p) {
+export function scanType() {
   if (scan.type === "horizontal") {
     scan.position = scan.area.x1;
     scan.line.x1 = scan.position / scan.ratio;
@@ -54,7 +54,7 @@ export function scanType(p) {
   }
 }
 
-export function scanArea(p) {
+export function scanArea() {
   if (!g.imgSource) return;
   if (scan.type === "horizontal") {
     scan.ratio = g.imgSource.width / cnv.width;
@@ -74,14 +74,12 @@ export function scanArea(p) {
   scan.frame.x2 = scan.area.x2 / scan.ratio;
   scan.frame.y2 = scan.area.y2 / scan.ratio;
 
-  scanType(p);
+  scanType();
 }
 
 export function sondeoSketch(p) {
   let canvasContainer;
   let isReady = false;
-
-  const recVideo = { active: false, seconds: 10 };
 
   const fullState = { cnv, maask, scan, shade, grain, params, layout, shift, scaling, rotation, maap, ...pickOptionMaps(state) };
   const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
@@ -104,7 +102,7 @@ export function sondeoSketch(p) {
     } else if (ctrl.regen === 'scan') {
       // Scan direction changed — recompute ratio/frame for the new axis.
       scan.action = false;
-      scanArea(p);
+      scanArea();
     } else if (ctrl.action === 'resetScan') {
       resetScan();
     } else if (ctrl.action === 'startScan') {
@@ -176,7 +174,7 @@ export function sondeoSketch(p) {
     if (g.imgSource) imageAdjust(g.imgSource);
     scan.action = false;
     maapClear();
-    scanArea(p);
+    scanArea();
     restartRotationAnimation();
     restartScalingAnimation();
     restartShiftXAnimation();
@@ -189,7 +187,7 @@ export function sondeoSketch(p) {
     shade.frame = 0;
     if (g.result) g.result.clear();
     maapClear();
-    scanArea(p);
+    scanArea();
     restartRotationAnimation();
     restartScalingAnimation();
     restartShiftXAnimation();
@@ -204,7 +202,7 @@ export function sondeoSketch(p) {
       maask.x2 = g.imgSource.width;
       maask.y2 = g.imgSource.height;
     }
-    scanArea(p);
+    scanArea();
     params.mode = "scan";
   }
 
@@ -221,7 +219,7 @@ export function sondeoSketch(p) {
       maask.y2 = g.imgSource.height;
     }
     maapClear();
-    scanArea(p);
+    scanArea();
     restartShiftXAnimation();
     restartShiftYAnimation();
     restartScalingAnimation();
@@ -292,7 +290,7 @@ export function sondeoSketch(p) {
     restartScalingAnimation();
     restartRotationAnimation();
     maapClear();
-    scanArea(p);
+    scanArea();
   }
 
   function fitCanvas() {
@@ -300,7 +298,7 @@ export function sondeoSketch(p) {
     const h = canvasContainer.clientHeight || window.innerHeight;
     p.resizeCanvas(w, h);
     if (g.imgSource) imageAdjust(g.imgSource);
-    scanArea(p);
+    scanArea();
   }
 
   // Mirrors the original skaaan drawCanvas(): the source buffer is rebuilt
@@ -572,7 +570,7 @@ export function sondeoSketch(p) {
       case 83: // S — toggle scan direction
         scan.type = scan.type === "horizontal" ? "vertical" : "horizontal";
         scan.action = false;
-        scanArea(p);
+        scanArea();
         syncUIFromState();
         break;
     }
