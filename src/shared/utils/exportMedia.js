@@ -43,6 +43,7 @@ export async function exportMP4({
   drawComposite,
   setStatus,
   getSize,
+  getCanvas,
   onDone,
 }) {
   if (recVideo.active) return;
@@ -88,7 +89,8 @@ export async function exportMP4({
       cnv.frame = f % Math.max(1, (rec.length.value * rec.frameRate));
       drawComposite();
       copyCtx.clearRect(0, 0, w, h);
-      copyCtx.drawImage(p.canvas, 0, 0, w, h);
+      const targetCanvas = getCanvas ? getCanvas() : p.canvas;
+      copyCtx.drawImage(targetCanvas, 0, 0, w, h);
       encoder.addFrameRgba(copyCtx.getImageData(0, 0, w, h).data);
       if (f % 10 === 0) setStatus(`Encoding ${f}/${totalFrames}`);
       if (f % 15 === 0) await new Promise((r) => setTimeout(r, 0));

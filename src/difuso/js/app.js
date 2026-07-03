@@ -384,6 +384,10 @@ function difusoSketch(p) {
     if (rec.type === 'video') {
       const vid = source.getCurrentTexture();
       if (vid) {
+        if (recVideo.active && typeof vid.time === 'function') {
+          vid.pause();
+          vid.time(cnv.frame / rec.frameRate);
+        }
         gImg.clear();
         gImg.texture(vid);
         gImg.plane(gImg.width, gImg.height);
@@ -516,9 +520,9 @@ function difusoSketch(p) {
   async function withHighResExport(fn) {
     const savedBase = cnv.density.base;
     try {
-      const maxScreen = Math.max(p.width, p.height);
+      const maxImageEdge = Math.max(cnv.width, cnv.height);
       const targetEdge = cnv.density.export || 1000;
-      const exportDensity = Math.max(1, targetEdge / maxScreen);
+      const exportDensity = Math.max(1, targetEdge / maxImageEdge);
       
       cnv.density.base = exportDensity;
       p.pixelDensity(exportDensity);
@@ -538,7 +542,19 @@ function difusoSketch(p) {
   function doExportPNG() {
     withHighResExport(() => {
       drawCanvas();
-      exportPNG(p, 'difuso');
+      const w = Math.floor(cnv.width * cnv.density.base);
+      const h = Math.floor(cnv.height * cnv.density.base);
+      
+      const copy = document.createElement('canvas');
+      copy.width = w;
+      copy.height = h;
+      const copyCtx = copy.getContext('2d');
+      copyCtx.drawImage(gradBuffer.canvas, 0, 0, w, h);
+      
+      const link = document.createElement('a');
+      link.download = `difuso-${timestamp()}.png`;
+      link.href = copy.toDataURL('image/png');
+      link.click();
     });
   }
 
@@ -553,6 +569,11 @@ function difusoSketch(p) {
         recVideo,
         drawComposite: drawCanvas,
         setStatus,
+        getCanvas: () => gradBuffer.canvas,
+        getSize: () => ({
+          w: Math.floor(cnv.width * cnv.density.base),
+          h: Math.floor(cnv.height * cnv.density.base)
+        })
       });
     });
   }
