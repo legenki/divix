@@ -213,7 +213,9 @@ export const rec = JSON.parse(JSON.stringify(REC_STATE));
 
 export const g = {
   texture: {
-    default: "assets/bandada/texture.webp",
+    // Fallback only — used when the random Unsplash fetch in setup() fails.
+    // (Was pointing at Bandada's local texture.webp by copy-paste mistake.)
+    default: "https://images.unsplash.com/photo-1707343844152-6d33a0bb32c3?q=80&w=2560&auto=format&fit=crop",
     data: null
   },
   ctx: null,

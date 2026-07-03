@@ -248,7 +248,7 @@ export function clonSketch(p) {
   }
 
   function shiftLockEvent(p) {
-    if (p.mouseIsPressed && p.mouseButton === p.LEFT && p.keyIsPressed && p.keyCode === p.SHIFT) {
+    if (p.mouseIsPressed && p.mouseButton.left && p.keyIsPressed && p.keyCode === p.SHIFT) {
       if (SYS.shiftLocked && !SYS.mxLocked && !SYS.myLocked) {
         if (p.mouseY > cnv.mouse.py || p.mouseY < cnv.mouse.py) {
           SYS.mxLocked = true;
@@ -269,7 +269,7 @@ export function clonSketch(p) {
   }
 
   function gridData(p) {
-    if (cnv.mouseOver && p.mouseIsPressed && p.mouseButton === p.RIGHT) {
+    if (cnv.mouseOver && p.mouseIsPressed && p.mouseButton.right) {
       if (!SYS.mouseLocked) {
         SYS.mouseLocked = true;
         p.requestPointerLock();
@@ -468,7 +468,7 @@ export function clonSketch(p) {
     g.preview.clear();
     g.preview.push();
 
-    if (p.mouseIsPressed && p.mouseButton === p.LEFT && g.area !== null && mode.select !== "erase") {
+    if (p.mouseIsPressed && p.mouseButton.left && g.area !== null && mode.select !== "erase") {
       g.preview.image(
         g.buffer,
         preview.coords.x1,
@@ -646,7 +646,7 @@ export function clonSketch(p) {
     if (cnv.source && g.imgSource) p.image(g.imgSource, 0, 0, p.width, p.height);
     if (cnv.result && g.result) p.image(g.result, 0, 0, p.width, p.height);
 
-    if (p.mouseIsPressed && p.mouseButton === p.LEFT && g.area !== null) {
+    if (p.mouseIsPressed && p.mouseButton.left && g.area !== null) {
       if (mode.select === "erase" && preview.coords.x2 > 0 && preview.coords.y2 > 0) {
         g.result.push();
         g.result.drawingContext.globalCompositeOperation = "destination-out";
@@ -695,7 +695,7 @@ export function clonSketch(p) {
     }
 
     if (grid.show && g.grid) {
-      if (!(cnv.mouseOver && p.mouseIsPressed && p.mouseButton === p.LEFT)) {
+      if (!(cnv.mouseOver && p.mouseIsPressed && p.mouseButton.left)) {
         p.image(g.grid, 0, 0, p.width, p.height);
       }
     }
@@ -858,7 +858,7 @@ export function clonSketch(p) {
   p.mousePressed = () => {
     if (cnv.mouseOver) {
       if (!preview.select) area.rotation.amount = 0;
-      if (p.mouseButton === p.LEFT) {
+      if (p.mouseButton.left) {
         if (g.backup && g.result) {
           g.backup.clear();
           g.backup.image(g.result, 0, 0, g.imgSource.width, g.imgSource.height);

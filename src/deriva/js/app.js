@@ -255,7 +255,7 @@ export function derivaSketch(p) {
   }
 
   function translateCoords() {
-    if (p.mouseIsPressed && p.mouseButton === p.RIGHT) {
+    if (p.mouseIsPressed && p.mouseButton.right) {
       if (!isMouseLocked) {
         isMouseLocked = true;
         // In full app, requestPointerLock here
@@ -286,7 +286,7 @@ export function derivaSketch(p) {
   }
 
   function addFormPreview() {
-    if (p.mouseButton === p.LEFT && !isLoadImage) {
+    if (p.mouseButton.left && !isLoadImage) {
       cnv.image.preview = true;
       cnv.image.x = form.coords.x;
       cnv.image.y = form.coords.y;
@@ -294,7 +294,7 @@ export function derivaSketch(p) {
   }
 
   function addForm(isRandom = false) {
-    if ((p.mouseButton === p.LEFT && cnv.image.preview) || isRandom) {
+    if ((p.mouseButton.left && cnv.image.preview) || isRandom) {
       cnv.image.preview = false;
       if (formArray.length >= form.amount.num) {
         formArray[0].remove();
@@ -456,14 +456,11 @@ export function derivaSketch(p) {
     }
 
     let restored = loadState();
-    
-    // We load the texture.
-    // If it fails or is not provided, we fallback to a dummy image
-    p.loadImage(g.texture.default, (img) => {
-      g.texture.data = img;
+
+    function finishSetup() {
       setupBuffers();
       isLoadImage = false;
-      
+
       // Load presets and setup UI AFTER texture is loaded and buffers are created
       fetch(`${import.meta.env.BASE_URL}assets/deriva/presets.json`)
         .then((r) => r.json())
@@ -483,59 +480,47 @@ export function derivaSketch(p) {
             syncUIFromState();
             generateForms();
           }
-          
+
           document.getElementById('dr-preset')?.addEventListener('change', (e) => {
             const preset = PRESETS[e.target.value];
             if (preset) applyPreset(preset);
           });
           document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
           document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
-          
+
           isReady = true;
         });
+    }
+
+    function loadFallbackTexture() {
+      p.loadImage(g.texture.default, (img) => {
+        g.texture.data = img;
+        finishSetup();
+      }, (err) => {
+        console.warn("Failed to load fallback texture, using a solid placeholder.", err);
+        let dummy = p.createImage(800, 800);
+        dummy.loadPixels();
+        for (let i = 0; i < dummy.pixels.length; i += 4) {
+          dummy.pixels[i] = 100;
+          dummy.pixels[i + 1] = 150;
+          dummy.pixels[i + 2] = 200;
+          dummy.pixels[i + 3] = 255;
+        }
+        dummy.updatePixels();
+        g.texture.data = dummy;
+        finishSetup();
+      });
+    }
+
+    // Mirrors the original's setup(): getRandomImage() (a random Unsplash
+    // photo) first, falling back to a fixed image only if that fetch fails.
+    const randomUrl = 'https://source.unsplash.com/random/' + cnv.image.size + 'x' + cnv.image.size;
+    p.loadImage(randomUrl, (img) => {
+      g.texture.data = img;
+      finishSetup();
     }, (err) => {
-      console.warn("Failed to load default texture, using fallback.", err);
-      let dummy = p.createImage(800, 800);
-      dummy.loadPixels();
-      for (let i = 0; i < dummy.pixels.length; i += 4) {
-        dummy.pixels[i] = 100;
-        dummy.pixels[i+1] = 150;
-        dummy.pixels[i+2] = 200;
-        dummy.pixels[i+3] = 255;
-      }
-      dummy.updatePixels();
-      g.texture.data = dummy;
-      setupBuffers();
-      isLoadImage = false;
-      
-      fetch(`${import.meta.env.BASE_URL}assets/deriva/presets.json`)
-        .then((r) => r.json())
-        .then((d) => { PRESETS = d; })
-        .catch((e) => console.warn('[deriva] presets load failed:', e))
-        .finally(() => {
-          buildUI();
-          if (restored) {
-            syncUIFromState();
-          } else if (Object.keys(PRESETS).length) {
-            const keys = Object.keys(PRESETS);
-            const pick = keys[Math.floor(Math.random() * keys.length)];
-            applyPreset(PRESETS[pick]);
-            const sel = document.getElementById('dr-preset');
-            if (sel) sel.value = pick;
-          } else {
-            syncUIFromState();
-            generateForms();
-          }
-          
-          document.getElementById('dr-preset')?.addEventListener('change', (e) => {
-            const preset = PRESETS[e.target.value];
-            if (preset) applyPreset(preset);
-          });
-          document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
-          document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
-          
-          isReady = true;
-        });
+      console.warn("Random Unsplash image failed, falling back to default.", err);
+      loadFallbackTexture();
     });
   };
 
@@ -567,7 +552,7 @@ export function derivaSketch(p) {
   };
 
   p.mouseDragged = () => {
-    if (cnv.mouseOver && p.mouseButton === p.RIGHT) {
+    if (cnv.mouseOver && p.mouseButton.right) {
       const speedX = Math.floor(p.movedX * cnv.settings.sens);
       const speedY = Math.floor(p.movedY * cnv.settings.sens);
       form.size.x += speedX;

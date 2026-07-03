@@ -294,7 +294,7 @@ export function bandadaSketch(p) {
     }
     
     g.mouse.down = p.mouseIsPressed;
-    g.mouse.button = p.mouseButton === p.LEFT ? 0 : (p.mouseButton === p.RIGHT ? 2 : 1);
+    g.mouse.button = p.mouseButton.left ? 0 : (p.mouseButton.right ? 2 : 1);
 
     if (cnv.animation) g.frame++;
   }
