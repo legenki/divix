@@ -48,6 +48,8 @@ export async function exportMP4({
 }) {
   if (recVideo.active) return;
   recVideo.active = true;
+  if (cnv && cnv.frame === undefined) cnv.frame = 0;
+  if (rec && rec.frame === undefined) rec.frame = 0;
   setStatus('Preparing video…');
 
   let { w, h } = getSize
