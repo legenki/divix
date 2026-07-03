@@ -433,8 +433,12 @@ function difusoSketch(p) {
   // canvas.position() centering with a declarative, CSS-friendly blit.
   function blitToVisible() {
     p.clear();
+    // The visible canvas is WEBGL, so its coordinate origin (0, 0) is the canvas
+    // CENTER, not the top-left. With imageMode(CENTER) set in setup(), blitting at
+    // (0, 0) centers the composed gradBuffer; using (p.width/2, p.height/2) would
+    // offset it toward the bottom-right (down-and-right by half the viewport).
     const s = Math.min(p.width / gradBuffer.width, p.height / gradBuffer.height);
-    p.image(gradBuffer, p.width / 2, p.height / 2, gradBuffer.width * s, gradBuffer.height * s);
+    p.image(gradBuffer, 0, 0, gradBuffer.width * s, gradBuffer.height * s);
   }
 
   // ---- Presets ----
