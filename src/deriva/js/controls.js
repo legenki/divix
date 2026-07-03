@@ -17,7 +17,7 @@ import {
 export const SECTIONS = [
   {
     id: "canvas",
-    title: "CANVAS",
+    title: "Canvas",
     controls: [
       {
         id: "dr-img-upload",
@@ -72,7 +72,7 @@ export const SECTIONS = [
   },
   {
     id: "forms",
-    title: "FORMS",
+    title: "Forms",
     controls: [
       {
         id: "dr-form-content",
@@ -165,7 +165,7 @@ export const SECTIONS = [
   },
   {
     id: "anim_move",
-    title: "ANIM: MOVE",
+    title: "Anim: Move",
     controls: [
       {
         id: "dr-mx-type",
@@ -215,7 +215,7 @@ export const SECTIONS = [
   },
   {
     id: "anim_offset",
-    title: "ANIM: OFFSET",
+    title: "Anim: Offset",
     controls: [
       {
         id: "dr-ox-type",
@@ -265,7 +265,7 @@ export const SECTIONS = [
   },
   {
     id: "anim_transform",
-    title: "ANIM: ROTATE/SCALE",
+    title: "Anim: Rotate/Scale",
     controls: [
       {
         id: "dr-r-type",
@@ -315,7 +315,7 @@ export const SECTIONS = [
   },
   {
     id: "anim_color",
-    title: "ANIM: STYLE",
+    title: "Anim: Style",
     controls: [
       {
         id: "dr-op-type",
@@ -371,7 +371,7 @@ export const SECTIONS = [
   },
   {
     id: "export",
-    title: "EXPORT",
+    title: "Export",
     controls: [
       {
         id: "dr-export-len",

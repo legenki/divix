@@ -123,7 +123,7 @@ export function derivaSketch(p) {
 
     let size = (height + width) / 100;
     let xBool = true;
-    let yBool = true;
+    let yBool;
     let modY = height % size;
     let modX = width % size;
     let divY = modY / (height / size);
@@ -475,12 +475,19 @@ export function derivaSketch(p) {
             syncUIFromState();
           } else if (Object.keys(PRESETS).length) {
             const keys = Object.keys(PRESETS);
-            applyPreset(PRESETS[keys[Math.floor(Math.random() * keys.length)]]);
+            const pick = keys[Math.floor(Math.random() * keys.length)];
+            applyPreset(PRESETS[pick]);
+            const sel = document.getElementById('dr-preset');
+            if (sel) sel.value = pick;
           } else {
             syncUIFromState();
             generateForms();
           }
           
+          document.getElementById('dr-preset')?.addEventListener('change', (e) => {
+            const preset = PRESETS[e.target.value];
+            if (preset) applyPreset(preset);
+          });
           document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
           document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
           
@@ -511,12 +518,19 @@ export function derivaSketch(p) {
             syncUIFromState();
           } else if (Object.keys(PRESETS).length) {
             const keys = Object.keys(PRESETS);
-            applyPreset(PRESETS[keys[Math.floor(Math.random() * keys.length)]]);
+            const pick = keys[Math.floor(Math.random() * keys.length)];
+            applyPreset(PRESETS[pick]);
+            const sel = document.getElementById('dr-preset');
+            if (sel) sel.value = pick;
           } else {
             syncUIFromState();
             generateForms();
           }
           
+          document.getElementById('dr-preset')?.addEventListener('change', (e) => {
+            const preset = PRESETS[e.target.value];
+            if (preset) applyPreset(preset);
+          });
           document.getElementById('dr-btn-save-png')?.addEventListener('click', doExportPNG);
           document.getElementById('dr-btn-save-mp4')?.addEventListener('click', doExportMP4);
           

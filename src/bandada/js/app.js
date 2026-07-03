@@ -173,7 +173,7 @@ export function bandadaSketch(p) {
 
     let size = (height + width) / 100;
     let xBool = true;
-    let yBool = true;
+    let yBool;
 
     let modY = height % size;
     let modX = width % size;

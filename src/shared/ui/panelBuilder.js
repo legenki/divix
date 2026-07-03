@@ -362,7 +362,10 @@ export function buildPresetSection(root, { idPrefix, presets, proPresets = {}, i
     select,
   );
 
-  const contentChildren = [selectRow];
+  // Workspaces without factory presets (Clon, Sondeo) keep Export/Import
+  // but an empty dropdown reads as broken — hide it.
+  const hasAnyPresets = Object.keys(presets).length > 0 || Object.keys(proPresets).length > 0;
+  const contentChildren = hasAnyPresets ? [selectRow] : [];
 
   if (hasProPresets && !isPro) {
     const note = el('p', { className: 'pro-preset-note' });

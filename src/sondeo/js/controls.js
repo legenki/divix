@@ -5,7 +5,7 @@ import { ANIMATION_TYPES } from './state.js';
 export const SECTIONS = [
   {
     id: "scan",
-    title: "SCAN & MASK",
+    title: "Scan & Mask",
     controls: [
       {
         id: "sn-upload",
@@ -84,7 +84,7 @@ export const SECTIONS = [
   },
   {
     id: "layout",
-    title: "LAYOUT & SETTINGS",
+    title: "Layout & Settings",
     controls: [
       {
         id: "sn-layout-mode",
@@ -125,7 +125,7 @@ export const SECTIONS = [
   },
   {
     id: "transform",
-    title: "TRANSFORM CONTROLS",
+    title: "Transform Controls",
     controls: [
       {
         id: "sn-base-shift-x",
@@ -165,7 +165,7 @@ export const SECTIONS = [
   },
   {
     id: "animation",
-    title: "ANIMATION",
+    title: "Animation",
     controls: [
       {
         id: "sn-anim-shift-x",
@@ -209,7 +209,7 @@ export const SECTIONS = [
   },
   {
     id: "effects",
-    title: "EFFECTS",
+    title: "Effects",
     controls: [
       {
         id: "sn-shade-apply",
@@ -297,7 +297,7 @@ export const SECTIONS = [
   },
   {
     id: "export",
-    title: "EXPORT",
+    title: "Export",
     controls: [
       {
         id: "sn-export-bg",

@@ -198,142 +198,166 @@ export class Form {
     switch (this.move.x.type) {
       case "none": _moveX = 0; break;
       case "const": _moveX = this.move.x.frame * this.move.x.geom.trend; this.move.x.frame += this.move.x.const.rate; break;
-      case "noise":
+      case "noise": {
         let noiseValue = this.move.x.noise.rate / this.move.x.noise.factor;
         _moveX = this.move.x.noise2D(this.move.x.frame * noiseValue, 0) * this.move.x.noise.level;
         this.move.x.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         let sinValue = Math.round(this.move.x.geom.level / (this.move.x.geom.rate * this.factor.width));
         let sinFrame = this.move.x.frame / sinValue;
         _moveX = this.p.map(Math.sin(2*PI * sinFrame), 1, -1, this.move.x.geom.level, -this.move.x.geom.level) * this.move.x.geom.trend;
         sinFrame >= 1 ? (this.move.x.frame = 1) : this.move.x.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         let cosValue = Math.round(this.move.x.geom.level / (this.move.x.geom.rate * this.factor.width));
         let cosFrame = this.move.x.frame / cosValue;
         _moveX = this.p.map(1 - Math.cos(2*PI * cosFrame), 1, -1, this.move.x.geom.level, -this.move.x.geom.level) * this.move.x.geom.trend;
         cosFrame >= 1 ? (this.move.x.frame = 1) : this.move.x.frame++; break;
+      }
     }
 
     // Move Y
     switch (this.move.y.type) {
       case "none": _moveY = 0; break;
       case "const": _moveY = this.move.y.frame * this.move.y.geom.trend; this.move.y.frame += this.move.y.const.rate; break;
-      case "noise":
+      case "noise": {
         let noiseValue = this.move.y.noise.rate / this.move.y.noise.factor;
         _moveY = this.move.y.noise2D(this.move.y.frame * noiseValue, 0) * this.move.y.noise.level;
         this.move.y.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         let sinValue = Math.round(this.move.y.geom.level / (this.move.y.geom.rate * this.factor.height));
         let sinFrame = this.move.y.frame / sinValue;
         _moveY = this.p.map(Math.sin(2*PI * sinFrame), 1, -1, this.move.y.geom.level, -this.move.y.geom.level) * this.move.y.geom.trend;
         sinFrame >= 1 ? (this.move.y.frame = 1) : this.move.y.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         let cosValue = Math.round(this.move.y.geom.level / (this.move.y.geom.rate * this.factor.height));
         let cosFrame = this.move.y.frame / cosValue;
         _moveY = this.p.map(1 - Math.cos(2*PI * cosFrame), 1, -1, this.move.y.geom.level, -this.move.y.geom.level) * this.move.y.geom.trend;
         cosFrame >= 1 ? (this.move.y.frame = 1) : this.move.y.frame++; break;
+      }
     }
 
     // Offset X
     switch (this.offset.x.type) {
       case "none": _offsetX = 0; break;
-      case "noise":
+      case "noise": {
         let noiseValue = this.offset.x.noise.rate / this.offset.x.noise.factor;
         _offsetX = this.offset.x.noise2D(this.offset.x.frame * noiseValue, 0) * this.offset.x.noise.level;
         this.offset.x.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         let sinValue = Math.round(this.offset.x.geom.level / (this.offset.x.geom.rate * this.factor.width));
         let sinFrame = this.offset.x.frame / sinValue;
         _offsetX = this.p.map(Math.sin(2*PI * sinFrame), 1, -1, this.offset.x.geom.level, -this.offset.x.geom.level) * this.offset.x.geom.trend;
         sinFrame >= 1 ? (this.offset.x.frame = 0) : this.offset.x.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         let cosValue = Math.round(this.offset.x.geom.level / (this.offset.x.geom.rate * this.factor.width));
         let cosFrame = this.offset.x.frame / cosValue;
         _offsetX = this.p.map(1 - Math.cos(2*PI * cosFrame), 1, -1, this.offset.x.geom.level, -this.offset.x.geom.level) * this.offset.x.geom.trend;
         cosFrame >= 1 ? (this.offset.x.frame = 0) : this.offset.x.frame++; break;
+      }
     }
 
     // Offset Y
     switch (this.offset.y.type) {
       case "none": _offsetY = 0; break;
-      case "noise":
+      case "noise": {
         let noiseValue = this.offset.y.noise.rate / this.offset.y.noise.factor;
         _offsetY = this.offset.y.noise2D(this.offset.y.frame * noiseValue, 0) * this.offset.y.noise.level;
         this.offset.y.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         let sinValue = Math.round(this.offset.y.geom.level / (this.offset.y.geom.rate * this.factor.height));
         let sinFrame = this.offset.y.frame / sinValue;
         _offsetY = this.p.map(Math.sin(2*PI * sinFrame), 1, -1, this.offset.y.geom.level, -this.offset.y.geom.level) * this.offset.y.geom.trend;
         sinFrame >= 1 ? (this.offset.y.frame = 0) : this.offset.y.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         let cosValue = Math.round(this.offset.y.geom.level / (this.offset.y.geom.rate * this.factor.height));
         let cosFrame = this.offset.y.frame / cosValue;
         _offsetY = this.p.map(1 - Math.cos(2*PI * cosFrame), 1, -1, this.offset.y.geom.level, -this.offset.y.geom.level) * this.offset.y.geom.trend;
         cosFrame >= 1 ? (this.offset.y.frame = 0) : this.offset.y.frame++; break;
+      }
     }
 
     // Rotate
     switch (this.rotate.type) {
       case "none": _rotate = 0; break;
       case "const": _rotate = this.rotate.frame * this.rotate.geom.trend; this.rotate.frame += this.rotate.geom.rate; break;
-      case "noise":
+      case "noise": {
         let noiseValue = this.rotate.noise.rate / this.rotate.noise.level;
         _rotate = this.rotate.noise2D(this.rotate.frame * noiseValue, 0) * this.rotate.noise.level;
         this.rotate.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         let sinValue = this.rotate.geom.rate / this.rotate.geom.level;
         _rotate = Math.sin(this.rotate.frame * sinValue) * this.rotate.geom.level * this.rotate.geom.trend;
         this.rotate.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         let cosValue = this.rotate.geom.rate / this.rotate.geom.level;
         _rotate = (1 - Math.cos(this.rotate.frame * cosValue)) * this.rotate.geom.level * this.rotate.geom.trend;
         this.rotate.frame++; break;
+      }
     }
 
     // Scale
     switch (this.scale.type) {
       case "none": _scale = 1; break;
-      case "noise":
+      case "noise": {
         let noiseValue = this.scale.noise.rate / this.scale.noise.factor;
         _scale = 1 + this.scale.noise2D(this.scale.frame * noiseValue, 0) * this.scale.noise.level;
         this.scale.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         _scale = 1 + Math.sin(this.scale.frame * this.scale.geom.rate) * this.scale.geom.level * this.scale.geom.trend;
         this.scale.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         _scale = (1 - Math.cos(this.scale.frame * this.scale.geom.rate)) * this.scale.geom.level * this.scale.geom.trend;
         _scale = 1 + _scale - _scale / 2;
         this.scale.frame++; break;
+      }
     }
 
     // Opacity
     switch (this.opacity.type) {
       case "none": _opacity = 255; break;
       case "const": _opacity = 255 - this.opacity.level; break;
-      case "noise":
+      case "noise": {
         _opacity = 255 - Math.abs(this.opacity.noise2D(this.opacity.frame * this.opacity.noise.rate, 0)) * this.opacity.level;
         this.opacity.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         _opacity = 255 - Math.abs(Math.sin(this.opacity.frame * this.opacity.geom.rate)) * this.opacity.level;
         this.opacity.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         _opacity = 255 - Math.abs(Math.cos(this.opacity.frame * this.opacity.geom.rate)) * this.opacity.level;
         this.opacity.frame++; break;
+      }
     }
 
     // Tint
     switch (this.tint.type) {
       case "none": _tint = 0; break;
       case "const": _tint = this.tint.level; break;
-      case "noise":
+      case "noise": {
         _tint = Math.abs(this.tint.noise2D(this.tint.frame * this.tint.noise.rate, 0)) * this.tint.level;
         this.tint.frame++; break;
-      case "sin":
+      }
+      case "sin": {
         _tint = Math.abs(Math.cos(this.tint.frame * this.tint.geom.rate)) * this.tint.level;
         this.tint.frame++; break;
-      case "cos":
+      }
+      case "cos": {
         _tint = Math.abs(Math.sin(this.tint.frame * this.tint.geom.rate)) * this.tint.level;
         this.tint.frame++; break;
+      }
     }
 
     let moveBufferX, moveBufferY, bufferX, bufferY;

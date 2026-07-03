@@ -2,7 +2,7 @@ import { BG_MODES, DRAW_MODES, SELECT_MODES, SHAPE_TYPES, GRID_COLORS } from './
 
 export const SECTIONS = [
   {
-    title: 'DRAW SETTINGS',
+    title: 'Draw Settings',
     controls: [
       {
         id: 'cl-mode-select',
@@ -103,7 +103,7 @@ export const SECTIONS = [
     ]
   },
   {
-    title: 'GRID SETTINGS',
+    title: 'Grid Settings',
     controls: [
       {
         id: 'cl-grid-snap',
@@ -184,7 +184,7 @@ export const SECTIONS = [
     ]
   },
   {
-    title: 'ACTIONS',
+    title: 'Actions',
     controls: [
       {
         id: 'cl-btn-undo',
