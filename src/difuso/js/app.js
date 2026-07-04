@@ -730,10 +730,22 @@ function difusoSketch(p) {
     });
   }
 
+  // Wires the hidden #df-obj-file-input (opened via the "3D Object" panel's
+  // upload button, see applyChange's 'uploadModel' action) to the shared
+  // loadModelFile path.
+  function bindObjectUpload() {
+    document.getElementById('df-obj-file-input')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) loadModelFile(file);
+      e.target.value = '';
+    });
+  }
+
   // Route a dropped file through source.js and, once loaded, resize to fit the
   // new source. source.handleDroppedFile fires the load but doesn't await it, so
   // dispatch by type here to know when to resize.
   function loadSourceFile(file) {
+    const name = file.name.toLowerCase();
     if (file.type.startsWith('image/')) {
       source
         .loadImageFile(file)
@@ -750,9 +762,28 @@ function difusoSketch(p) {
           console.warn('[difuso] video load failed:', err);
           setStatus('Video load failed');
         });
+    } else if (name.endsWith('.obj') || name.endsWith('.stl')) {
+      loadModelFile(file);
     } else {
       setStatus('Unsupported file type');
     }
+  }
+
+  // Load a .obj/.stl model via objects.js, mirroring how loadSourceFile wraps
+  // source.js's image/video loaders. Shared by the file-input change handler
+  // and drag-and-drop (both funnel model files here).
+  function loadModelFile(file) {
+    objectsCtl
+      .loadModelFile(file)
+      .then(() => {
+        resizeCanvas();
+        syncUIFromState();
+        saveState();
+      })
+      .catch((err) => {
+        console.warn('[difuso] model load failed:', err);
+        setStatus('Model load failed');
+      });
   }
 
   // ---- Graphics helpers ----
@@ -868,6 +899,7 @@ function difusoSketch(p) {
               buildUI();
               bindFooter();
               bindDragDrop();
+              bindObjectUpload();
 
               const keys = Object.keys(PRESETS);
               if (restored) {
