@@ -16,7 +16,7 @@ export const SECTIONS = [
     controls: [
       { id: 'bd-export-size', type: 'slider', label: 'Export Size (px)', path: 'cnv.density.export', min: 500, max: 4000, step: 100 },
       { id: 'bd-export-length', type: 'slider', label: 'Video Length', path: 'rec.length.value', min: 1, max: 60, step: 1 },
-      { id: 'bd-export-quality', type: 'slider', label: 'Image Quality', path: 'rec.quality', min: 0, max: 100, step: 5 },
+      { id: 'bd-export-quality', type: 'slider', label: 'Export Quality', path: 'rec.quality', min: 0, max: 100, step: 5 },
       // bd-btn-save-mp4, bd-btn-save-png go to footer.
     ],
   },
