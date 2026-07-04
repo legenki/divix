@@ -641,11 +641,13 @@ export function divixSketch(p) {
 
   function doExportPNG() {
     withHighResExport(() => {
-      // Render one frame and blit to the visible canvas so the shared exportPNG
-      // (which saves p.canvas) captures the current composite.
+      // Save gDraw itself (the fixed-ratio composite), not p.canvas — the
+      // visible canvas is a full-viewport surface whose aspect ratio tracks
+      // the browser window, not cnv.ratio, so saving it directly would export
+      // whatever rectangle the window happens to be instead of the square (or
+      // other ratio) the user configured.
       drawScene();
-      blitToVisible();
-      exportPNG(p, 'divix');
+      exportPNG(p, 'divix', gDraw);
     });
   }
 
@@ -658,11 +660,13 @@ export function divixSketch(p) {
         cnv,
         rec,
         recVideo,
-        drawComposite: () => {
-          drawScene();
-          blitToVisible();
-        },
+        drawComposite: drawScene,
         setStatus,
+        getCanvas: () => gDraw.canvas,
+        getSize: () => ({
+          w: Math.floor(gDraw.width * cnv.density.base),
+          h: Math.floor(gDraw.height * cnv.density.base)
+        })
       });
     });
   }
