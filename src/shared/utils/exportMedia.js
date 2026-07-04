@@ -32,6 +32,11 @@ export function exportPNG(p, prefix, source) {
  * @param {Function} opts.drawComposite () => void — renders one frame to p.canvas
  * @param {Function} opts.setStatus    (msg: string) => void
  * @param {Function} [opts.getSize]    () => { w, h } — override canvas size (default: p.width × density)
+ * @param {Function} [opts.beforeDraw] async (frameNum) => void — awaited before drawComposite() runs for
+ *                                     this frame. Use this to seek a video element and wait for its
+ *                                     'seeked' event: video.time(...) is asynchronous, and drawComposite()
+ *                                     samples whatever frame the video element currently has decoded, so
+ *                                     the seek must land before drawComposite() runs, not after.
  * @param {Function} [opts.onDone]     () => void — called after export finishes or fails
  */
 export async function exportMP4({
@@ -44,6 +49,7 @@ export async function exportMP4({
   setStatus,
   getSize,
   getCanvas,
+  beforeDraw,
   onDone,
 }) {
   if (recVideo.active) return;
@@ -96,6 +102,7 @@ export async function exportMP4({
       const frameNum = f % Math.max(1, (recLength * rec.frameRate));
       if (cnv) cnv.frame = frameNum;
       if (rec) rec.frame = frameNum;
+      if (beforeDraw) await beforeDraw(frameNum);
       drawComposite();
       copyCtx.clearRect(0, 0, w, h);
       const targetCanvas = getCanvas ? getCanvas() : p.canvas;

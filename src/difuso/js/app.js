@@ -384,9 +384,11 @@ function difusoSketch(p) {
     if (rec.type === 'video') {
       const vid = source.getCurrentTexture();
       if (vid) {
+        // During export, seeking happens in beforeVideoFrame() (awaited by
+        // exportMP4 before this draw call) so the seek has actually landed by
+        // the time this texture read happens — seeking here too would race it.
         if (recVideo.active && typeof vid.time === 'function') {
           vid.pause();
-          vid.time(cnv.frame / rec.frameRate);
         }
         gImg.clear();
         gImg.texture(vid);
@@ -558,6 +560,38 @@ function difusoSketch(p) {
     });
   }
 
+  // Seeks the source video to this export frame's timestamp and waits for the
+  // browser to actually decode it before drawCanvas() reads a texture from
+  // the video element. video.time(...) (= elt.currentTime = ...) is
+  // asynchronous — the element only fires 'seeked' once the requested frame
+  // is decoded — and drawCanvas() just samples whatever frame the element
+  // currently has, live. Seeking without waiting (the previous behavior) let
+  // the export loop outrun the decoder, so every exported frame was whatever
+  // frame happened to be decoded yet: a slideshow instead of smooth video.
+  // A 200ms cap keeps a stalled/looping seek (observed on some codecs right
+  // at a video's start/end) from hanging the whole export.
+  function beforeVideoFrame(frameNum) {
+    if (rec.type !== 'video' || !recVideo.active) return Promise.resolve();
+    const vid = rec.video;
+    if (!vid || typeof vid.time !== 'function') return Promise.resolve();
+    const el = vid.elt;
+
+    vid.time(frameNum / rec.frameRate);
+    if (el.seeking === false) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        el.removeEventListener('seeked', finish);
+        resolve();
+      };
+      el.addEventListener('seeked', finish, { once: true });
+      setTimeout(finish, 200);
+    });
+  }
+
   function doExportMP4() {
     recVideo.seconds = readMp4Length();
     return withHighResExport(() => {
@@ -568,6 +602,7 @@ function difusoSketch(p) {
         rec,
         recVideo,
         drawComposite: drawCanvas,
+        beforeDraw: beforeVideoFrame,
         setStatus,
         getCanvas: () => gradBuffer.canvas,
         getSize: () => ({
