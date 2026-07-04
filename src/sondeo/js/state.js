@@ -1,4 +1,4 @@
-// SONDEO (Skaaan) - Global State and Constants
+// SONDEO — Global State and Constants
 
 export const ANIMATION_TYPES = {
   None: "none",

@@ -1,4 +1,4 @@
-// SONDEO (Skaaan) — UI Controls
+// SONDEO — UI Controls
 
 import { ANIMATION_TYPES } from './state.js';
 

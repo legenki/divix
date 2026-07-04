@@ -301,8 +301,8 @@ export function sondeoSketch(p) {
     scanArea();
   }
 
-  // Mirrors the original skaaan drawCanvas(): the source buffer is rebuilt
-  // every frame (so mouse drag and animations preview live, not only while
+  // Mirrors the original drawCanvas(): the source buffer is rebuilt every
+  // frame (so mouse drag and animations preview live, not only while
   // scanning), then the scan head advances, then the layout is composited
   // around the window centre.
   function drawCanvas() {
@@ -462,7 +462,7 @@ export function sondeoSketch(p) {
     const canvasEl = p.createCanvas(canvasContainer.clientWidth, canvasContainer.clientHeight);
     canvasEl.mouseOver(() => { cnv.canvasOver = true; });
     canvasEl.mouseOut(() => { cnv.canvasOver = false; });
-    // Original skaaan runs the display canvas at density 2 and rectMode
+    // The original runs the display canvas at density 2 and rectMode
     // CORNERS everywhere (layout.js draws rects as x1,y1,x2,y2).
     p.pixelDensity(2);
     p.rectMode(p.CORNERS);

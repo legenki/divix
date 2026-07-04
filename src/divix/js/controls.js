@@ -25,8 +25,7 @@ import {
   ORDER_TYPES,
 } from './state.js';
 
-// One-off UI-only option set with no state.js equivalent (matches ritmo's
-// local-constant convention, e.g. SORT_OPTIONS). Values match cnv.color.mode.
+// One-off UI-only option set with no state.js equivalent. Values match cnv.color.mode.
 const BG_MODES = {
   Custom: 'custom',
   'Use Palette Color': 'palette',

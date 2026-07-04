@@ -376,7 +376,7 @@ export function divixSketch(p) {
       buffers.gAlpha = gAlpha;
     } else if (gForm.width !== res.width || gForm.height !== res.height) {
       // resizeCanvas instead of remove+create: p5.Graphics.remove() throws in
-      // instance mode (ritmo hit the same constraint).
+      // instance mode.
       gForm.resizeCanvas(res.width, res.height);
       gDraw.resizeCanvas(res.width, res.height);
       gAlpha.resizeCanvas(res.width, res.height);
@@ -749,9 +749,9 @@ export function divixSketch(p) {
     syncPaletteTemp();
 
     // colorjs (window.Color) is needed by form.js's LCH interpolation but is
-    // NOT in main.js's `libs: ['paper']` for divix. Rather than change Task 3's
-    // contract, load it here and gate the draw loop until it (and the fetches)
-    // resolve — the same pattern ritmo uses for its per-workspace lazy libs.
+    // NOT in main.js's `libs: ['paper']` for divix. Load it here and gate the
+    // draw loop until it (and the fetches) resolve, matching the per-workspace
+    // lazy-lib pattern used elsewhere.
     Promise.all([
       ensureVendorLibs('color').catch((e) => console.warn('[divix] colorjs load failed:', e)),
       fetch(`${import.meta.env.BASE_URL}assets/divix/presets.json`)

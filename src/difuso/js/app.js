@@ -648,8 +648,8 @@ function difusoSketch(p) {
 
   // ---- Graphics helpers ----
   function disposeGraphics(g) {
-    // p5.Graphics.remove() throws in instance mode (same constraint DIVIX/ritmo
-    // hit); guard it so a failed dispose can't abort a resize.
+    // p5.Graphics.remove() throws in instance mode; guard it so a failed
+    // dispose can't abort a resize.
     if (g && typeof g.remove === 'function') {
       try {
         g.remove();

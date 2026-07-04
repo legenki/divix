@@ -1,4 +1,4 @@
-// BANDADA (Boids) — workspace state and option maps.
+// BANDADA — workspace state and option maps.
 // Ported from reference/boids/scripts/var.js
 
 export const PRESET_TYPES = {

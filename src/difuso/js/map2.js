@@ -2,10 +2,9 @@
 // Via Manohar Vanga / Jeff Thompson (sighack easing functions).
 // Factory injects the p5 instance for pow/cos/sin/sqrt/PI.
 //
-// Ported verbatim from the original tool's map2.js, following the proven port
-// shape already shipped in ritmo/js/map2.js (same codebase family). The `when`
-// argument is numeric: IN = 0, OUT = 1, BOTH = 2 (matching the original, where
-// callers pass e.g. `'Exponential', 1` = ease-OUT).
+// Ported verbatim from the original tool's map2.js. The `when` argument is
+// numeric: IN = 0, OUT = 1, BOTH = 2 (matching the original, where callers
+// pass e.g. `'Exponential', 1` = ease-OUT).
 
 export function createMap2(p) {
   const IN = 0,

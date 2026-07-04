@@ -1,4 +1,4 @@
-// BANDADA (Boids) — main workspace controller.
+// BANDADA — main workspace controller.
 // Assembles the simulation logic, UI, and export pipeline.
 
 import * as state from './state.js';

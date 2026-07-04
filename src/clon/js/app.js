@@ -6,7 +6,7 @@ import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG } from '../../shared/utils/exportMedia.js';
 import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
-const STORAGE_KEY = 'klon-tool';
+const STORAGE_KEY = 'clon-tool';
 
 const { cnv, preview, form, area, mode, grid, g, SYS } = state;
 

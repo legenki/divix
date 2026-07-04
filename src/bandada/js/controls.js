@@ -1,4 +1,4 @@
-// BANDADA (Boids) — control panel sections (declarative SECTIONS format).
+// BANDADA — control panel sections (declarative SECTIONS format).
 
 import {
   RATIO_TYPES,
