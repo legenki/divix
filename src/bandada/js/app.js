@@ -450,7 +450,7 @@ export function bandadaSketch(p) {
   }
 
   function setStatus(msg) {
-    const el = document.getElementById('bd-export-status');
+    const el = document.getElementById('bn-export-status');
     if (el) el.innerText = msg;
   }
 
@@ -502,8 +502,8 @@ export function bandadaSketch(p) {
   }
 
   function bindFooter() {
-    document.getElementById('bd-btn-save-png')?.addEventListener('click', doExportPNG);
-    document.getElementById('bd-btn-save-mp4')?.addEventListener('click', doExportMP4);
+    document.getElementById('bn-btn-save-png')?.addEventListener('click', doExportPNG);
+    document.getElementById('bn-btn-save-mp4')?.addEventListener('click', doExportMP4);
     document.getElementById('bd-preset')?.addEventListener('change', (e) => {
       const preset = PRESETS[e.target.value];
       if (preset) applyPreset(preset);
