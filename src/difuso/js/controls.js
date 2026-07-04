@@ -27,7 +27,7 @@
 //     ui.js:117-162 confirms image/video mode has NO separate canvas-background
 //     mechanism — image/video sources have no Back Color / Transparency
 //     control; those only apply in Object mode (df-obj-canvas-color /
-//     df-obj-transparent above).
+//     df-obj-transparent below).
 //   - Upload Media / Upload Custom Texture buttons — file-upload triggers wired
 //     directly in app.js (Task 10), not SECTIONS controls. The dither.type
 //     'custom' (custom-texture) mode is likewise omitted — dither.js throws on
