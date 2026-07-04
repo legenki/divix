@@ -84,10 +84,9 @@ export const gradient = {
   }
 };
 
-// `rec.type` default is changed from the original's "object" (3D) to "image",
-// since 3D output is out of scope for this slice (see
-// docs/superpowers/specs/2026-07-02-difuso-workspace-design.md). Obj-specific
-// derived fields are dropped along with the 3D block itself.
+// `rec.type` default is changed from the original's "object" (3D) to "image"
+// — Difuso opens on an image by default; users opt into 3D by uploading a
+// .obj/.stl model (see objects.js), which sets rec.type to 'object' itself.
 export const rec = {
   type: "image",
   buffer: undefined,
@@ -102,7 +101,98 @@ export const rec = {
   lengthMax: 60
 };
 
+// `obj` and `motion` drive the 3D Object mode (rec.type === 'object'). Ported
+// from reference/dithr/scripts/var.js's obj/motion blocks.
+export const obj = {
+  model: undefined,
+  state: "",
+  canvas: "#ffffff",
+  transparent: false,
+  camera: "ortho",
+  rotation: {
+    x: 0,
+    y: 0
+  },
+  translate: {
+    x: 0,
+    y: 0
+  },
+  scale: {
+    default: 2.5,
+    factor: 2.5,
+    min: 1,
+    max: 10
+  },
+  light: {
+    ambient: 50,
+    specular: 200,
+    shininess: 12,
+    one: {
+      color: "#ff0000",
+      x: 0,
+      y: 1,
+      z: -1
+    },
+    two: {
+      color: "#00ff00",
+      x: -0.1,
+      y: 0,
+      z: -0.1
+    },
+    three: {
+      color: "#0000ff",
+      x: 0.5,
+      y: 0,
+      z: -0.5
+    }
+  }
+};
+
+export const motion = {
+  active: true,
+  frame: 0,
+  rotate: {
+    type: "constant",
+    angle: {
+      x: 45,
+      y: 45,
+      z: 45
+    },
+    speed: {
+      x: 0,
+      y: 0.1,
+      z: 0
+    }
+  },
+  translate: {
+    level: {
+      x: 0.25,
+      y: 0.25,
+      z: 0.25
+    },
+    speed: {
+      x: 0,
+      y: 0,
+      z: 0
+    }
+  }
+};
+
 // --- Option maps (read-only; label → value lookups for the panel UI) ---
+
+export const RATIO_TYPES = {
+  "2:1": "2:1",
+  "16:9": "16:9",
+  "3:2": "3:2",
+  "4:3": "4:3",
+  "5:4": "5:4",
+  "1:1": "1:1",
+  "4:5": "4:5",
+  "3:4": "3:4",
+  "2:3": "2:3",
+  "9:16": "9:16",
+  "1:2": "1:2"
+};
 
 export const RESOLUTIONS = {
   "2:1": { width: 1920, height: 960 },
