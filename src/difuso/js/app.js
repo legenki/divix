@@ -297,6 +297,7 @@ function difusoSketch(p) {
     show('df-motion-translate-speed-x', isObject);
     show('df-motion-translate-speed-y', isObject);
     show('df-motion-translate-speed-z', isObject);
+    show('df-motion-reset', isObject);
   }
 
   function syncUIFromState() {
