@@ -477,9 +477,13 @@ export function bandadaSketch(p) {
 
   function doExportPNG() {
     withHighResExport(() => {
+      // Save g.ctx itself (the fixed-ratio composite), not p.canvas — the
+      // visible canvas is a full-viewport surface whose aspect ratio tracks
+      // the browser window, not cnv.ratio, so saving it directly would export
+      // whatever rectangle the window happens to be instead of the ratio the
+      // user configured.
       drawScene();
-      blitToVisible();
-      exportPNG(p, 'bandada');
+      exportPNG(p, 'bandada', g.ctx);
     });
   }
 
@@ -492,11 +496,13 @@ export function bandadaSketch(p) {
         cnv,
         rec,
         recVideo,
-        drawComposite: () => {
-          drawScene();
-          blitToVisible();
-        },
+        drawComposite: drawScene,
         setStatus,
+        getCanvas: () => g.ctx.canvas,
+        getSize: () => ({
+          w: Math.floor(g.ctx.width * cnv.density.base),
+          h: Math.floor(g.ctx.height * cnv.density.base)
+        })
       });
     });
   }
