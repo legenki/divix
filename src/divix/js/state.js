@@ -157,7 +157,7 @@ export const rec = {
   image: false,
   svg: false,
   frame: 0,
-  frameRate: 60,
+  frameRate: 30,
   length: {
     value: 10,
     min: 1,
