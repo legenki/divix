@@ -105,7 +105,7 @@ export const mode = {
 export const grid = {
   update: true,
   snap: true,
-  show: true,
+  show: false,
   color: "black",
   opacity: 0.5,
   width: 1.5,
