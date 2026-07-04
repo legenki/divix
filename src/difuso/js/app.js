@@ -12,6 +12,7 @@ import { createDither } from './dither.js';
 import { createHalftone } from './halftone.js';
 import { createAscii } from './ascii.js';
 import { createGradient } from './gradient.js';
+import { createObjects } from './objects.js';
 import { SECTIONS } from './controls.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
@@ -58,6 +59,7 @@ function difusoSketch(p) {
   let halftoneCtl = null;
   let asciiCtl = null;
   let gradientCtl = null;
+  let objectsCtl = null;
 
   // ---- Font-path resolution ----
   // FONT_TYPES[label] is a relative path like 'assets/font/font_atascii.ttf';
@@ -155,12 +157,29 @@ function difusoSketch(p) {
   // The effect modules do NOT auto-detect state changes, so this is where the
   // rebuild-on-change discipline lives.
   function applyChange(ctrl) {
+    if (ctrl.action === 'uploadModel') {
+      document.getElementById('df-obj-file-input')?.click();
+    } else if (ctrl.action === 'resetLights') {
+      objectsCtl.resetLights();
+      syncUIFromState();
+    } else if (ctrl.action === 'resetObjectMotions') {
+      objectsCtl.resetObjectMotions();
+      syncUIFromState();
+    } else if (ctrl.action === 'resetObjectCoordinates') {
+      objectsCtl.resetObjectCoordinates();
+      syncUIFromState();
+    }
     switch (ctrl.regen) {
       case 'canvas':
-        // Canvas ratio isn't a fixed resolution here (calculateCanvasSize fits
-        // the source to the window); the ratio slider is inert for sizing but
-        // we resize buffers to stay consistent with any source change.
+        // In object mode this is a real resize (calculateCanvasSize reads
+        // RESOLUTIONS[cnv.ratio] directly); in image/video mode the ratio
+        // slider is inert for sizing (source dictates it) but we still
+        // resize buffers to stay consistent.
         resizeCanvas();
+        break;
+      case 'objectCamera':
+        // Camera mode (ortho/perspective) is read live every frame in
+        // previewGraphics() — nothing to rebuild here.
         break;
       case 'ditherType':
         // New dither.type: rebuild whatever generated texture it needs. Only
@@ -233,6 +252,51 @@ function difusoSketch(p) {
     show('df-gradient-saturation', gradient.type === 'original');
     show('df-gradient-palette', isGradientMap);
     show('df-gradient-reverse', isGradientMap);
+
+    // 3D Object section: every row in it individually gated on
+    // rec.type === 'object', same mechanism as every other conditional row
+    // above — the whole section collapses to an empty shell when every row
+    // inside it is hidden.
+    const isObject = rec.type === 'object';
+    show('df-canvas-ratio', isObject);
+    show('df-obj-upload', isObject);
+    show('df-obj-camera', isObject);
+    show('df-obj-transparent', isObject);
+    show('df-obj-canvas-color', isObject);
+    show('df-obj-scale-factor', isObject);
+    show('df-obj-translate-x', isObject);
+    show('df-obj-translate-y', isObject);
+    show('df-obj-reset-coords', isObject);
+    show('df-light-ambient', isObject);
+    show('df-light-specular', isObject);
+    show('df-light-shininess', isObject);
+    show('df-light-one-color', isObject);
+    show('df-light-one-x', isObject);
+    show('df-light-one-y', isObject);
+    show('df-light-one-z', isObject);
+    show('df-light-two-color', isObject);
+    show('df-light-two-x', isObject);
+    show('df-light-two-y', isObject);
+    show('df-light-two-z', isObject);
+    show('df-light-three-color', isObject);
+    show('df-light-three-x', isObject);
+    show('df-light-three-y', isObject);
+    show('df-light-three-z', isObject);
+    show('df-light-reset', isObject);
+    show('df-motion-active', isObject);
+    show('df-motion-rotate-type', isObject);
+    show('df-motion-rotate-angle-x', isObject);
+    show('df-motion-rotate-angle-y', isObject);
+    show('df-motion-rotate-angle-z', isObject);
+    show('df-motion-rotate-speed-x', isObject);
+    show('df-motion-rotate-speed-y', isObject);
+    show('df-motion-rotate-speed-z', isObject);
+    show('df-motion-translate-level-x', isObject);
+    show('df-motion-translate-level-y', isObject);
+    show('df-motion-translate-level-z', isObject);
+    show('df-motion-translate-speed-x', isObject);
+    show('df-motion-translate-speed-y', isObject);
+    show('df-motion-translate-speed-z', isObject);
   }
 
   function syncUIFromState() {
@@ -247,9 +311,17 @@ function difusoSketch(p) {
   // to even pixel dimensions. Unlike DIVIX (fixed resolution per ratio), DIFUSO's
   // canvas dimensions are computed from the source image at runtime.
   function calculateCanvasSize() {
-    const source0 = source ? source.getCurrentTexture() : null;
-    const targetWidth = source0 ? source0.width : cnv.width;
-    const targetHeight = source0 ? source0.height : cnv.height;
+    let targetWidth;
+    let targetHeight;
+    if (rec.type === 'object') {
+      const res = state.RESOLUTIONS[cnv.ratio] || state.RESOLUTIONS['1:1'];
+      targetWidth = res.width;
+      targetHeight = res.height;
+    } else {
+      const source0 = source ? source.getCurrentTexture() : null;
+      targetWidth = source0 ? source0.width : cnv.width;
+      targetHeight = source0 ? source0.height : cnv.height;
+    }
     if (!targetWidth || !targetHeight) return;
 
     const winWidth = window.innerWidth;
@@ -394,6 +466,8 @@ function difusoSketch(p) {
         gImg.texture(vid);
         gImg.plane(gImg.width, gImg.height);
       }
+    } else if (rec.type === 'object') {
+      objectsCtl.previewGraphics(gImg);
     }
 
     if (dither.type === 'none') {
@@ -733,6 +807,7 @@ function difusoSketch(p) {
       p.WEBGL
     );
     canvas.parent(canvasContainer);
+    objectsCtl = createObjects({ p, state });
     // Must match cnv.density.base (setupBuffers() below): the dither/halftone
     // shaders read p.pixelDensity() to size their UV grid against the effect
     // buffers. A mismatch here doesn't error, it just makes the shader think
@@ -813,7 +888,7 @@ function difusoSketch(p) {
 
   p.draw = () => {
     if (!isReady || !gImg || !dithBuffer || !gradBuffer) return;
-    if (!source || source.getCurrentTexture() === null) return;
+    if (rec.type !== 'object' && (!source || source.getCurrentTexture() === null)) return;
     drawCanvas();
   };
 
@@ -821,6 +896,19 @@ function difusoSketch(p) {
     if (!canvasContainer) return;
     fitVisibleCanvas();
     if (isReady) resizeCanvas();
+  };
+
+  p.mouseDragged = () => {
+    if (rec.type === 'object' && isReady) {
+      objectsCtl.handleMouseDragged();
+    }
+  };
+
+  p.mouseWheel = (event) => {
+    if (rec.type === 'object' && isReady) {
+      event.preventDefault();
+      objectsCtl.handleMouseWheel(event);
+    }
   };
 }
 
