@@ -96,9 +96,7 @@ export const rec = {
   frame: 0,
   quality: 75,
   status: "Loading ...",
-  frameRate: 30,
-  length: 2,
-  lengthMax: 60
+  frameRate: 30
 };
 
 // `obj` and `motion` drive the 3D Object mode (rec.type === 'object'). Ported

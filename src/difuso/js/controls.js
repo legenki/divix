@@ -35,8 +35,9 @@
 //     reference itself at ui.js:463/469).
 //   - Video File Format selector (rec.format webm/gif/webp/png) — shared
 //     exportMedia.js only supports PNG and MP4 (footer buttons).
-//   - Export Length (rec.length) — mirrored as the footer df-mp4-length <select>
-//     (template.html), matching DIVIX's dx-mp4-length pattern, NOT a slider.
+//   - Export Length — the footer df-mp4-length <select> (template.html) sets
+//     recVideo.seconds directly (matching DIVIX's dx-mp4-length pattern), NOT
+//     a slider. There is no separate rec.length field to mirror.
 
 import { FONT_TYPES, RATIO_TYPES } from './state.js';
 
