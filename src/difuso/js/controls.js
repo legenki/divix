@@ -23,11 +23,11 @@
 //      panel controls.
 //
 // Also intentionally excluded (verified against reference/dithr/scripts/ui.js):
-//   - LICENSE tab, Fullscreen Mode, Show Poster, Browser Color, the entire
-//     OBJECT (3D camera/motion/lights) folder, and Transparency/Back Color
-//     (both bound to the un-ported 3D `obj` state). Re-read of ui.js:117-162
-//     confirms image/video mode has NO separate canvas-background mechanism —
-//     the only Back Color there binds to `obj`, so there is nothing to port.
+//   - LICENSE tab, Fullscreen Mode, Show Poster, Browser Color. Re-read of
+//     ui.js:117-162 confirms image/video mode has NO separate canvas-background
+//     mechanism — image/video sources have no Back Color / Transparency
+//     control; those only apply in Object mode (df-obj-canvas-color /
+//     df-obj-transparent above).
 //   - Upload Media / Upload Custom Texture buttons — file-upload triggers wired
 //     directly in app.js (Task 10), not SECTIONS controls. The dither.type
 //     'custom' (custom-texture) mode is likewise omitted — dither.js throws on
@@ -38,7 +38,7 @@
 //   - Export Length (rec.length) — mirrored as the footer df-mp4-length <select>
 //     (template.html), matching DIVIX's dx-mp4-length pattern, NOT a slider.
 
-import { FONT_TYPES } from './state.js';
+import { FONT_TYPES, RATIO_TYPES } from './state.js';
 
 // Local UI-only option maps with no direct state.js export (matches DIVIX's
 // BG_MODES local-constant convention). Values match the state fields they drive.
@@ -201,8 +201,63 @@ export const SECTIONS = [
       // monitor live in the footer (template.html), not here.
       // Export Size range (min 1, max 5, step 1) is DIFUSO's own (ui.js:895-897) —
       // deliberately NOT DIVIX's 2-10/0.25 range.
+      // df-canvas-ratio: visible only when rec.type === 'object' (Task 6
+      // refreshVisibility). image/video stay source-driven for sizing
+      // (calculateCanvasSize in app.js); only object mode needs a fixed
+      // target resolution since there's no source image/video to size from.
+      { id: 'df-canvas-ratio', type: 'select', label: 'Canvas Ratio', path: 'cnv.ratio', options: RATIO_TYPES, regen: 'canvas' },
       { id: 'df-export-size', type: 'slider', label: 'Export Size (px)', path: 'cnv.density.export', min: 500, max: 4000, step: 100 },
       { id: 'df-export-quality', type: 'slider', label: 'Export Quality', path: 'rec.quality', min: 0, max: 100, step: 5 },
+    ],
+  },
+  {
+    title: '3D Object',
+    // Whole section shown/hidden as a single unit when rec.type === 'object'
+    // (Task 6 refreshVisibility) — not per-row visibility like the
+    // dither-type-dependent rows above. One section, not split into
+    // Lighting/Motion sub-sections (per design decision).
+    controls: [
+      { id: 'df-obj-upload', type: 'button', label: 'Upload 3D Model', action: 'uploadModel' },
+      { id: 'df-obj-camera', type: 'select', label: 'Camera', path: 'obj.camera', options: { Orthographic: 'ortho', Perspective: 'perspective' }, regen: 'objectCamera' },
+      { id: 'df-obj-transparent', type: 'check', label: 'Transparent Background', path: 'obj.transparent' },
+      { id: 'df-obj-canvas-color', type: 'color', label: 'Background Color', path: 'obj.canvas' },
+      { id: 'df-obj-scale-factor', type: 'slider', label: 'Scale', path: 'obj.scale.factor', min: 1, max: 10, step: 0.1 },
+      { id: 'df-obj-translate-x', type: 'slider', label: 'Translate X', path: 'obj.translate.x', min: -1, max: 1, step: 0.01 },
+      { id: 'df-obj-translate-y', type: 'slider', label: 'Translate Y', path: 'obj.translate.y', min: -1, max: 1, step: 0.01 },
+      { id: 'df-obj-reset-coords', type: 'button', label: 'Reset Position / Rotation / Scale', action: 'resetObjectCoordinates' },
+
+      { id: 'df-light-ambient', type: 'slider', label: 'Ambient Light', path: 'obj.light.ambient', min: 0, max: 255, step: 1 },
+      { id: 'df-light-specular', type: 'slider', label: 'Specular', path: 'obj.light.specular', min: 0, max: 255, step: 1 },
+      { id: 'df-light-shininess', type: 'slider', label: 'Shininess', path: 'obj.light.shininess', min: 1, max: 100, step: 1 },
+      { id: 'df-light-one-color', type: 'color', label: 'Light 1 Color', path: 'obj.light.one.color' },
+      { id: 'df-light-one-x', type: 'slider', label: 'Light 1 X', path: 'obj.light.one.x', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-one-y', type: 'slider', label: 'Light 1 Y', path: 'obj.light.one.y', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-one-z', type: 'slider', label: 'Light 1 Z', path: 'obj.light.one.z', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-two-color', type: 'color', label: 'Light 2 Color', path: 'obj.light.two.color' },
+      { id: 'df-light-two-x', type: 'slider', label: 'Light 2 X', path: 'obj.light.two.x', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-two-y', type: 'slider', label: 'Light 2 Y', path: 'obj.light.two.y', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-two-z', type: 'slider', label: 'Light 2 Z', path: 'obj.light.two.z', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-three-color', type: 'color', label: 'Light 3 Color', path: 'obj.light.three.color' },
+      { id: 'df-light-three-x', type: 'slider', label: 'Light 3 X', path: 'obj.light.three.x', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-three-y', type: 'slider', label: 'Light 3 Y', path: 'obj.light.three.y', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-three-z', type: 'slider', label: 'Light 3 Z', path: 'obj.light.three.z', min: -1, max: 1, step: 0.01 },
+      { id: 'df-light-reset', type: 'button', label: 'Reset Lights', action: 'resetLights' },
+
+      { id: 'df-motion-active', type: 'check', label: 'Enable Motion', path: 'motion.active' },
+      { id: 'df-motion-rotate-type', type: 'select', label: 'Rotate Motion Type', path: 'motion.rotate.type', options: { Constant: 'constant', Oscillate: 'oscillate' } },
+      { id: 'df-motion-rotate-angle-x', type: 'slider', label: 'Rotate Angle X', path: 'motion.rotate.angle.x', min: 0, max: 180, step: 1 },
+      { id: 'df-motion-rotate-angle-y', type: 'slider', label: 'Rotate Angle Y', path: 'motion.rotate.angle.y', min: 0, max: 180, step: 1 },
+      { id: 'df-motion-rotate-angle-z', type: 'slider', label: 'Rotate Angle Z', path: 'motion.rotate.angle.z', min: 0, max: 180, step: 1 },
+      { id: 'df-motion-rotate-speed-x', type: 'slider', label: 'Rotate Speed X', path: 'motion.rotate.speed.x', min: -1, max: 1, step: 0.01 },
+      { id: 'df-motion-rotate-speed-y', type: 'slider', label: 'Rotate Speed Y', path: 'motion.rotate.speed.y', min: -1, max: 1, step: 0.01 },
+      { id: 'df-motion-rotate-speed-z', type: 'slider', label: 'Rotate Speed Z', path: 'motion.rotate.speed.z', min: -1, max: 1, step: 0.01 },
+      { id: 'df-motion-translate-level-x', type: 'slider', label: 'Translate Level X', path: 'motion.translate.level.x', min: 0, max: 1, step: 0.01 },
+      { id: 'df-motion-translate-level-y', type: 'slider', label: 'Translate Level Y', path: 'motion.translate.level.y', min: 0, max: 1, step: 0.01 },
+      { id: 'df-motion-translate-level-z', type: 'slider', label: 'Translate Level Z', path: 'motion.translate.level.z', min: 0, max: 1, step: 0.01 },
+      { id: 'df-motion-translate-speed-x', type: 'slider', label: 'Translate Speed X', path: 'motion.translate.speed.x', min: -1, max: 1, step: 0.01 },
+      { id: 'df-motion-translate-speed-y', type: 'slider', label: 'Translate Speed Y', path: 'motion.translate.speed.y', min: -1, max: 1, step: 0.01 },
+      { id: 'df-motion-translate-speed-z', type: 'slider', label: 'Translate Speed Z', path: 'motion.translate.speed.z', min: -1, max: 1, step: 0.01 },
+      { id: 'df-motion-reset', type: 'button', label: 'Reset Motion', action: 'resetObjectMotions' },
     ],
   },
 ];
