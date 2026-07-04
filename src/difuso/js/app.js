@@ -28,7 +28,7 @@ import {
 
 const STORAGE_KEY = 'difuso-tool';
 
-const { cnv, ascii, dither, gradient, rec, FONT_TYPES, COLOR_PALETTES } = state;
+const { cnv, ascii, dither, gradient, rec, motion, FONT_TYPES, COLOR_PALETTES } = state;
 
 // Noise-texture manifest: `dither.texture` (1..4) indexes into the per-tier
 // array. The bundled filenames differ per tier, so they're listed explicitly
@@ -666,24 +666,37 @@ function difusoSketch(p) {
     });
   }
 
+  // Advances motion.frame synchronously to match the export frame number.
+  // Unlike beforeVideoFrame, no async wait is needed: motion.frame is a plain
+  // counter read directly by objects.js's previewGraphics(), not tied to
+  // browser-decoded media that needs time to catch up.
+  function beforeObjectFrame(frameNum) {
+    if (rec.type !== 'object') return Promise.resolve();
+    motion.frame = frameNum;
+    return Promise.resolve();
+  }
+
   function doExportMP4() {
     recVideo.seconds = readMp4Length();
-    return withHighResExport(() => {
-      return exportMP4({
+    const savedMotionFrame = motion.frame;
+    return withHighResExport(() =>
+      exportMP4({
         p,
         prefix: 'difuso',
         cnv,
         rec,
         recVideo,
         drawComposite: drawCanvas,
-        beforeDraw: beforeVideoFrame,
+        beforeDraw: rec.type === 'object' ? beforeObjectFrame : beforeVideoFrame,
         setStatus,
         getCanvas: () => gradBuffer.canvas,
         getSize: () => ({
           w: Math.floor(cnv.width * cnv.density.base),
           h: Math.floor(cnv.height * cnv.density.base)
         })
-      });
+      })
+    ).finally(() => {
+      motion.frame = savedMotionFrame;
     });
   }
 
