@@ -141,8 +141,91 @@ export function createObjects({ p, state }) {
     gImg.pop();
   }
 
+  // Rotates the model proportional to mouse movement. Guarded by rec.type ===
+  // 'object' at the call site in app.js (same guard pattern app.js already
+  // uses for other type-specific branches), so no guard duplicated here.
+  function handleMouseDragged() {
+    const cx = (state.cnv.sens.y * (p.mouseY - p.pmouseY)) / 75;
+    const cy = (state.cnv.sens.x * (p.mouseX - p.pmouseX)) / 75;
+    obj.rotation.x += cx;
+    obj.rotation.y += cy;
+    obj.rotation.x %= p.TWO_PI;
+    obj.rotation.y %= p.TWO_PI;
+    updateObjectState();
+  }
+
+  // Zooms via scale.factor, clamped to scale.min/max. `event` is the p5
+  // WheelEvent passed through from app.js's mouseWheel callback.
+  function handleMouseWheel(event) {
+    obj.scale.factor -= event.delta * state.cnv.sens.scale;
+    if (obj.scale.factor > obj.scale.max) obj.scale.factor = obj.scale.max;
+    if (obj.scale.factor < obj.scale.min) obj.scale.factor = obj.scale.min;
+    updateObjectState();
+  }
+
+  // Human-readable status string for a status readout in the panel — mirrors
+  // the reference's checkObjectState().
+  function updateObjectState() {
+    obj.state = `Rotation: ${Math.round(p.degrees(obj.rotation.x))}˚ | ${Math.round(
+      p.degrees(obj.rotation.y)
+    )}˚\nScale: ${Math.round(obj.scale.factor * 100) / 100}`;
+  }
+
+  function resetLights() {
+    obj.light.ambient = 50;
+    obj.light.specular = 200;
+    obj.light.shininess = 12;
+
+    obj.light.one.color = '#ff0000';
+    obj.light.one.x = 0;
+    obj.light.one.y = 1;
+    obj.light.one.z = -1;
+
+    obj.light.two.color = '#00ff00';
+    obj.light.two.x = -0.1;
+    obj.light.two.y = 0;
+    obj.light.two.z = -0.1;
+
+    obj.light.three.color = '#0000ff';
+    obj.light.three.x = 0.5;
+    obj.light.three.y = 0;
+    obj.light.three.z = -0.5;
+  }
+
+  function resetObjectMotions() {
+    motion.frame = 0;
+    motion.rotate.type = 'constant';
+    motion.rotate.angle.x = 45;
+    motion.rotate.angle.y = 45;
+    motion.rotate.angle.z = 45;
+    motion.rotate.speed.x = 0;
+    motion.rotate.speed.y = 0;
+    motion.rotate.speed.z = 0;
+
+    motion.translate.level.x = 0.25;
+    motion.translate.level.y = 0.25;
+    motion.translate.level.z = 0.25;
+    motion.translate.speed.x = 0;
+    motion.translate.speed.y = 0;
+    motion.translate.speed.z = 0;
+  }
+
+  function resetObjectCoordinates() {
+    obj.rotation.x = 0;
+    obj.rotation.y = 0;
+    obj.translate.x = 0;
+    obj.translate.y = 0;
+    obj.scale.factor = obj.scale.default;
+    updateObjectState();
+  }
+
   return {
     loadModelFile,
     previewGraphics,
+    handleMouseDragged,
+    handleMouseWheel,
+    resetLights,
+    resetObjectMotions,
+    resetObjectCoordinates,
   };
 }
