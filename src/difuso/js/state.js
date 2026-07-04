@@ -96,7 +96,7 @@ export const rec = {
   frame: 0,
   quality: 75,
   status: "Loading ...",
-  frameRate: 60,
+  frameRate: 30,
   length: 2,
   lengthMax: 60
 };
