@@ -374,12 +374,20 @@ export function divixSketch(p) {
       buffers.gForm = gForm;
       buffers.gDraw = gDraw;
       buffers.gAlpha = gAlpha;
-    } else if (gForm.width !== res.width || gForm.height !== res.height) {
+    } else {
       // resizeCanvas instead of remove+create: p5.Graphics.remove() throws in
-      // instance mode.
+      // instance mode. Called unconditionally (not just when res.width/height
+      // actually changed) because pixelDensity must also be re-applied here:
+      // withHighResExport() changes cnv.density.base without changing
+      // cnv.ratio, so a resolution-only guard would skip the density update
+      // entirely and silently export at whatever density the buffers already
+      // had — this is what made "Export Size (px)" a no-op for PNG/MP4 export.
       gForm.resizeCanvas(res.width, res.height);
+      gForm.pixelDensity(cnv.density.base);
       gDraw.resizeCanvas(res.width, res.height);
+      gDraw.pixelDensity(cnv.density.base);
       gAlpha.resizeCanvas(res.width, res.height);
+      gAlpha.pixelDensity(cnv.density.base);
     }
   }
 
@@ -619,9 +627,12 @@ export function divixSketch(p) {
   async function withHighResExport(fn) {
     const savedBase = cnv.density.base;
     try {
-      const maxScreen = Math.max(p.width, p.height);
+      // Density multiplier against the fixed-ratio buffer's own edge, not the
+      // browser window's — otherwise "Export Size (px)" would silently depend
+      // on how big the window happened to be when the user clicked export.
+      const maxEdge = Math.max(gDraw.width, gDraw.height);
       const targetEdge = cnv.density.export || 1000;
-      const exportDensity = Math.max(1, targetEdge / maxScreen);
+      const exportDensity = Math.max(1, targetEdge / maxEdge);
       
       cnv.density.base = exportDensity;
       p.pixelDensity(exportDensity);
