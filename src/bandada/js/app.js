@@ -457,9 +457,12 @@ export function bandadaSketch(p) {
   async function withHighResExport(fn) {
     const savedBase = cnv.density.base;
     try {
-      const maxScreen = Math.max(p.width, p.height);
+      // Density multiplier against the fixed-ratio buffer's own edge, not the
+      // browser window's — otherwise "Export Size (px)" would silently depend
+      // on how big the window happened to be when the user clicked export.
+      const maxEdge = Math.max(g.ctx.width, g.ctx.height);
       const targetEdge = cnv.density.export || 1000;
-      const exportDensity = Math.max(1, targetEdge / maxScreen);
+      const exportDensity = Math.max(1, targetEdge / maxEdge);
       
       cnv.density.base = exportDensity;
       p.pixelDensity(exportDensity);
