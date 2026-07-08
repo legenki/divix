@@ -60,6 +60,9 @@ export function bandadaSketch(p) {
   }
 
   function applyChange(ctrl) {
+    if (ctrl.action === 'uploadImage') {
+      document.getElementById('bn-image-file-input')?.click();
+    }
     switch (ctrl.regen) {
       case 'canvas':
         setupBuffers();
@@ -519,6 +522,44 @@ export function bandadaSketch(p) {
     });
   }
 
+  function bindImageUpload() {
+    document.getElementById('bn-image-file-input')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) loadImageFile(file);
+      e.target.value = '';
+    });
+  }
+
+  // Loads a user-picked raster image as the canvas background texture,
+  // mirroring the reference's loadUserImage() (events.js): texture.data feeds
+  // updateImageAsTexture(). Unlike the reference (which left its render-mode
+  // switch commented out), also flip the Background mode to 'image' so the
+  // uploaded picture is visible immediately regardless of the current setting.
+  function loadImageFile(file) {
+    if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+      setStatus('Unsupported file type');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      p.loadImage(
+        event.target.result,
+        (img) => {
+          texture.data = img;
+          g.texture = updateImageAsTexture(cnv.density.base);
+          cnv.bg.mode = 'image';
+          syncUIFromState();
+          saveState();
+        },
+        (err) => {
+          console.warn('[bandada] image load failed:', err);
+          setStatus('Image load failed');
+        }
+      );
+    };
+    reader.readAsDataURL(file);
+  }
+
   // --- p5 lifecycle ---
   p.setup = () => {
     canvasContainer = document.getElementById('bandada-canvas');
@@ -551,6 +592,7 @@ export function bandadaSketch(p) {
       .finally(() => {
         buildUI();
         bindFooter();
+        bindImageUpload();
 
         const keys = Object.keys(PRESETS);
         if (restored) {

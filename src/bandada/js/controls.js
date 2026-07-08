@@ -37,6 +37,7 @@ export const SECTIONS = [
       { id: 'bd-edge-ease', type: 'slider', label: 'Repel Easing', path: 'params.edge.ease.value', min: 0, max: 1, step: 0.01 },
       { id: 'bd-bg-mode', type: 'select', label: 'Background', path: 'cnv.bg.mode', options: CANVAS_BACK_MODES, regen: 'canvas' },
       { id: 'bd-bg-color', type: 'color', label: 'Canvas Color', path: 'cnv.bg.color' },
+      { id: 'bd-upload-image', type: 'button', label: 'Upload Image', action: 'uploadImage' },
     ],
   },
   {
