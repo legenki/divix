@@ -68,9 +68,18 @@ export function bandadaSketch(p) {
         setupBuffers();
         break;
       case 'shape':
+        // g.shapeTypes is a precomputed per-boid array — rebuild it from the
+        // new params.shape before flock.update()'s shape-mismatch check copies
+        // it onto the boids (the donor's Shape Type change handler does the
+        // same, ui.js:334-338). Without this the mismatch check reassigns the
+        // SAME stale strings and the control appears dead.
+        updateShapeTypes();
+        if (!cnv.animation && flock) flock.update();
+        break;
       case 'skew':
       case 'color':
-        // Values updated via reference tracking. Flock update loop will catch shape mismatch.
+        // Values updated via reference tracking (syncGlobals recomputes the
+        // derived g.* fields every frame).
         break;
       case 'boids':
         flock.resize(params.boids.value);
