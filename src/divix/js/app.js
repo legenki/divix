@@ -384,8 +384,17 @@ export function divixSketch(p) {
       // had — this is what made "Export Size (px)" a no-op for PNG/MP4 export.
       gForm.resizeCanvas(res.width, res.height);
       gForm.pixelDensity(cnv.density.base);
+      gForm.strokeWeight(0.5);
+      gForm.noStroke();
+      gForm.angleMode(p.DEGREES);
+      
       gDraw.resizeCanvas(res.width, res.height);
       gDraw.pixelDensity(cnv.density.base);
+      gDraw.rectMode(p.CORNERS);
+      gDraw.imageMode(p.CENTER);
+      gDraw.strokeWeight(0.5);
+      gDraw.noStroke();
+      
       gAlpha.resizeCanvas(res.width, res.height);
       gAlpha.pixelDensity(cnv.density.base);
     }
@@ -760,7 +769,10 @@ export function divixSketch(p) {
     applySplitGrid();
 
     const restored = loadState();
-    if (restored) applySplitGrid();
+    if (restored) {
+      setupBuffers();
+      applySplitGrid();
+    }
     syncPaletteTemp();
 
     // colorjs (window.Color) is needed by form.js's LCH interpolation but is
