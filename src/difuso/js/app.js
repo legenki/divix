@@ -327,11 +327,9 @@ function difusoSketch(p) {
 
     const winWidth = window.innerWidth;
     const winHeight = window.innerHeight;
-    const ui = 640 < winWidth - cnv.uiSize * 2 ? cnv.uiSize : 0;
-    const availWidth = winWidth - ui * 2;
 
-    const maxWidth = Math.min(availWidth * cnv.scale, cnv.maxSize);
-    const maxHeight = Math.min(winHeight * cnv.scale, cnv.maxSize);
+    const maxWidth = Math.min(winWidth * 0.85, cnv.maxSize);
+    const maxHeight = Math.min(winHeight * 0.85, cnv.maxSize);
     const scaleFactor = Math.min(maxWidth / targetWidth, maxHeight / targetHeight);
 
     const w = targetWidth * scaleFactor;
@@ -509,14 +507,9 @@ function difusoSketch(p) {
   function blitToVisible() {
     p.clear();
     // The visible canvas is WEBGL, so its coordinate origin (0, 0) is the canvas
-    // CENTER, not the top-left. gradBuffer is already sized by
-    // calculateCanvasSize() to fit the window minus UI chrome, so blit it at
-    // its NATURAL size — scaling it up to the viewport here (the old
-    // fit-to-canvas math) stretched the image edge-to-edge and hid the margins
-    // the reference shows. Mirror centerCanvas(): shift left by the UI offset
-    // when the window is wide enough for the side panel.
-    const ui = 640 <= p.width - cnv.uiSize * 2 ? cnv.uiSize : 0;
-    p.image(gradBuffer, -ui, 0, gradBuffer.width, gradBuffer.height);
+    // CENTER, not the top-left. It is already sized by calculateCanvasSize()
+    // to fit 85% of the window.
+    p.image(gradBuffer, 0, 0, gradBuffer.width, gradBuffer.height);
   }
 
   // ---- Presets ----

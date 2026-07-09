@@ -108,11 +108,10 @@ export function clonSketch(p) {
   }
 
   // Mirrors klon's setMaxWindowResolution(): the display canvas budget
-  // follows the window, minus the control panel (panel 260px + margins).
+  // follows the window at 85% scale to match other tools.
   function setMaxWindowResolution() {
-    const uiOffset = 300;
-    const maxWidth = Math.min(1280, (window.innerWidth - uiOffset) * 0.85);
-    const maxHeight = Math.min(800, window.innerHeight * 0.9);
+    const maxWidth = window.innerWidth * 0.85;
+    const maxHeight = window.innerHeight * 0.85;
     cnv.maxWidth = maxWidth - (maxWidth % 10);
     cnv.maxHeight = maxHeight - (maxHeight % 10);
   }

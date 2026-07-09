@@ -29,7 +29,7 @@ export const CNV_STATE = {
   multSide: 0.48,
   multLayer: 0.85,
   multWidth: 0,
-  multHeight: 0.92,
+  multHeight: 0.85,
   density: 2,
   densityMin: 2,
   densityMax: 4,
@@ -37,7 +37,7 @@ export const CNV_STATE = {
   mouseOver: false,
   offSide: 4,
   gap: 2,
-  uiSize: -155,
+  uiSize: 0,
   bgSource: "#FFFFFFFF",
   bgResult: "#FFFFFF00",
   stroke: "#000000FF"
