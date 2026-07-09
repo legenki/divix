@@ -7,8 +7,7 @@
 export const cnv = {
   width: 640,
   height: 640,
-  minSize: 320,
-  maxSize: 1280,
+  maxSize: 9999,
   uiSize: 167,
   scale: 0.98,
   ratio: "1:1",

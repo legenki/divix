@@ -24,8 +24,8 @@ export const INITIAL_STATE = {
 export const CNV_STATE = {
   width: 640,
   height: 640,
-  maxWidth: 1920,
-  maxHeight: 1080,
+  maxWidth: 9999,
+  maxHeight: 9999,
   multSide: 0.48,
   multLayer: 0.85,
   multWidth: 0,
