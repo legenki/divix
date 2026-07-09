@@ -100,6 +100,7 @@ export class Flock {
     const s = g.vision;
     const pad = g.gridPadding;
 
+    let rebuild = false;
     if (
       this.space.scale !== s ||
       this.space.gwidth !== g.width ||
@@ -112,11 +113,21 @@ export class Flock {
       this.space.gheight = g.height;
       this.space.width = Math.ceil(newWidth / s) * s;
       this.space.height = Math.ceil(newHeight / s) * s;
+      rebuild = true;
     }
 
     const cols = Math.ceil(this.space.width / s);
     const rows = Math.ceil(this.space.height / s);
-    this.buckets = Array.from({ length: rows }, () => Array.from({ length: cols }, () => []));
+    
+    if (rebuild || !this.buckets.length) {
+      this.buckets = Array.from({ length: rows }, () => Array.from({ length: cols }, () => []));
+    } else {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          this.buckets[r][c].length = 0;
+        }
+      }
+    }
 
     for (const boid of this.boids) {
       const row = Math.floor((boid.y + pad) / s);

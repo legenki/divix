@@ -190,7 +190,7 @@ export const g = {
   source: null,
   result: null,
   texture: {
-    default: "https://images.unsplash.com/photo-1707343844152-6d33a0bb32c3?q=80&w=2560&auto=format&fit=crop",
+    default: "assets/sondeo/default.jpg",
     data: null
   },
   coverImg: null,
