@@ -168,8 +168,8 @@ export function sondeoSketch(p) {
     scanArea();
     restartRotationAnimation();
     restartScalingAnimation();
-    restartShiftXAnimation();
-    restartShiftYAnimation();
+    params.sideMode === "full" ? (cnv.uiSize = 0) : (cnv.uiSize = -145);
+    if (layout.mode === "layer") cnv.uiSize = -145;
   }
 
   function resetScan() {

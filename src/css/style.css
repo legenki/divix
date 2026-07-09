@@ -110,7 +110,7 @@ canvas {
 #copo-canvas canvas,
 #refrac-canvas canvas,
 #clon-canvas canvas {
-  inset: 0 344px 0 0;
+  inset: 0 290px 0 0;
   margin: auto;
 }
 
@@ -118,7 +118,7 @@ canvas {
 .app-switcher-container {
   position: absolute;
   top: 20px;
-  left: calc((100vw - 344px) / 2);
+  left: calc((100vw - 290px) / 2);
   transform: translateX(-50%);
   z-index: 9999;
   pointer-events: auto;
