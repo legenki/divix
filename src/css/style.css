@@ -105,12 +105,12 @@ canvas {
   z-index: 1;
 }
 
-/* Aspect-fitted workspaces: center the canvas in the viewport */
+/* Aspect-fitted workspaces: center the canvas in the available space (left of panel) */
 #borro-canvas canvas,
 #copo-canvas canvas,
 #refrac-canvas canvas,
 #clon-canvas canvas {
-  inset: 0;
+  inset: 0 344px 0 0;
   margin: auto;
 }
 
@@ -118,7 +118,7 @@ canvas {
 .app-switcher-container {
   position: absolute;
   top: 20px;
-  left: 50%;
+  left: calc((100vw - 344px) / 2);
   transform: translateX(-50%);
   z-index: 9999;
   pointer-events: auto;

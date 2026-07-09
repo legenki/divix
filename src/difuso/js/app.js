@@ -507,9 +507,9 @@ function difusoSketch(p) {
   function blitToVisible() {
     p.clear();
     // The visible canvas is WEBGL, so its coordinate origin (0, 0) is the canvas
-    // CENTER, not the top-left. It is already sized by calculateCanvasSize()
-    // to fit 85% of the window.
-    p.image(gradBuffer, 0, 0, gradBuffer.width, gradBuffer.height);
+    // CENTER, not the top-left. Shift left by 172px (half of 344px right panel space)
+    // to center the drawing in the available space.
+    p.image(gradBuffer, -172, 0, gradBuffer.width, gradBuffer.height);
   }
 
   // ---- Presets ----

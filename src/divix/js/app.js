@@ -628,7 +628,7 @@ export function divixSketch(p) {
     const res = state.RESOLUTIONS[cnv.ratio];
     const scale = Math.min((p.width * 0.85) / gDraw.width, (p.height * 0.85) / gDraw.height);
     drawBackground(res, scale);
-    p.image(gDraw, p.width / 2, p.height / 2, gDraw.width * scale, gDraw.height * scale);
+    p.image(gDraw, (p.width - 344) / 2, p.height / 2, gDraw.width * scale, gDraw.height * scale);
   }
 
   async function withHighResExport(fn) {
@@ -743,7 +743,7 @@ export function divixSketch(p) {
     if (cnv.color.mode === 'custom') p.fill(cnv.color.custom);
     else p.fill(palette.array[cnv.color.slot] || '#ffffff');
     p.rectMode(p.CENTER);
-    p.rect(p.width / 2, p.height / 2, res.width * scale, res.height * scale);
+    p.rect((p.width - 344) / 2, p.height / 2, res.width * scale, res.height * scale);
     p.pop();
   }
 

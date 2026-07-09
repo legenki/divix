@@ -37,7 +37,7 @@ export const CNV_STATE = {
   mouseOver: false,
   offSide: 4,
   gap: 2,
-  uiSize: 0,
+  uiSize: -172,
   bgSource: "#FFFFFFFF",
   bgResult: "#FFFFFF00",
   stroke: "#000000FF"

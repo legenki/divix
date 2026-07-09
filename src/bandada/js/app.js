@@ -298,7 +298,7 @@ export function bandadaSketch(p) {
       const scale = Math.min((p.width * 0.85) / g.ctx.width, (p.height * 0.85) / g.ctx.height);
       const gw = g.ctx.width * scale;
       const gh = g.ctx.height * scale;
-      const offsetX = (p.width - gw) / 2;
+      const offsetX = (p.width - 344 - gw) / 2;
       const offsetY = (p.height - gh) / 2;
       g.mouse.x = p.map(p.mouseX, offsetX, offsetX + gw, 0, g.ctx.width);
       g.mouse.y = p.map(p.mouseY, offsetY, offsetY + gh, 0, g.ctx.height);
@@ -403,11 +403,11 @@ export function bandadaSketch(p) {
       p.noStroke();
       p.fill(cnv.bg.color || '#ffffff');
       p.rectMode(p.CENTER);
-      p.rect(p.width / 2, p.height / 2, res.width * scale, res.height * scale);
+      p.rect((p.width - 344) / 2, p.height / 2, res.width * scale, res.height * scale);
       p.pop();
     }
 
-    p.image(g.ctx, p.width / 2, p.height / 2, g.ctx.width * scale, g.ctx.height * scale);
+    p.image(g.ctx, (p.width - 344) / 2, p.height / 2, g.ctx.width * scale, g.ctx.height * scale);
   }
 
   // --- Persistence ---

@@ -122,8 +122,6 @@ export function sondeoSketch(p) {
     } else if (ctrl.action === 'upload') {
       const el = document.getElementById('sn-hidden-file-input');
       if (el) el.click();
-    } else if (ctrl.action === 'randomImage') {
-      loadRandomImage();
     }
     refreshVisibility();
     saveState();
@@ -159,17 +157,10 @@ export function sondeoSketch(p) {
     syncUIFromState();
   }
 
-  function loadRandomImage() {
-    isReady = false;
-    p.loadImage(g.texture.default, (img) => {
-      imageReadytoUse(img);
-      isReady = true;
-    }, () => { isReady = true; });
-  }
 
   function changeLayout() {
-    params.sideMode === "full" ? (cnv.uiSize = 0) : (cnv.uiSize = -155);
-    if (layout.mode === "layer") cnv.uiSize = -155;
+    params.sideMode === "full" ? (cnv.uiSize = 0) : (cnv.uiSize = -172);
+    if (layout.mode === "layer") cnv.uiSize = -172;
   
     if (g.imgSource) imageAdjust(g.imgSource);
     scan.action = false;
@@ -245,7 +236,7 @@ export function sondeoSketch(p) {
     if (layout.mode === "side") cnv.multWidth = cnv.multSide;
     if (layout.mode === "layer") cnv.multWidth = cnv.multLayer;
   
-    let maxWidth = Math.min(cnv.maxWidth, Math.floor(window.innerWidth * cnv.multWidth) + cnv.uiSize);
+    let maxWidth = Math.min(cnv.maxWidth, Math.floor(window.innerWidth * cnv.multWidth));
     let maxHeight = Math.min(cnv.maxHeight, Math.floor(window.innerHeight * cnv.multHeight));
   
     let w = maxWidth / loadedImage.width;
