@@ -206,10 +206,8 @@ export function divixSketch(p) {
   function applyChange(ctrl) {
     switch (ctrl.id) {
       case 'dx-canvas-random':
-        randomizeCtl.randomizeAll();
+        randomizeCtl.randomizeCanvasSettings();
         applySplitGrid();
-        buildAllNoise();
-        syncPaletteTemp();
         syncUIFromState();
         saveState();
         return;

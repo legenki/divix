@@ -171,5 +171,10 @@ export function createRandomize({ p, state, ease, palettes }) {
     obj.cycle = p.min(form.cycleMax + 2, p.floor(cycle));
   }
 
-  return { randomizeAll, randomizePalette, randomizeTransform };
+  function randomizeCanvasSettings() {
+    randomizeSplit();
+    randomizeTransition();
+  }
+
+  return { randomizeAll, randomizePalette, randomizeTransform, randomizeCanvasSettings };
 }
