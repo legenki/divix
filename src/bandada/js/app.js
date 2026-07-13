@@ -12,6 +12,7 @@ import { timestamp } from '../../shared/utils/datetime.js';
 import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG, exportMP4 } from '../../shared/utils/exportMedia.js';
+import { isOverPanel } from '../../shared/utils/panelGuard.js';
 import {
   createPanelBuilder,
   buildPresetSection,
@@ -293,7 +294,11 @@ export function bandadaSketch(p) {
     const forceLevel = p.map(cnv.mouseForce.value, cnv.mouseForce.min, cnv.mouseForce.max, 200, 5);
     g.mouse.force = Math.max(mouseForce / forceLevel, 0);
 
-    if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+    // Ignore mouse when the cursor is over the sidebar panel (or any UI
+    // overlay) so that clicking sliders / buttons doesn't push the boids.
+    const overPanel = isOverPanel('app-bandada', p.mouseX, p.mouseY);
+
+    if (!overPanel && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       g.mouse.over = true;
       const scale = Math.min((p.width * 0.85) / g.ctx.width, (p.height * 0.85) / g.ctx.height);
       const gw = g.ctx.width * scale;
@@ -306,10 +311,10 @@ export function bandadaSketch(p) {
       g.mouse.over = false;
     }
     
-    g.mouse.down = p.mouseIsPressed;
+    g.mouse.down = overPanel ? false : p.mouseIsPressed;
     g.mouse.button = p.mouseButton.left ? 0 : (p.mouseButton.right ? 2 : 1);
 
-    if (cnv.animation) g.frame++;
+    if (cnv.animation || recVideo.active) g.frame++;
   }
 
   function updateRandomArrays() {
@@ -384,7 +389,7 @@ export function bandadaSketch(p) {
 
     syncGlobals();
 
-    if (cnv.animation && flock) {
+    if ((cnv.animation || recVideo.active) && flock) {
       flock.update();
     }
 

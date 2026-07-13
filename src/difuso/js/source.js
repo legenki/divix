@@ -38,7 +38,7 @@ const VIDEO_MIME_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
  * @param {import('p5')} deps.p         The p5 2.x instance (instance mode).
  * @param {object}       deps.state     The whole state.js module (uses `rec`, `cnv`).
  * @param {string}       deps.defaultImageUrl  URL of the bundled default image
- *   (public/assets/difuso/default-image.webp), shown before any user upload.
+ *   (public/assets/difuso/default.webp), shown before any user upload.
  * @param {(file: File) => void} [deps.onUnsupported]  Optional callback fired
  *   when handleDroppedFile/handleFile receives a file type this module does
  *   not handle (e.g. .obj/.stl/.json — those are other tasks' concerns, but

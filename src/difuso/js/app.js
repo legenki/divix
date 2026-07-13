@@ -20,6 +20,7 @@ import { timestamp } from '../../shared/utils/datetime.js';
 import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportMP4 } from '../../shared/utils/exportMedia.js';
+import { isOverPanel } from '../../shared/utils/panelGuard.js';
 import {
   createPanelBuilder,
   buildPresetSection,
@@ -259,7 +260,7 @@ function difusoSketch(p) {
     // inside it is hidden.
     const isObject = rec.type === 'object';
     show('df-canvas-ratio', isObject);
-    show('df-obj-upload', isObject);
+    show('df-obj-upload', true);
     show('df-obj-camera', isObject);
     show('df-obj-transparent', isObject);
     show('df-obj-canvas-color', isObject);
@@ -386,7 +387,7 @@ function difusoSketch(p) {
     source = source || createSource({
       p,
       state,
-      defaultImageUrl: `${import.meta.env.BASE_URL}assets/difuso/default-image.webp`,
+      defaultImageUrl: `${import.meta.env.BASE_URL}assets/difuso/default.webp`,
       onUnsupported: () => setStatus('Unsupported file type'),
     });
 
@@ -878,7 +879,7 @@ function difusoSketch(p) {
       source = createSource({
         p,
         state,
-        defaultImageUrl: `${import.meta.env.BASE_URL}assets/difuso/default-image.webp`,
+        defaultImageUrl: `${import.meta.env.BASE_URL}assets/difuso/default.webp`,
         onUnsupported: () => setStatus('Unsupported file type'),
       });
 
@@ -938,13 +939,13 @@ function difusoSketch(p) {
   };
 
   p.mouseDragged = () => {
-    if (rec.type === 'object' && isReady) {
+    if (rec.type === 'object' && isReady && !isOverPanel('app-difuso', p.mouseX, p.mouseY)) {
       objectsCtl.handleMouseDragged();
     }
   };
 
   p.mouseWheel = (event) => {
-    if (rec.type === 'object' && isReady) {
+    if (rec.type === 'object' && isReady && !isOverPanel('app-difuso', p.mouseX, p.mouseY)) {
       event.preventDefault();
       objectsCtl.handleMouseWheel(event);
     }

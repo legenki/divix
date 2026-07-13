@@ -114,7 +114,7 @@ export const cnv = {
 };
 
 export const texture = {
-  default: "assets/bandada/texture.webp",
+  default: "assets/bandada/default.webp",
   url: null,
   user: null,
   data: null,

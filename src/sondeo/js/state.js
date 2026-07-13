@@ -190,7 +190,7 @@ export const g = {
   source: null,
   result: null,
   texture: {
-    default: "assets/sondeo/default.jpg",
+    default: "assets/sondeo/default.webp",
     data: null
   },
   coverImg: null,

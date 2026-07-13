@@ -102,7 +102,7 @@ async function main() {
     }
   }
 
-  await download(DEFAULT_IMAGE_URL, path.join(outDir, "default-image.webp"));
+  await download(DEFAULT_IMAGE_URL, path.join(outDir, "default.webp"));
   count++;
 
   console.log(`Downloaded ${count} assets`);

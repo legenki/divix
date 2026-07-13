@@ -4,6 +4,7 @@ import { SECTIONS } from './controls.js';
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG } from '../../shared/utils/exportMedia.js';
+import { isOverPanel } from '../../shared/utils/panelGuard.js';
 import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
 const STORAGE_KEY = 'clon-tool';
@@ -783,7 +784,7 @@ export function clonSketch(p) {
 
     loadState();
 
-    p.loadImage(`${import.meta.env.BASE_URL}assets/clon/default.jpg`, (img) => {
+    p.loadImage(`${import.meta.env.BASE_URL}assets/clon/default.webp`, (img) => {
       imageReadytoUse(p, img);
       isReady = true;
 
@@ -796,7 +797,10 @@ export function clonSketch(p) {
   p.draw = () => {
     if (!isReady) return;
     
-    if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+    if (
+      !isOverPanel('app-clon', p.mouseX, p.mouseY) &&
+      p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height
+    ) {
       cnv.mouseOver = true;
       cnv.mouse.px = p.mouseX;
       cnv.mouse.py = p.mouseY;

@@ -11,6 +11,7 @@ import { randomSystem } from './random.js';
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG } from '../../shared/utils/exportMedia.js';
+import { isOverPanel } from '../../shared/utils/panelGuard.js';
 import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
 const STORAGE_KEY = 'sondeo-tool';
@@ -482,8 +483,7 @@ export function sondeoSketch(p) {
     }
 
     loadState();
-
-    p.loadImage(`${import.meta.env.BASE_URL}assets/sondeo/default.jpg`, (img) => {
+    p.loadImage(`${import.meta.env.BASE_URL}assets/sondeo/default.webp`, (img) => {
       imageReadytoUse(img);
       isReady = true;
     });
@@ -512,6 +512,7 @@ export function sondeoSketch(p) {
   // Original gates mask interaction on a press that starts inside the
   // canvas area, not on hover.
   p.mousePressed = () => {
+    if (isOverPanel('app-sondeo', p.mouseX, p.mouseY)) return;
     if (
       params.cmouse.x > 1 &&
       params.cmouse.x < cnv.width - 1 &&
