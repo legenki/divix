@@ -91,15 +91,11 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/boids-default.webp",
-      "data": null
     }
   },
   "Custom Texture": {
     "cnv": {
-      "ratio": "4:3",
+      "ratio": "1:1",
       "bg": {
         "mode": "image",
         "color": "#e2e0daff"
@@ -189,15 +185,11 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/custom-texture.webp",
-      "data": null
     }
   },
   "Coral Stream": {
     "cnv": {
-      "ratio": "3:2",
+      "ratio": "1:1",
       "bg": {
         "mode": "color",
         "color": "#0f0655"
@@ -287,10 +279,6 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/texture.webp",
-      "data": null
     }
   },
   "Kate's Magic": {
@@ -385,10 +373,6 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/kate.webp",
-      "data": null
     }
   },
   "Jelly Geometry": {
@@ -483,15 +467,11 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/shadow.webp",
-      "data": null
     }
   },
   "A Bit Of Serenity": {
     "cnv": {
-      "ratio": "3:4",
+      "ratio": "1:1",
       "bg": {
         "mode": "image",
         "color": "#e5e5e5ff"
@@ -581,10 +561,6 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/serenity.webp",
-      "data": null
     }
   },
   "Diffusion Burst": {
@@ -679,10 +655,6 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/diffusion.webp",
-      "data": null
     }
   },
   "Chain Reaction": {
@@ -777,15 +749,11 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/texture.webp",
-      "data": null
     }
   },
   "Mirrors Drift": {
     "cnv": {
-      "ratio": "3:4",
+      "ratio": "1:1",
       "bg": {
         "mode": "image",
         "color": "#000000ff"
@@ -875,10 +843,6 @@
       "length": {
         "value": 5
       }
-    },
-    "texture": {
-      "url": "assets/mirrors-drift.webp",
-      "data": null
     }
   },
   "Severance Effect": {
@@ -973,10 +937,6 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/severance.webp",
-      "data": null
     }
   },
   "Bubble Flow": {
@@ -1071,10 +1031,6 @@
       "length": {
         "value": 10
       }
-    },
-    "texture": {
-      "url": "assets/texture.webp",
-      "data": null
     }
   }
 }
