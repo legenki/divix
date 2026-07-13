@@ -230,35 +230,6 @@ export const FONT_TYPES = {
   "PxPlus IBM VGA 9x14": "assets/font/font_PxPlus_IBM_VGA_9x14.ttf"
 };
 
-// Reduced from the source tool's presetTypes — no "** User Preset **" entry;
-// that option is added dynamically at runtime (same pattern as PRESET_TYPES
-// in DIVIX), not baked into the static option map.
-export const PRESET_TYPES = {
-  "ASCII8 Digital Future": "digitalFutureASCII8",
-  "ASCII8 Blocky Grain": "blockyGrainASCII8",
-  "ASCII8 Gradient Text": "gradientTextASCII8",
-  "ASCII8 Camo Texture": "camoTextureASCII8",
-  "ASCII16 Black Label": "blackLabelASCII16",
-  "ASCII16 Random Wave": "randomWaveASCII16",
-  "ASCII16 Shading Filter": "shadingFilterASCII16",
-  "ASCII20 Retro Gaming": "retroGamingASCII20",
-  "Halftone Basic Neon": "neonBasicHalftone",
-  "Halftone Basic Candy": "candyBasicHalftone",
-  "Halftone CMYK Original": "originalHalftoneCMYK",
-  "Halftone CMYK Gradient": "gradientHalftoneCMYK",
-  "Halftone CMYK Pop-Up": "popupHalftoneCMYK",
-  "Bayer2 Rough Gradient": "roughGradientBayer2",
-  "Bayer4 Fine Grayscale": "fineGrayscaleBayer4",
-  "Bayer16 Fine Original": "fineOriginalBayer16",
-  "Matrix Fine Checker": "fineCheckerMatrix",
-  "Matrix Diagonal Contrast": "diagonalContrastMatrix",
-  "Matrix Grid Gradient": "gridGradientMatrix",
-  "Noise16 Fine Contrast": "fineContrastNoise16",
-  "Noise64 Grainy Repetitive": "grainyRepetitiveNoise64",
-  "Noise64 Blue Contrast": "blueContrastNoise64",
-  "Noise128 Duotone Gradient": "duotoneGradientNoise128",
-  "Noise128 Rough Original": "roughOriginalNoise128"
-};
 
 // 30 built-in color palettes, ported from the source tool's `colorPalette`.
 // Indexing choice: kept as the original's 1-based numeric-string keys (an

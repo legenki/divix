@@ -167,30 +167,6 @@ export const rec = {
 
 // --- Option maps (read-only; label → value lookups for the panel UI) ---
 
-export const PRESET_TYPES = {
-  "Split Vibration": "splitVibration",
-  "Lotus Metamorphosis": "lotusMetamorphosis",
-  "Star Trails": "starTrails",
-  "Wall Art Dynamics": "wallArtDynamics",
-  "Radical Vortex": "radicalVortex",
-  "Hypnotic Garden": "hypnoticGarden",
-  "Hype The Type": "hypeTheType",
-  "Butterfly Effect": "butterflyEffect",
-  "Cutout Progression": "cutoutProgression",
-  "Funky Beats": "funkyBeats",
-  "Cross Transition": "crossTransition",
-  "Jelly Airflow": "jellyAirflow",
-  OMG: "omgType",
-  "Star Force Credits": "starForceCredits",
-  "Glowing Vessel": "glowingVessel",
-  "Blossom Geomerty": "blossomGeomerty",
-  "Matrix Drawing": "matrixDrawing",
-  "Pool Vibration": "poolVibration",
-  "Unfolding Circles": "unfoldingCircles",
-  "Prismatic Mandala": "prismaticMandala",
-  "Drop The SVG": "dropTheSVG"
-};
-
 export const SLOT_TYPES = {
   "Color 1": 0,
   "Color 2": 1,

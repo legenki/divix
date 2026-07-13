@@ -1,20 +1,6 @@
 // BANDADA — workspace state and option maps.
 // Ported from reference/boids/scripts/var.js
 
-export const PRESET_TYPES = {
-  "Default Preset": "defaultPreset",
-  "Custom Texture": "customTexture",
-  "Coral Stream": "coralStreamPreset",
-  "Kate's Magic": "kateMagicPreset",
-  "Jelly Geometry": "jellyGeometryPreset",
-  "A Bit Of Serenity": "serenityScenePreset",
-  "Diffusion Burst": "diffusionBurstPreset",
-  "Chain Reaction": "chainReactionPreset",
-  "Mirrors Drift": "mirrorsDriftPreset",
-  "Severance Effect": "severanceEffectPreset",
-  "Bubble Flow": "bubbleFlowPreset",
-  "** User Preset **": "User Preset"
-};
 
 export const CANVAS_BACK_MODES = {
   "Custom Color": "color",
