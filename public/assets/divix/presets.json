@@ -361,7 +361,7 @@
   },
   "Wall Art Dynamics": {
     "cnv": {
-      "ratio": "4:3",
+      "ratio": "1:1",
       "color": {
         "mode": "custom",
         "custom": "#000000",
@@ -721,7 +721,7 @@
   },
   "Hype The Type": {
     "cnv": {
-      "ratio": "16:9",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#000000",
@@ -1081,7 +1081,7 @@
   },
   "Funky Beats": {
     "cnv": {
-      "ratio": "3:2",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#000000",
@@ -1321,7 +1321,7 @@
   },
   "Jelly Airflow": {
     "cnv": {
-      "ratio": "3:2",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#ffffff",
@@ -1441,7 +1441,7 @@
   },
   "OMG": {
     "cnv": {
-      "ratio": "16:9",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#000000",
@@ -1561,7 +1561,7 @@
   },
   "Star Force Credits": {
     "cnv": {
-      "ratio": "3:2",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#ffffff",
@@ -1681,7 +1681,7 @@
   },
   "Glowing Vessel": {
     "cnv": {
-      "ratio": "4:3",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#000000",
@@ -1921,7 +1921,7 @@
   },
   "Matrix Drawing": {
     "cnv": {
-      "ratio": "3:2",
+      "ratio": "1:1",
       "color": {
         "mode": "custom",
         "custom": "#000000",
@@ -2041,7 +2041,7 @@
   },
   "Pool Vibration": {
     "cnv": {
-      "ratio": "3:2",
+      "ratio": "1:1",
       "color": {
         "mode": "palette",
         "custom": "#000000",
