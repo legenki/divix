@@ -46,6 +46,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       devOptions: {
         enabled: true,
+        suppressWarnings: true,
       },
       workbox: {
         // Include workspace assets (presets/palettes JSON, mask/default images)
