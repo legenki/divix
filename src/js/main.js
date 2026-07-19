@@ -1,5 +1,5 @@
 import { registerSW } from 'virtual:pwa-register';
-import { ensureVendorLibs } from '../shared/utils/lazyLibs.js';
+import { ensureVendorLibs, ensureNoiseLibs } from '../shared/utils/lazyLibs.js';
 
 // Register Service Worker for PWA. New content shows a toast; the user
 // decides when to reload so an in-progress session isn't lost.
@@ -44,19 +44,25 @@ function showUpdateToast(onUpdate) {
  * @property {string}   [shortcut]  KeyboardEvent.code that activates it with Alt.
  * @property {string[]} [libs]      Vendor globals the sketch needs (see lazyLibs.js);
  *                                  loaded in parallel with the chunk, ready before setup().
+ * @property {boolean}  [needsNoise] Seeded simplex + alea (divix, sondeo).
  * @property {p5|null}  instance    Lazily created p5 instance (mutated at runtime).
  * @property {Promise<void>|null} pending  In-flight init promise; null when idle.
+ * @property {number}   lastActive  performance.now() when last activated.
  */
 /** @type {Workspace[]} */
 const workspaces = [
-  { name: 'divix',   load: () => import('../divix/js/app.js').then((m) => m.divixSketch),     containerId: 'divix-canvas',   animated: true, shortcut: 'KeyD', libs: ['paper'] },
+  { name: 'divix',   load: () => import('../divix/js/app.js').then((m) => m.divixSketch),     containerId: 'divix-canvas',   animated: true, shortcut: 'KeyD', needsNoise: true },
   { name: 'difuso',  load: () => import('../difuso/js/app.js').then((m) => m.difusoSketch),   containerId: 'difuso-canvas',  animated: true, shortcut: 'KeyF' },
   { name: 'bandada', load: () => import('../bandada/js/app.js').then((m) => m.bandadaSketch), containerId: 'bandada-canvas', animated: true, shortcut: 'KeyB' },
-  { name: 'sondeo',  load: () => import('../sondeo/js/app.js').then((m) => m.sondeoSketch),   containerId: 'sondeo-canvas',  animated: true, shortcut: 'KeyS' },
+  { name: 'sondeo',  load: () => import('../sondeo/js/app.js').then((m) => m.sondeoSketch),   containerId: 'sondeo-canvas',  animated: true, shortcut: 'KeyS', needsNoise: true },
   { name: 'clon',    load: () => import('../clon/js/app.js').then((m) => m.clonSketch),       containerId: 'clon-canvas',    animated: true, shortcut: 'KeyC' },
-].map((w) => ({ ...w, instance: null }));
+].map((w) => ({ ...w, instance: null, pending: null, lastActive: 0 }));
 
 const workspaceByName = new Map(workspaces.map((w) => [w.name, w]));
+
+// Idle workspaces older than this may drop their p5 instance to free GPU/CPU
+// memory. State is still in localStorage and will rehydrate on next open.
+const IDLE_DISPOSE_MS = 5 * 60 * 1000;
 
 let currentApp = 'divix';
 let currentTheme = 'light';
@@ -69,6 +75,7 @@ let currentTheme = 'light';
  * @returns {Promise<void>}
  */
 function initApp(ws) {
+  ws.lastActive = performance.now();
   if (ws.instance) {
     if (currentTheme === 'dark') applyThemeToInstance(ws, currentTheme);
     return Promise.resolve();
@@ -77,7 +84,15 @@ function initApp(ws) {
 
   // Vendor globals download in parallel with the sketch chunk and p5 constructor;
   // all must be ready before the instance is created (sketches touch globals in setup()).
-  ws.pending = Promise.all([ws.load(), import('p5'), ensureVendorLibs(...(ws.libs || []))])
+  const libNames = [...(ws.libs || [])];
+  const prep = [
+    ws.load(),
+    import('p5'),
+    libNames.length ? ensureVendorLibs(...libNames) : Promise.resolve(),
+    ws.needsNoise ? ensureNoiseLibs() : Promise.resolve(),
+  ];
+
+  ws.pending = Promise.all(prep)
     .then(([sketch, { default: p5 }]) => {
       const container = document.getElementById(ws.containerId);
       if (container) {
@@ -92,6 +107,38 @@ function initApp(ws) {
 
   return ws.pending;
 }
+
+/**
+ * Tear down a p5 instance so WebGL contexts and canvases can be GC'd.
+ * @param {Workspace} ws
+ */
+function disposeApp(ws) {
+  if (!ws.instance) return;
+  try {
+    if (typeof ws.instance.remove === 'function') ws.instance.remove();
+  } catch (e) {
+    console.warn(`[main] dispose "${ws.name}" failed:`, e);
+  }
+  ws.instance = null;
+  const container = document.getElementById(ws.containerId);
+  if (container) container.innerHTML = '';
+}
+
+/**
+ * Drop idle non-active workspaces after IDLE_DISPOSE_MS of inactivity.
+ */
+function maybeDisposeIdle() {
+  const now = performance.now();
+  for (const ws of workspaces) {
+    if (ws.name === currentApp) continue;
+    if (!ws.instance) continue;
+    if (now - ws.lastActive < IDLE_DISPOSE_MS) continue;
+    disposeApp(ws);
+  }
+}
+
+// Periodic idle cleanup (cheap; only runs dispose when thresholds hit).
+setInterval(maybeDisposeIdle, 60 * 1000);
 
 /**
  * Applies a theme to a workspace's p5 instance if it exposes applyTheme.
@@ -162,6 +209,7 @@ function switchApp(appName) {
 function executeSwitchApp(appName) {
   currentApp = appName;
   const active = workspaceByName.get(appName);
+  active.lastActive = performance.now();
 
   // Update tab + view visibility synchronously for an instant UI response.
   workspaces.forEach((ws) => {

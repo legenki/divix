@@ -18,6 +18,7 @@ import { timestamp } from '../../shared/utils/datetime.js';
 import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG, exportMP4 } from '../../shared/utils/exportMedia.js';
+import { createDirtyLoop } from '../../shared/utils/dirtyLoop.js';
 import {
   createPanelBuilder,
   buildPresetSection,
@@ -36,11 +37,11 @@ export function divixSketch(p) {
   // ---- Runtime-only (not persisted) ----
   let gForm = null;
   let gDraw = null;
-  let gAlpha = null;
   let isReady = false;
   let PRESETS = {};
   let palettes = [];
   const recVideo = { active: false, seconds: 4 };
+  const dirty = createDirtyLoop(p);
 
   // Seeded simplex generators — one per transform axis, keyed to that axis'
   // own `.seed`. Rebuilt when the relevant seed changes (the 'seed' regen tag)
@@ -98,7 +99,12 @@ export function divixSketch(p) {
   }
 
   // ---- Panel UI ----
-  const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
+  const panel = createPanelBuilder({
+    state: fullState,
+    applyChange,
+    refreshVisibility,
+    onSliderInput: () => dirty.markDirty(),
+  });
 
   function buildUI() {
     const root = document.getElementById('dx-controls');
@@ -142,7 +148,9 @@ export function divixSketch(p) {
       e.stopPropagation();
       randomizeCtl.randomizePalette();
       syncPaletteTemp();
+      formCtl?.invalidateColorCache?.();
       rebuildSwatches();
+      dirty.markDirty();
       saveState();
     });
     root.appendChild(sec);
@@ -175,6 +183,8 @@ export function divixSketch(p) {
       row.querySelector(`#dx-palette-use-${i}`).addEventListener('change', (e) => {
         palette.use[i] = e.target.checked;
         syncPaletteTemp();
+        formCtl?.invalidateColorCache?.();
+        dirty.markDirty();
         saveState();
       });
       const colorInput = row.querySelector(`#dx-palette-color-${i}`);
@@ -183,11 +193,15 @@ export function divixSketch(p) {
         palette.array[i] = e.target.value;
         code.textContent = e.target.value.toUpperCase();
         syncPaletteTemp();
+        formCtl?.invalidateColorCache?.();
+        dirty.markDirty();
         saveState();
       });
       row.querySelector(`#dx-palette-select-${i}`).addEventListener('click', () => {
         palette.index = i;
         rebuildSwatches();
+        formCtl?.invalidateColorCache?.();
+        dirty.markDirty();
         saveState();
       });
       holder.appendChild(row);
@@ -209,6 +223,7 @@ export function divixSketch(p) {
         randomizeCtl.randomizeCanvasSettings();
         applySplitGrid();
         syncUIFromState();
+        dirty.markDirty();
         saveState();
         return;
       case 'dx-canvas-reset':
@@ -219,32 +234,42 @@ export function divixSketch(p) {
         form.transition.x = 0;
         form.transition.y = 0;
         syncUIFromState();
+        dirty.markDirty();
         saveState();
         return;
       case 'dx-rand-scale':
         randomizeCtl.randomizeTransform(form.scale, false);
         buildNoise('scale');
         syncUIFromState();
+        dirty.markDirty();
         saveState();
         return;
       case 'dx-rand-xmove':
         randomizeCtl.randomizeTransform(form.xmove, false);
         buildNoise('xmove');
         syncUIFromState();
+        dirty.markDirty();
         saveState();
         return;
       case 'dx-rand-ymove':
         randomizeCtl.randomizeTransform(form.ymove, false);
         buildNoise('ymove');
         syncUIFromState();
+        dirty.markDirty();
         saveState();
         return;
       case 'dx-rand-rotate':
         randomizeCtl.randomizeTransform(form.rotate, false);
         buildNoise('rotate');
         syncUIFromState();
+        dirty.markDirty();
         saveState();
         return;
+    }
+
+    // Toggle animation → dirty-loop policy.
+    if (ctrl.path === 'cnv.animation') {
+      dirty.setAnimating(!!cnv.animation);
     }
 
     switch (ctrl.regen) {
@@ -268,7 +293,9 @@ export function divixSketch(p) {
         // the refreshVisibility() below.
         break;
     }
+    formCtl?.invalidateColorCache?.();
     refreshVisibility();
+    dirty.markDirty();
     saveState();
   }
 
@@ -342,17 +369,7 @@ export function divixSketch(p) {
       // rotations (cnv.rotation.value, per-form formData.transform.rotate) are
       // authored in DEGREES; without this a fresh p5.Graphics defaults to
       // RADIANS, so the forms are rotated ~57x too far and their content
-      // collapses toward gForm's center. For split.type 'none' the 1:1 copy
-      // still fills the canvas so it looked plausible, but any split that
-      // clips+mirrors gForm's quadrants then only fills the region the
-      // (mislaid) content actually reached — producing the compressed composite.
-      // Reference system.js also sets strokeWeight(0.5)+noStroke() on gForm
-      // here; form.js always overwrites strokeWeight before drawing so this
-      // has no visible effect today, but replicate it anyway — this file has
-      // twice now shipped a bug from a buffer mode call silently missing
-      // (see the angleMode/rectMode/imageMode comments above and below), so
-      // treat reference/splitx/scripts/system.js's buffer setup as the
-      // authoritative checklist rather than relying on incidental call order.
+      // collapses toward gForm's center.
       gForm.strokeWeight(0.5);
       gForm.noStroke();
       gForm.angleMode(p.DEGREES);
@@ -360,18 +377,13 @@ export function divixSketch(p) {
       gDraw.pixelDensity(cnv.density.base);
       // Match the reference tool's gDraw render modes (system.js setupCanvas):
       // the per-quadrant clip rects use CORNERS coords (rect(x1,y1,x2,y2)) and
-      // the composited image is centered at the translated origin. Without these
-      // the clip rect and the corner-anchored image never overlap, so gDraw
-      // composites out fully transparent for every split.type !== 'none'.
+      // the composited image is centered at the translated origin.
       gDraw.rectMode(p.CORNERS);
       gDraw.imageMode(p.CENTER);
       gDraw.strokeWeight(0.5);
       gDraw.noStroke();
-      gAlpha = p.createGraphics(res.width, res.height);
-      gAlpha.pixelDensity(cnv.density.base);
       buffers.gForm = gForm;
       buffers.gDraw = gDraw;
-      buffers.gAlpha = gAlpha;
     } else {
       // resizeCanvas instead of remove+create: p5.Graphics.remove() throws in
       // instance mode. Called unconditionally (not just when res.width/height
@@ -385,16 +397,13 @@ export function divixSketch(p) {
       gForm.strokeWeight(0.5);
       gForm.noStroke();
       gForm.angleMode(p.DEGREES);
-      
+
       gDraw.resizeCanvas(res.width, res.height);
       gDraw.pixelDensity(cnv.density.base);
       gDraw.rectMode(p.CORNERS);
       gDraw.imageMode(p.CENTER);
       gDraw.strokeWeight(0.5);
       gDraw.noStroke();
-      
-      gAlpha.resizeCanvas(res.width, res.height);
-      gAlpha.pixelDensity(cnv.density.base);
     }
   }
 
@@ -482,10 +491,22 @@ export function divixSketch(p) {
   // formData.clip on the live object form.js returns (getFormData() hands back
   // the same reference) so svgExport reads a populated clip array. Ported from
   // reference drawSplitImages().
+  // Fast path: split.type === 'none' is a single 1:1 copy (no clip/mirror).
   function drawSplitImages() {
     const formData = formCtl.getFormData();
-    formData.clip = [];
+    formData.clip.length = 0;
     gDraw.clear();
+
+    if (split.type === 'none' || (split.x === 1 && split.y === 1)) {
+      const clip = splitFormation(0, 0, 0);
+      formData.clip.push(clip);
+      gDraw.imageMode(p.CENTER);
+      gDraw.push();
+      gDraw.translate(gForm.width / 2, gForm.height / 2);
+      gDraw.image(gForm, 0, 0, gDraw.width, gDraw.height, 0, 0, gForm.width, gForm.height);
+      gDraw.pop();
+      return;
+    }
 
     let count = 0;
     for (let x = 0; x < split.x; x++) {
@@ -569,7 +590,10 @@ export function divixSketch(p) {
     formCtl.switchForm();
     buildAllNoise();
     syncPaletteTemp();
+    formCtl?.invalidateColorCache?.();
+    dirty.setAnimating(!!cnv.animation);
     syncUIFromState();
+    dirty.markDirty();
     saveState();
   }
 
@@ -812,24 +836,34 @@ export function divixSketch(p) {
         syncPaletteTemp();
         syncUIFromState();
       }
+      dirty.setAnimating(!!cnv.animation);
+      dirty.markDirty();
       isReady = true;
     });
   };
 
   p.draw = () => {
     if (!isReady || !gForm) return;
+    // Skip full redraw when animation is off and nothing changed.
+    if (!cnv.animation && !recVideo.active && !dirty.needsDraw()) {
+      dirty.afterDraw();
+      return;
+    }
 
     drawScene();
     blitToVisible();
+    dirty.consume();
 
     if (cnv.animation) {
       const total = rec.length.value * rec.frameRate;
       cnv.frame >= total ? (cnv.frame = 0) : cnv.frame++;
     }
+    dirty.afterDraw();
   };
 
   p.windowResized = () => {
     if (canvasContainer) fitCanvas();
+    dirty.markDirty();
   };
 }
 

@@ -5,18 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Divix</title>
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="src/css/style.css">
 
-  <!-- LIBRARIES -->
-
-  <!-- Small helpers shared by the workspaces (seeded noise, ~20 KB) -->
-  <script src="/lib/vendor/alea.js"></script>
-  <script src="/lib/vendor/simplex-noise.min.js"></script>
-  <script src="/lib/vendor/hsluv.min.js"></script>
-  <!-- Heavy vendor libs (paper, colorjs, h264 encoder) load on demand per
-       workspace — see shared/utils/lazyLibs.js -->
+  <!-- Vendor libs (alea, simplex, paper, colorjs, h264 encoder) load on
+       demand per workspace / feature — see shared/utils/lazyLibs.js -->
 </head>
 <body class="theme-light">
 

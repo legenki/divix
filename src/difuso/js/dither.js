@@ -99,7 +99,11 @@ export function createDither({ p, state, buffer, noiseTextures }) {
   }
 
   function makeNoiseTexture() {
-    const img = noiseTextures[state.dither.noise][state.dither.texture - 1];
+    const tier = noiseTextures?.[state.dither.noise];
+    const img = tier?.[state.dither.texture - 1];
+    // Noise PNGs load lazily per tier — caller must ensureNoiseTier() first.
+    // Returning null lets apply() skip a frame instead of crashing.
+    if (!img || !img.width) return null;
     const d = img.width * state.dither.scale * p.pixelDensity();
     const tex = p.createGraphics(d, d);
     prepTile(tex);
@@ -115,9 +119,14 @@ export function createDither({ p, state, buffer, noiseTextures }) {
   // must invoke it after any change to dither.matrix/scale/noise/texture, or
   // apply() will keep drawing a stale tile. apply() only self-heals a NEVER-
   // built tile (ditherTexture === null), it does not detect staleness.
+  // Returns null when noise tier images are not loaded yet.
   function buildDitherTexture() {
     if (ditherTexture && typeof ditherTexture.remove === 'function') {
-      ditherTexture.remove();
+      try {
+        ditherTexture.remove();
+      } catch {
+        /* ignore */
+      }
     }
     ditherTexture = null;
 
@@ -156,6 +165,15 @@ export function createDither({ p, state, buffer, noiseTextures }) {
 
     const shader = buildShader();
     if (!ditherTexture) buildDitherTexture();
+    // Noise tier still loading — pass source through until tile is ready.
+    if (!ditherTexture) {
+      buffer.push();
+      buffer.texture(sourceTexture);
+      buffer.rectMode(p.CORNER);
+      buffer.rect(-buffer.width / 2, -buffer.height / 2, buffer.width, buffer.height);
+      buffer.pop();
+      return;
+    }
 
     buffer.shader(shader);
     shader.setUniform('u_texture', sourceTexture);

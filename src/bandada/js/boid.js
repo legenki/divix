@@ -2,6 +2,12 @@ import { V2D } from './v2d.js';
 import { g } from './state.js';
 import { lerpAngle } from './utils.js';
 
+// Per-instance scratch vectors — avoids allocating V2D every flock/interact frame.
+const _aln = new V2D();
+const _csn = new V2D();
+const _sep = new V2D();
+const _mv = new V2D();
+
 export class Boid extends V2D {
   constructor(index, p) {
     super(g.shapePos[index].x, g.shapePos[index].y);
@@ -25,14 +31,23 @@ export class Boid extends V2D {
 
     this.startX = Math.floor(this.x);
     this.startY = Math.floor(this.y);
+
+    // Reused neighbor lists (cleared each flock call).
+    this._ns = [];
+    this._ds = [];
   }
 
   neighbors(flock) {
     const cands = flock.candidates(this);
-    const ns = [];
-    const ds = [];
+    const ns = this._ns;
+    const ds = this._ds;
+    ns.length = 0;
+    ds.length = 0;
 
-    const candidate_count = cands.flat().length;
+    // Count without flat() allocation.
+    let candidate_count = 0;
+    for (let ci = 0; ci < cands.length; ci++) candidate_count += cands[ci].length;
+
     let step = g.accuracy === 0 ? 1 : Math.ceil(candidate_count / g.accuracy);
     let i = Math.floor(this.p.random(step));
 
@@ -55,9 +70,9 @@ export class Boid extends V2D {
   flock(flock) {
     this.acc.zero();
 
-    const aln = new V2D();
-    const csn = new V2D();
-    const sep = new V2D();
+    const aln = _aln.zero();
+    const csn = _csn.zero();
+    const sep = _sep.zero();
 
     const [ns, ds] = this.neighbors(flock);
 
@@ -133,7 +148,7 @@ export class Boid extends V2D {
     }
 
     if (g.mouse.down && g.mouse.over) {
-      const mv = new V2D(g.mouse.x, g.mouse.y);
+      const mv = _mv.set(g.mouse.x, g.mouse.y);
       const d = mv.sqrDist(this);
       mv.sub(this)
         .setMag(10000 / (d || 1))
@@ -176,19 +191,19 @@ export class Boid extends V2D {
   }
 
   imageRender() {
+    if (!g.texture) return;
     const size = g.scale;
     const sizeHalf = size / 2;
     const sx = this.startX - sizeHalf;
     const sy = this.startY - sizeHalf;
 
+    // Clip to the boid shape then stamp a texture patch. Per-boid clip is
+    // still the correct visual; vector mode remains the fast path.
     g.ctx.fill(255);
     g.ctx.beginClip();
     this[this.shapeType]();
     g.ctx.endClip();
-
-    if (g.texture) {
-      g.ctx.copy(g.texture, sx, sy, size, size, -sizeHalf, -sizeHalf, size, size);
-    }
+    g.ctx.copy(g.texture, sx, sy, size, size, -sizeHalf, -sizeHalf, size, size);
   }
 
   // Shaping functions

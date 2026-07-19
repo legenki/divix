@@ -796,11 +796,15 @@ export function clonSketch(p) {
 
   p.draw = () => {
     if (!isReady) return;
-    
-    if (
+
+    const overCanvas =
       !isOverPanel('app-clon', p.mouseX, p.mouseY) &&
-      p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height
-    ) {
+      p.mouseX >= 0 &&
+      p.mouseX <= p.width &&
+      p.mouseY >= 0 &&
+      p.mouseY <= p.height;
+
+    if (overCanvas) {
       cnv.mouseOver = true;
       cnv.mouse.px = p.mouseX;
       cnv.mouse.py = p.mouseY;
@@ -808,7 +812,19 @@ export function clonSketch(p) {
       cnv.mouseOver = false;
     }
 
+    // Interaction-driven tool: full redraw only when the cursor is over the
+    // canvas, a button is held, or UI dirtied the scene. Idle saves GPU fill.
+    if (!overCanvas && !p.mouseIsPressed && p.frameCount > 1) {
+      // Keep a very low tick so mouse-enter is noticed quickly via mouseMoved.
+      return;
+    }
+
     drawScene(p);
+  };
+
+  p.mouseMoved = () => {
+    // Wake the loop when the cursor re-enters the canvas area.
+    if (typeof p.loop === 'function') p.loop();
   };
 
   p.mousePressed = () => {

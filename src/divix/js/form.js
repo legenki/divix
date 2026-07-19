@@ -13,13 +13,13 @@
  * @param {object} deps
  * @param {import('p5')} deps.p            The p5 instance (instance mode).
  * @param {object}       deps.state        The whole state.js module (palette, cnv, form, rec, SHAPE_SIZE, SHAPE_PATHS, ...).
- * @param {object}       deps.buffers      Graphics buffers created by app.js: `{ gForm, gDraw, gAlpha }` (p5.Graphics).
+ * @param {object}       deps.buffers      Graphics buffers created by app.js: `{ gForm, gDraw }` (p5.Graphics).
  * @param {object}       deps.noise        Seeded simplex generators: `{ xmove, ymove, rotate, scale }`.
  *   IMPORTANT CONTRACT: each entry must expose `.noise3D(x, y, z)`. These are
  *   constructed by app.js (e.g. `new SimplexNoise(alea(seed))`) — NOT here, and
  *   NOT the numeric placeholders on state.js's `simplex` export. This module
  *   only reads `.noise3D()` off them.
- * @returns {{ switchForm: () => void, drawForms: () => void, generateParameters: () => void, getFormData: () => object }}
+ * @returns {{ switchForm: () => void, drawForms: () => void, generateParameters: () => void, getFormData: () => object, invalidateColorCache: () => void }}
  */
 export function createForm({ p, state, buffers, noise }) {
   const { palette, cnv, form, rec, SHAPE_SIZE, SHAPE_PATHS } = state;
@@ -27,9 +27,30 @@ export function createForm({ p, state, buffers, noise }) {
 
   const TWO_PI = Math.PI * 2;
 
-  // Was a module-level global in the original; here it is render state private
-  // to this factory, recomputed every frame by generateParameters().
-  let formData = {};
+  // Reused every frame — avoid allocating new arrays/objects for GC pressure.
+  const formData = {
+    frame: 0,
+    width: 0,
+    height: 0,
+    scale: 1,
+    rotation: 0,
+    position: { x: 0, y: 0 },
+    shape: { width: 0, height: 0 },
+    clip: [],
+    color: [],
+    transform: {
+      transition: { x: [], y: [] },
+      move: { x: [], y: [] },
+      scale: [],
+      rotate: [],
+    },
+    maxRotateAngle: 90,
+  };
+
+  // Cached interpolated ramps for transitionLCH / transitionRGB (invalidated
+  // when palette or mode changes).
+  let colorRamp = null;
+  let colorRampKey = '';
 
   // --- Shape lookup -------------------------------------------------------
 
@@ -100,8 +121,51 @@ export function createForm({ p, state, buffers, noise }) {
     }
   }
 
+  function ensureCapacity(n) {
+    const arrays = [
+      formData.color,
+      formData.transform.transition.x,
+      formData.transform.transition.y,
+      formData.transform.move.x,
+      formData.transform.move.y,
+      formData.transform.scale,
+      formData.transform.rotate,
+    ];
+    for (const arr of arrays) {
+      if (arr.length < n) arr.length = n;
+    }
+  }
+
+  function invalidateColorCache() {
+    colorRamp = null;
+    colorRampKey = '';
+  }
+
+  function ensureColorRamp(count) {
+    const mode = form.color.mode;
+    if (mode !== 'transitionLCH' && mode !== 'transitionRGB') {
+      colorRamp = null;
+      return;
+    }
+    const colors = palette.temp && palette.temp.length ? palette.temp : palette.array;
+    const key = `${mode}|${count}|${colors.join(',')}`;
+    if (colorRamp && colorRampKey === key) return;
+    colorRampKey = key;
+    colorRamp = new Array(count);
+    for (let i = 0; i < count; i++) {
+      const t = count <= 1 ? 0 : i / (count - 1);
+      colorRamp[i] =
+        mode === 'transitionLCH'
+          ? getInterpolatedLCHColor(t, colors)
+          : getInterpolatedRGBColor(t, colors);
+    }
+  }
+
   function generateParameters() {
-    formData = {};
+    const n = form.count.base;
+    ensureCapacity(n);
+    ensureColorRamp(n);
+    formData.clip.length = 0;
 
     // Guard: a zero-length clip (frames * frameRate) would make `frame` NaN.
     const totalFrames = rec.length.value * rec.frameRate;
@@ -110,39 +174,18 @@ export function createForm({ p, state, buffers, noise }) {
     formData.height = gForm.height * 0.5;
     formData.scale = cnv.scale.value;
     formData.rotation = cnv.rotation.value;
-    formData.position = {};
     formData.position.x = formData.width * cnv.position.x;
     formData.position.y = formData.height * cnv.position.y;
-    formData.shape = {};
     formData.shape.width = -form.shape.width;
     formData.shape.height = -form.shape.height;
-    // Left empty here — the split/clip draw loop (main.js in the reference)
-    // is the piece that pushes per-quadrant clip rects onto this array.
-    // svgExport.js iterates formData.clip to build its scene, so until a
-    // split module (not yet ported) populates it, exports render nothing.
-    formData.clip = [];
-    formData.color = [];
-    formData.transform = {};
-    formData.transform.transition = {};
-    formData.transform.transition.x = [];
-    formData.transform.transition.y = [];
-    formData.transform.move = {};
-    formData.transform.move.x = [];
-    formData.transform.move.y = [];
-    formData.transform.scale = [];
-    formData.transform.rotate = [];
     formData.maxRotateAngle = 90;
     const seqCount = form.sequence >= 0 ? [1, 1 - form.sequence] : [form.sequence + 1, 1];
 
-    for (let i = 0; i < form.count.base; i++) {
-      formData.color.push(getColorValue(i));
+    for (let i = 0; i < n; i++) {
+      formData.color[i] = getColorValue(i);
 
-      formData.transform.transition.x.push(
-        getTransition(i, formData.width * form.transition.x)
-      );
-      formData.transform.transition.y.push(
-        getTransition(i, formData.height * form.transition.y)
-      );
+      formData.transform.transition.x[i] = getTransition(i, formData.width * form.transition.x);
+      formData.transform.transition.y[i] = getTransition(i, formData.height * form.transition.y);
 
       const xMove = getMoveValue(
         i,
@@ -164,19 +207,25 @@ export function createForm({ p, state, buffers, noise }) {
         form.ymove.speed,
         47.3 * form.ymove.seed
       );
-      formData.transform.move.x.push(
-        getMoveOrder(i, form.xmove.order, xMove * formData.width * form.xmove.amp)
+      formData.transform.move.x[i] = getMoveOrder(
+        i,
+        form.xmove.order,
+        xMove * formData.width * form.xmove.amp
       );
-      formData.transform.move.y.push(
-        getMoveOrder(i, form.ymove.order, yMove * formData.width * form.ymove.amp)
+      formData.transform.move.y[i] = getMoveOrder(
+        i,
+        form.ymove.order,
+        yMove * formData.width * form.ymove.amp
       );
 
-      const sequence = p.map(i, 0, form.count.base - 1, seqCount[0], seqCount[1]);
-      formData.transform.scale.push(
-        p.constrain(sequence + getScaleOrder(i, getScaleValue(i)), 0, 2)
+      const sequence = p.map(i, 0, n - 1, seqCount[0], seqCount[1]);
+      formData.transform.scale[i] = p.constrain(
+        sequence + getScaleOrder(i, getScaleValue(i)),
+        0,
+        2
       );
 
-      formData.transform.rotate.push(getRotateOrder(i, getRotateValue(i)));
+      formData.transform.rotate[i] = getRotateOrder(i, getRotateValue(i));
     }
   }
 
@@ -338,15 +387,10 @@ export function createForm({ p, state, buffers, noise }) {
         return palette.temp[index];
       }
 
-      case 'transitionLCH': {
-        const countLCH = p.map(i, 0, form.count.base - 1, 0, 1);
-        return getInterpolatedLCHColor(countLCH, palette.temp);
-      }
-
-      case 'transitionRGB': {
-        const countRGB = p.map(i, 0, form.count.base - 1, 0, 1);
-        return getInterpolatedRGBColor(countRGB, palette.temp);
-      }
+      case 'transitionLCH':
+      case 'transitionRGB':
+        // Precomputed in ensureColorRamp().
+        return (colorRamp && colorRamp[i]) || '#000000';
 
       default:
         return '#000000';
@@ -388,10 +432,10 @@ export function createForm({ p, state, buffers, noise }) {
     switchForm,
     drawForms,
     generateParameters,
+    invalidateColorCache,
     // Returns the params from the last generateParameters() call (run inside
-    // drawForms()). Before the first drawForms(), formData is `{}` — callers
-    // that read into it (e.g. svgExport.js) must only run after at least one
-    // draw has happened.
+    // drawForms()). Callers that read into it (e.g. svgExport.js) must only
+    // run after at least one draw has happened.
     getFormData: () => formData,
   };
 }

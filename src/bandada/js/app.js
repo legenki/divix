@@ -13,11 +13,14 @@ import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG, exportMP4 } from '../../shared/utils/exportMedia.js';
 import { isOverPanel } from '../../shared/utils/panelGuard.js';
+import { createDirtyLoop } from '../../shared/utils/dirtyLoop.js';
 import {
   createPanelBuilder,
   buildPresetSection,
   openSections,
 } from '../../shared/ui/panelBuilder.js';
+
+const BOIDS_PERF_WARN = 1500;
 
 const STORAGE_KEY = 'bandada-tool';
 
@@ -29,8 +32,11 @@ export function bandadaSketch(p) {
   let flock = null;
   let gAlpha = null;
   let PRESETS = {};
+  let fillColorsKey = '';
+  let strokeColorsKey = '';
 
   const recVideo = { active: false, seconds: 10 };
+  const dirty = createDirtyLoop(p);
 
   const fullState = {
     cnv,
@@ -42,7 +48,12 @@ export function bandadaSketch(p) {
     ...pickOptionMaps(state),
   };
 
-  const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
+  const panel = createPanelBuilder({
+    state: fullState,
+    applyChange,
+    refreshVisibility,
+    onSliderInput: () => dirty.markDirty(),
+  });
 
   function buildUI() {
     const root = document.getElementById('bn-controls');
@@ -64,6 +75,9 @@ export function bandadaSketch(p) {
     if (ctrl.action === 'uploadImage') {
       document.getElementById('bn-image-file-input')?.click();
     }
+    if (ctrl.path === 'cnv.animation') {
+      dirty.setAnimating(!!cnv.animation);
+    }
     switch (ctrl.regen) {
       case 'canvas':
         setupBuffers();
@@ -79,11 +93,16 @@ export function bandadaSketch(p) {
         break;
       case 'skew':
       case 'color':
-        // Values updated via reference tracking (syncGlobals recomputes the
-        // derived g.* fields every frame).
+        // Invalidate cached p5.Color objects so syncGlobals rebuilds them.
+        fillColorsKey = '';
+        strokeColorsKey = '';
         break;
       case 'boids':
         flock.resize(params.boids.value);
+        if (params.boids.value >= BOIDS_PERF_WARN) {
+          setStatus(`High boid count (${params.boids.value}) — may drop FPS`);
+          setTimeout(() => setStatus(''), 4000);
+        }
         break;
       case 'flock':
       case 'sim':
@@ -92,6 +111,7 @@ export function bandadaSketch(p) {
         break;
     }
     refreshVisibility();
+    dirty.markDirty();
     saveState();
   }
 
@@ -282,11 +302,19 @@ export function bandadaSketch(p) {
     g.shapeType = `${params.shape}Shape`;
 
     g.fillStyle = `${params.fill.style}Color`;
-    g.fillColors = [p.color(params.fill[0]), p.color(params.fill[1])];
+    const fillKey = `${params.fill[0]}|${params.fill[1]}`;
+    if (fillKey !== fillColorsKey) {
+      fillColorsKey = fillKey;
+      g.fillColors = [p.color(params.fill[0]), p.color(params.fill[1])];
+    }
     g.fillReaction = params.fill.reaction;
 
     g.strokeStyle = `${params.stroke.style}Color`;
-    g.strokeColors = [p.color(params.stroke[0]), p.color(params.stroke[1])];
+    const strokeKey = `${params.stroke[0]}|${params.stroke[1]}`;
+    if (strokeKey !== strokeColorsKey) {
+      strokeColorsKey = strokeKey;
+      g.strokeColors = [p.color(params.stroke[0]), p.color(params.stroke[1])];
+    }
     g.strokeReaction = params.stroke.reaction;
     g.strokeWeight = params.stroke.width.value;
 
@@ -619,20 +647,39 @@ export function bandadaSketch(p) {
         } else {
           syncUIFromState();
         }
+        dirty.setAnimating(!!cnv.animation);
+        dirty.markDirty();
         isReady = true;
       });
   };
 
   p.draw = () => {
     if (!isReady || !g.ctx) return;
+    // When animation is off, only repaint on dirty (UI/mouse) frames.
+    // Mouse interaction still needs live updates while pressed.
+    const mouseLive = p.mouseIsPressed && g.mouse?.over;
+    if (!cnv.animation && !recVideo.active && !dirty.needsDraw() && !mouseLive) {
+      dirty.afterDraw();
+      return;
+    }
 
     p.cursor(p.HAND);
     drawScene();
     blitToVisible();
+    dirty.consume();
+    dirty.afterDraw();
+  };
+
+  p.mouseMoved = () => {
+    if (isReady) dirty.markDirty();
+  };
+  p.mouseDragged = () => {
+    if (isReady) dirty.markDirty();
   };
 
   p.windowResized = () => {
     if (canvasContainer) fitCanvas();
+    dirty.markDirty();
   };
 }
 

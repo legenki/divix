@@ -16,6 +16,7 @@
 
 import { saveSVG } from '../../shared/utils/svgDownload.js';
 import { timestamp } from '../../shared/utils/datetime.js';
+import { ensurePaper } from '../../shared/utils/lazyLibs.js';
 
 /**
  * Builds the SVG exporter bound to a p5 instance, shared state and buffers.
@@ -39,7 +40,8 @@ export function createSvgExport({ p, state, buffers, getFormData, filenamePrefix
     return form.type in SHAPE_PATHS ? SHAPE_PATHS[form.type] : '';
   }
 
-  function generateSVG() {
+  async function generateSVG() {
+    await ensurePaper();
     const formData = getFormData();
 
     const paperCanvas = document.createElement('canvas');

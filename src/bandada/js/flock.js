@@ -140,18 +140,21 @@ export class Flock {
   }
 
   _b(r, c, a) {
-    if (this.buckets[r]?.[c]) {
-      for (let i = 0; i < this.buckets[r][c].length; i++) {
-        a.push(this.buckets[r][c][i]);
-      }
-    }
+    // Push the cell array itself (neighbors() iterates each cell). Avoids
+    // flattening thousands of boid refs into one list every frame.
+    const cell = this.buckets[r]?.[c];
+    if (cell && cell.length) a.push(cell);
   }
 
   candidates(boid) {
-    const cand = [];
+    // Reuse one scratch list of cell arrays (9 cells max) — no new Array
+    // per boid per frame.
+    const cand = this._cand || (this._cand = []);
+    cand.length = 0;
     const pad = g.gridPadding;
-    const row = Math.floor((boid.y + pad) / this.space.scale);
-    const col = Math.floor((boid.x + pad) / this.space.scale);
+    const scale = this.space.scale || 1;
+    const row = Math.floor((boid.y + pad) / scale);
+    const col = Math.floor((boid.x + pad) / scale);
 
     this._b(row, col, cand);
     this._b(row, col + 1, cand);

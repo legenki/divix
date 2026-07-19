@@ -21,6 +21,8 @@ import { downloadPresetJSON, openPresetFile } from '../../shared/utils/presetIO.
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportMP4 } from '../../shared/utils/exportMedia.js';
 import { isOverPanel } from '../../shared/utils/panelGuard.js';
+import { debounce } from '../../shared/utils/debounce.js';
+import { createDirtyLoop } from '../../shared/utils/dirtyLoop.js';
 import {
   createPanelBuilder,
   buildPresetSection,
@@ -51,8 +53,10 @@ function difusoSketch(p) {
   let gradBuffer = null; // WEBGL gradient / pass-through target.
   let isReady = false;
   let PRESETS = {};
-  let noiseTextures = null; // { noise16: p5.Image[4], ... }
+  let noiseTextures = { noise16: [], noise32: [], noise64: [], noise128: [] };
   const recVideo = { active: false, seconds: 4 };
+  const dirty = createDirtyLoop(p);
+  let loadedNoiseTiers = new Set();
 
   // ---- Factories (wired after buffers + assets exist, in setup) ----
   let source = null;
@@ -72,7 +76,12 @@ function difusoSketch(p) {
   }
 
   // ---- Panel UI ----
-  const panel = createPanelBuilder({ state, applyChange, refreshVisibility });
+  const panel = createPanelBuilder({
+    state,
+    applyChange,
+    refreshVisibility,
+    onSliderInput: () => dirty.markDirty(),
+  });
 
   function buildUI() {
     const root = document.getElementById('df-controls');
@@ -185,7 +194,12 @@ function difusoSketch(p) {
       case 'ditherType':
         // New dither.type: rebuild whatever generated texture it needs. Only
         // 'matrix'/'noise' have a dither tile; 'ascii' has a glyph atlas.
-        if (dither.type === 'matrix' || dither.type === 'noise') {
+        if (dither.type === 'noise') {
+          ensureNoiseTier(dither.noise).then(() => {
+            if (ditherCtl) ditherCtl.buildDitherTexture();
+            dirty.markDirty();
+          });
+        } else if (dither.type === 'matrix') {
           ditherCtl.buildDitherTexture();
         } else if (dither.type === 'ascii') {
           asciiCtl.buildGlyphTexture();
@@ -194,7 +208,12 @@ function difusoSketch(p) {
       case 'ditherTexture':
         // matrix/scale/noise/texture changed — rebuild the Bayer/noise tile.
         // Guarded: buildDitherTexture throws for non-matrix/noise types.
-        if (dither.type === 'matrix' || dither.type === 'noise') {
+        if (dither.type === 'noise') {
+          ensureNoiseTier(dither.noise).then(() => {
+            if (ditherCtl) ditherCtl.buildDitherTexture();
+            dirty.markDirty();
+          });
+        } else if (dither.type === 'matrix') {
           ditherCtl.buildDitherTexture();
         }
         break;
@@ -210,6 +229,7 @@ function difusoSketch(p) {
         break;
     }
     refreshVisibility();
+    dirty.markDirty();
     saveState();
   }
 
@@ -417,21 +437,24 @@ function difusoSketch(p) {
   // Recompute canvas size from the current source, recreate buffers + factories,
   // and rebuild all generated textures for the current state. Used on ratio /
   // source / window changes.
-  function resizeCanvas() {
+  async function resizeCanvas() {
     calculateCanvasSize();
     setupBuffers();
     wireFactories();
-    rebuildGeneratedTextures();
+    await rebuildGeneratedTextures();
   }
 
   // Rebuild the glyph atlas / dither tile / gradient ramp for the current state,
   // after the factories are (re)wired. Font must already be loaded.
-  function rebuildGeneratedTextures() {
+  async function rebuildGeneratedTextures() {
     if (state.ascii.font) {
       asciiCtl.measureGlyphBox();
       asciiCtl.buildGlyphTexture();
     }
-    if (dither.type === 'matrix' || dither.type === 'noise') {
+    if (dither.type === 'noise') {
+      await ensureNoiseTier(dither.noise);
+      ditherCtl.buildDitherTexture();
+    } else if (dither.type === 'matrix') {
       ditherCtl.buildDitherTexture();
     }
     gradientCtl.buildGradientTexture();
@@ -519,14 +542,19 @@ function difusoSketch(p) {
   // already owns COLOR_PALETTES), then rebuild everything. The preset's
   // gradient.palette drives which built-in palette populates the working swatch
   // colours via applySelectedPalette() — matching the reference's applyPalette().
-  function applyPreset(preset) {
+  async function applyPreset(preset) {
     if (!preset) return;
     if (preset.cnv) deepMerge(cnv, preset.cnv);
     if (preset.dither) deepMerge(dither, preset.dither);
     if (preset.ascii) deepMerge(ascii, preset.ascii);
     if (preset.gradient) deepMerge(gradient, preset.gradient);
 
-    resizeCanvas();
+    // Presets often pick a different noise tier than the default — load it
+    // before rebuild so makeNoiseTexture never gets an undefined image.
+    if (dither.type === 'noise') {
+      await ensureNoiseTier(dither.noise);
+    }
+    await resizeCanvas();
 
     // Load the preset's font (async), then rebuild the glyph atlas. Font load
     // resolves independently; the ramp/tile were already rebuilt by resizeCanvas.
@@ -539,6 +567,7 @@ function difusoSketch(p) {
     gradientCtl.applySelectedPalette();
 
     syncUIFromState();
+    dirty.markDirty();
     saveState();
   }
 
@@ -816,23 +845,38 @@ function difusoSketch(p) {
     }
   }
 
-  // Load the 4 noise tiles for each tier in parallel.
-  function loadNoiseTextures() {
-    const tiers = Object.keys(NOISE_MANIFEST);
-    const out = {};
-    const jobs = [];
-    for (const tier of tiers) {
-      out[tier] = new Array(NOISE_MANIFEST[tier].length);
-      NOISE_MANIFEST[tier].forEach((file, i) => {
+  // Load only the noise tier currently selected (noise16/32/64/128). Other
+  // tiers load on first switch — saves ~200 KB of PNG decode on startup.
+  // Concurrent callers for the same tier share one in-flight promise.
+  const noiseTierPending = new Map();
+  function ensureNoiseTier(tier) {
+    if (!NOISE_MANIFEST[tier]) return Promise.resolve();
+    if (loadedNoiseTiers.has(tier)) return Promise.resolve();
+    if (noiseTierPending.has(tier)) return noiseTierPending.get(tier);
+
+    const files = NOISE_MANIFEST[tier];
+    noiseTextures[tier] = new Array(files.length);
+    const promise = Promise.all(
+      files.map((file, i) => {
         const url = `${import.meta.env.BASE_URL}assets/difuso/textures/${tier}/${file}`;
-        jobs.push(
-          p.loadImage(url).then((img) => {
-            out[tier][i] = img;
-          })
-        );
+        return p.loadImage(url).then((img) => {
+          noiseTextures[tier][i] = img;
+        });
+      })
+    )
+      .then(() => {
+        loadedNoiseTiers.add(tier);
+      })
+      .catch((e) => {
+        console.warn(`[difuso] noise tier ${tier} load failed:`, e);
+        throw e;
+      })
+      .finally(() => {
+        noiseTierPending.delete(tier);
       });
-    }
-    return Promise.all(jobs).then(() => out);
+
+    noiseTierPending.set(tier, promise);
+    return promise;
   }
 
   // ---- p5 lifecycle ----
@@ -859,8 +903,7 @@ function difusoSketch(p) {
 
     const restored = loadState();
 
-    // Fetch presets, load noise textures + the default source image + initial
-    // font in parallel; gate the draw loop on all of them.
+    // Fetch presets + only the default noise tier; other tiers load on demand.
     Promise.all([
       fetch(`${import.meta.env.BASE_URL}assets/difuso/presets.json`)
         .then((r) => r.json())
@@ -868,11 +911,9 @@ function difusoSketch(p) {
           PRESETS = d;
         })
         .catch((e) => console.warn('[difuso] presets load failed:', e)),
-      loadNoiseTextures()
-        .then((tex) => {
-          noiseTextures = tex;
-        })
-        .catch((e) => console.warn('[difuso] noise textures load failed:', e)),
+      ensureNoiseTier(dither.noise || 'noise64').catch((e) =>
+        console.warn('[difuso] noise textures load failed:', e)
+      ),
     ]).finally(() => {
       // Create the source loader, load the default image, size the canvas and
       // wire everything once the source resolves.
@@ -895,33 +936,54 @@ function difusoSketch(p) {
           wireFactories();
 
           // Load the initial font (async), then build the glyph atlas.
-          asciiCtl
-            .loadFont(fontUrl(ascii.fontname))
-            .catch((e) => console.warn('[difuso] font load failed:', e))
-            .finally(() => {
-              gradientCtl.applySelectedPalette();
-              if (dither.type === 'matrix' || dither.type === 'noise') {
-                ditherCtl.buildDitherTexture();
-              }
+          // loadState() may have restored a non-default noise tier — ensure it
+          // before building the dither tile.
+          const noiseReady =
+            dither.type === 'noise'
+              ? ensureNoiseTier(dither.noise)
+              : Promise.resolve();
 
-              buildUI();
-              bindFooter();
-              bindDragDrop();
-              bindObjectUpload();
+          Promise.all([
+            asciiCtl.loadFont(fontUrl(ascii.fontname)).catch((e) =>
+              console.warn('[difuso] font load failed:', e)
+            ),
+            noiseReady.catch((e) => console.warn('[difuso] noise load failed:', e)),
+          ]).finally(() => {
+            gradientCtl.applySelectedPalette();
+            if (dither.type === 'matrix' || dither.type === 'noise') {
+              ditherCtl.buildDitherTexture();
+            }
 
-              const keys = Object.keys(PRESETS);
-              if (restored) {
-                syncUIFromState();
-              } else if (keys.length) {
-                const pick = keys[Math.floor(Math.random() * keys.length)];
-                applyPreset(PRESETS[pick]);
-                const sel = document.getElementById('df-preset');
-                if (sel) sel.value = pick;
-              } else {
-                syncUIFromState();
-              }
+            buildUI();
+            bindFooter();
+            bindDragDrop();
+            bindObjectUpload();
+
+            const keys = Object.keys(PRESETS);
+            const finish = () => {
+              dirty.markDirty();
               isReady = true;
-            });
+            };
+
+            if (restored) {
+              syncUIFromState();
+              // Restored state may still need the noise tier above; rebuild once
+              // more after ensure (already awaited in noiseReady).
+              if (dither.type === 'noise') ditherCtl.buildDitherTexture();
+              finish();
+            } else if (keys.length) {
+              const pick = keys[Math.floor(Math.random() * keys.length)];
+              applyPreset(PRESETS[pick])
+                .then(() => {
+                  const sel = document.getElementById('df-preset');
+                  if (sel) sel.value = pick;
+                })
+                .finally(finish);
+            } else {
+              syncUIFromState();
+              finish();
+            }
+          });
         });
     });
   };
@@ -929,18 +991,39 @@ function difusoSketch(p) {
   p.draw = () => {
     if (!isReady || !gImg || !dithBuffer || !gradBuffer) return;
     if (rec.type !== 'object' && (!source || source.getCurrentTexture() === null)) return;
+
+    // Static image + non-object: only redraw when dirty. Video/object/export
+    // always need a live loop.
+    const live =
+      rec.type === 'video' || rec.type === 'object' || recVideo.active || dirty.needsDraw();
+    if (!live) {
+      dirty.afterDraw();
+      return;
+    }
+
     drawCanvas();
+    dirty.consume();
+    // Keep looping for video/object; pause static image after paint.
+    if (rec.type === 'image' && !recVideo.active) {
+      dirty.afterDraw();
+    }
   };
 
-  p.windowResized = () => {
+  const onResize = debounce(() => {
     if (!canvasContainer) return;
     fitVisibleCanvas();
     if (isReady) resizeCanvas();
+    dirty.markDirty();
+  }, 200);
+
+  p.windowResized = () => {
+    onResize();
   };
 
   p.mouseDragged = () => {
     if (rec.type === 'object' && isReady && !isOverPanel('app-difuso', p.mouseX, p.mouseY)) {
       objectsCtl.handleMouseDragged();
+      dirty.markDirty();
     }
   };
 
@@ -948,6 +1031,7 @@ function difusoSketch(p) {
     if (rec.type === 'object' && isReady && !isOverPanel('app-difuso', p.mouseX, p.mouseY)) {
       event.preventDefault();
       objectsCtl.handleMouseWheel(event);
+      dirty.markDirty();
     }
   };
 }

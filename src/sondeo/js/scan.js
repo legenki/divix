@@ -3,16 +3,47 @@ import { randomSystem } from './random.js';
 import { map2 } from './map2.js';
 import { scanComplete } from './app.js';
 
+/**
+ * Fast strip copy via pixels arrays when shade/grain are off. Avoids the
+ * intermediate p5.Image allocations from get()/set() on every scan step.
+ */
+function copyStripPixels(sx, sy, sw, sh) {
+  const src = g.source;
+  const dst = g.result;
+  if (!src || !dst) return false;
+  src.loadPixels();
+  dst.loadPixels();
+  const srcW = src.width;
+  const dstW = dst.width;
+  const sp = src.pixels;
+  const dp = dst.pixels;
+  for (let y = 0; y < sh; y++) {
+    const srcRow = ((sy + y) * srcW + sx) * 4;
+    const dstRow = ((sy + y) * dstW + sx) * 4;
+    const bytes = sw * 4;
+    dp.set(sp.subarray(srcRow, srcRow + bytes), dstRow);
+  }
+  dst.updatePixels();
+  return true;
+}
+
 export function startScanning(p) {
   let size, mod;
+  const needsModify = shade.apply !== 'none' || grain.type !== 'none';
   switch (scan.type) {
     case "horizontal":
       size = scan.area.x2 - scan.area.x1;
       mod = size % scan.speed;
       if (scan.position <= scan.area.x2 - mod) {
-        let c = g.source.get(scan.position, scan.area.y1, scan.speed, scan.area.y2 - scan.area.y1);
-        if (shade.apply !== "none" || grain.type !== "none") c = modifyScan(p, c);
-        g.result.set(scan.position, scan.area.y1, c);
+        const sw = scan.speed;
+        const sh = scan.area.y2 - scan.area.y1;
+        if (!needsModify) {
+          copyStripPixels(scan.position, scan.area.y1, sw, sh);
+        } else {
+          let c = g.source.get(scan.position, scan.area.y1, sw, sh);
+          c = modifyScan(p, c);
+          g.result.set(scan.position, scan.area.y1, c);
+        }
         scan.position += scan.speed;
       } else {
         scanComplete();
@@ -23,9 +54,15 @@ export function startScanning(p) {
       size = scan.area.y2 - scan.area.y1;
       mod = size % scan.speed;
       if (scan.position <= scan.area.y2 - mod) {
-        let c = g.source.get(scan.area.x1, scan.position, scan.area.x2 - scan.area.x1, scan.speed);
-        if (shade.apply !== "none" || grain.type !== "none") c = modifyScan(p, c);
-        g.result.set(scan.area.x1, scan.position, c);
+        const sw = scan.area.x2 - scan.area.x1;
+        const sh = scan.speed;
+        if (!needsModify) {
+          copyStripPixels(scan.area.x1, scan.position, sw, sh);
+        } else {
+          let c = g.source.get(scan.area.x1, scan.position, sw, sh);
+          c = modifyScan(p, c);
+          g.result.set(scan.area.x1, scan.position, c);
+        }
         scan.position += scan.speed;
       } else {
         scanComplete();

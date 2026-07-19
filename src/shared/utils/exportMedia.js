@@ -66,10 +66,12 @@ export async function exportMP4({
   w = w % 2 === 0 ? w : w - 1;
   h = h % 2 === 0 ? h : h - 1;
 
+  // willReadFrequently keeps the canvas on a CPU-friendly path for repeated
+  // getImageData during the encode loop (avoids GPU readback thrash).
   const copy = document.createElement('canvas');
   copy.width = w;
   copy.height = h;
-  const copyCtx = copy.getContext('2d');
+  const copyCtx = copy.getContext('2d', { willReadFrequently: true, alpha: true });
 
   let encoder;
   try {
@@ -109,7 +111,8 @@ export async function exportMP4({
       copyCtx.drawImage(targetCanvas, 0, 0, w, h);
       encoder.addFrameRgba(copyCtx.getImageData(0, 0, w, h).data);
       if (f % 10 === 0) setStatus(`Encoding ${f}/${totalFrames}`);
-      if (f % 15 === 0) await new Promise((r) => setTimeout(r, 0));
+      // Yield periodically so the UI stays responsive during long encodes.
+      if (f % 8 === 0) await new Promise((r) => setTimeout(r, 0));
     }
 
     setStatus('Finalizing…');

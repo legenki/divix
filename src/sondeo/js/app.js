@@ -12,6 +12,7 @@ import { createPersistence } from '../../shared/utils/persistence.js';
 import { deepMerge } from '../../shared/utils/deepMerge.js';
 import { exportPNG } from '../../shared/utils/exportMedia.js';
 import { isOverPanel } from '../../shared/utils/panelGuard.js';
+import { createDirtyLoop } from '../../shared/utils/dirtyLoop.js';
 import { createPanelBuilder, openSections } from '../../shared/ui/panelBuilder.js';
 
 const STORAGE_KEY = 'sondeo-tool';
@@ -28,6 +29,9 @@ export function restartScalingAnimation() {
   scaling.value = 0;
 }
 
+/** Optional hook set by the active sketch so scanComplete can pause the loop. */
+let onScanComplete = null;
+
 export function scanComplete() {
   scan.action = false;
   params.frame = 0;
@@ -37,6 +41,7 @@ export function scanComplete() {
   restartScalingAnimation();
   restartShiftXAnimation();
   restartShiftYAnimation();
+  if (typeof onScanComplete === 'function') onScanComplete();
 }
 
 export function scanType() {
@@ -81,9 +86,19 @@ export function scanArea() {
 export function sondeoSketch(p) {
   let canvasContainer;
   let isReady = false;
+  const dirty = createDirtyLoop(p);
+  onScanComplete = () => {
+    dirty.setAnimating(false);
+    dirty.markDirty();
+  };
 
   const fullState = { cnv, maask, scan, shade, grain, params, layout, shift, scaling, rotation, maap, ...pickOptionMaps(state) };
-  const panel = createPanelBuilder({ state: fullState, applyChange, refreshVisibility });
+  const panel = createPanelBuilder({
+    state: fullState,
+    applyChange,
+    refreshVisibility,
+    onSliderInput: () => dirty.markDirty(),
+  });
 
   // Sondeo has no factory presets — the panel starts straight at the
   // workspace's own sections, no Preset List / Export / Import section.
@@ -125,12 +140,15 @@ export function sondeoSketch(p) {
       if (el) el.click();
     }
     refreshVisibility();
+    dirty.markDirty();
     saveState();
   }
 
   function startScan() {
     if (params.mode !== "scan") changeMode();
     scan.action = !scan.action;
+    dirty.setAnimating(!!scan.action);
+    dirty.markDirty();
   }
 
   function changeMode() {
@@ -454,9 +472,9 @@ export function sondeoSketch(p) {
     const canvasEl = p.createCanvas(canvasContainer.clientWidth, canvasContainer.clientHeight);
     canvasEl.mouseOver(() => { cnv.canvasOver = true; });
     canvasEl.mouseOut(() => { cnv.canvasOver = false; });
-    // The original runs the display canvas at density 2 and rectMode
-    // CORNERS everywhere (layout.js draws rects as x1,y1,x2,y2).
-    p.pixelDensity(2);
+    // Preview at 1× pixel density (export still uses full-resolution
+    // offscreen buffers). rectMode CORNERS matches layout.js (x1,y1,x2,y2).
+    p.pixelDensity(1);
     p.rectMode(p.CORNERS);
 
     // Seed the simplex generators (the original's newSimplex*() calls in
@@ -495,6 +513,17 @@ export function sondeoSketch(p) {
   };
 
   p.draw = () => {
+    // Live only while scanning, dragging, or after a dirty UI change.
+    const live =
+      scan.action ||
+      p.mouseIsPressed ||
+      dirty.needsDraw() ||
+      params.mode === 'mask';
+    if (isReady && g.imgSource && g.source && !live) {
+      dirty.afterDraw();
+      return;
+    }
+
     p.clear();
     // Mask mode dims the page behind the canvas with translucent red,
     // exactly like the original (params.bg alpha 0.5 vs 0).
@@ -507,6 +536,8 @@ export function sondeoSketch(p) {
 
     p.cursor(p.CROSS);
     drawCanvas();
+    dirty.consume();
+    if (!scan.action && !p.mouseIsPressed) dirty.afterDraw();
   };
 
   // Original gates mask interaction on a press that starts inside the
@@ -520,13 +551,20 @@ export function sondeoSketch(p) {
       params.cmouse.y < cnv.height - 1
     ) {
       cnv.mouseOver = true;
+      dirty.markDirty();
     } else if (params.mode === "mask" && cnv.canvasOver) {
       cnv.mouseOver = true;
+      dirty.markDirty();
     }
   };
 
   p.mouseReleased = () => {
     cnv.mouseOver = false;
+    dirty.markDirty();
+  };
+
+  p.mouseDragged = () => {
+    if (cnv.mouseOver) dirty.markDirty();
   };
 
   p.keyPressed = (e) => {
@@ -570,6 +608,7 @@ export function sondeoSketch(p) {
 
   p.windowResized = () => {
     if (canvasContainer) fitCanvas();
+    dirty.markDirty();
   };
 }
 

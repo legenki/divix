@@ -36,14 +36,16 @@ export async function ensureHME() {
 }
 
 /**
- * Heavyweight vendor globals loaded per workspace on first activation
+ * Heavyweight vendor globals loaded per workspace / feature on demand
  * (see the workspace registry in src/js/main.js) instead of blocking the
- * initial page load. All sketch code touches these globals no earlier than
- * p5 setup(), which runs after the loader promise resolves.
+ * initial page load. Sketch code must not touch these globals until the
+ * corresponding ensure* promise resolves.
  */
 const VENDOR_LIBS = {
   paper: 'lib/vendor/paper-full.min.js',
   color: 'lib/vendor/color.global.min.js',
+  alea: 'lib/vendor/alea.js',
+  simplex: 'lib/vendor/simplex-noise.min.js',
 };
 
 /**
@@ -53,6 +55,21 @@ const VENDOR_LIBS = {
  */
 export function ensureVendorLibs(...names) {
   return Promise.all(
-    names.map((name) => loadScript(`${import.meta.env.BASE_URL}${VENDOR_LIBS[name]}`))
+    names.map((name) => {
+      if (!VENDOR_LIBS[name]) {
+        return Promise.reject(new Error(`Unknown vendor lib: ${name}`));
+      }
+      return loadScript(`${import.meta.env.BASE_URL}${VENDOR_LIBS[name]}`);
+    })
   );
+}
+
+/** Seeded simplex + alea PRNG used by Divix and Sondeo. */
+export function ensureNoiseLibs() {
+  return ensureVendorLibs('alea', 'simplex');
+}
+
+/** paper.js — only needed for SVG import/export in Divix. */
+export function ensurePaper() {
+  return ensureVendorLibs('paper');
 }

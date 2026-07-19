@@ -50,8 +50,16 @@ export default defineConfig({
       },
       workbox: {
         // Include workspace assets (presets/palettes JSON, mask/default images)
-        // so lazily fetched data works offline too.
+        // so lazily fetched data works offline too. Exclude the 1.7 MB H.264
+        // encoder — it is only needed for MP4 export and is fetched on demand.
         globPatterns: ['**/*.{js,css,html,svg,json,webp}'],
+        // Heavy / on-demand only: H.264 encoder (~1.7 MB). Unused hsluv kept on
+        // disk for parity with Grafema vendor set but not precached.
+        globIgnores: [
+          '**/h264-mp4-encoder.web.js',
+          '**/hsluv.min.js',
+          '**/workbox-*.js',
+        ],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
         cleanupOutdatedCaches: true,
         skipWaiting: true,

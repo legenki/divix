@@ -3,6 +3,7 @@
 // Ported from the original tool's global-mode path script. Imports a
 // user-uploaded SVG via paper.js, normalizes it to the canvas default size,
 // and writes it into the mutable 'custom' slot of the shape dictionaries.
+// paper.js is loaded lazily on first import (see ensurePaper).
 //
 // Stripped from the original: the Tweakpane `shapeTypeSelector.refresh()` call
 // (UI concern) and the hardcoded `showPopupAlert('emptySvgNotice')` toast. The
@@ -10,6 +11,8 @@
 // callback and a boolean return so app.js can present failure however Divix's
 // UI does. `getSvgDimensions` was dead code in the original (commented out at
 // its only call site) and is intentionally not ported.
+
+import { ensurePaper } from '../../shared/utils/lazyLibs.js';
 
 /**
  * Builds the custom-shape importer.
@@ -32,7 +35,14 @@ export function createCustomShape({ p, state, switchForm, onError }) {
    * Imports SVG markup, normalizes it, and installs it as the 'custom' shape.
    * @param {string} svgFileContents Raw SVG text (the file contents).
    */
-  function importSVG(svgFileContents) {
+  async function importSVG(svgFileContents) {
+    try {
+      await ensurePaper();
+    } catch (e) {
+      console.error('[divix] paper.js load failed:', e);
+      if (typeof onError === 'function') onError('svgImportError');
+      return;
+    }
     paper.setup();
     paper.pixelRatio = 1;
 

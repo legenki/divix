@@ -77,7 +77,8 @@ export const RESOLUTIONS = {
 export const cnv = {
   preset: "User Preset",
   density: {
-    base: 3,
+    // Preview at 1×; export path bumps this via withHighResExport.
+    base: 1,
     export: 2000
   },
   ratio: "1:1",

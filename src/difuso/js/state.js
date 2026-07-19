@@ -13,7 +13,8 @@ export const cnv = {
   ratio: "1:1",
   preset: "User Preset",
   density: {
-    base: 2,
+    // Preview at 1×; export path bumps this via withHighResExport.
+    base: 1,
     export: 2000
   },
   sens: {

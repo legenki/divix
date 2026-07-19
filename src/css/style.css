@@ -44,14 +44,7 @@
   --strokeWeight: 1px;
 
   --panel-width: 260px;
-  --textBoxSettings_width: 250px;
-  --glyphEditor_width: 500px;
-  --glyphEditor_height: 625px;
   --toolbar_buttonSize: 30px;
-  --logo_size: 165px;
-  --glyphSet_boxSize: 40px;
-  --textBox_width: 800px;
-  --textBox_height: 600px;
 }
 
 /* Dark Theme Support */
@@ -263,65 +256,6 @@ body.theme-dark .secuencia-panel {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-}
-
-/* Left panel for Secuencia script editor */
-#scriptEditor,
-#s-scriptEditor {
-  position: absolute;
-  width: var(--glyphEditor_width);
-  height: calc(100vh - (var(--margin-xlarge) * 2));
-  left: 0;
-  margin: var(--margin-xlarge);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  gap: 12px;
-}
-
-.secuencia-subpanel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-#textBoxSettings,
-#s-textBoxSettings {
-  width: var(--textBoxSettings_width);
-  height: calc(100vh - (var(--margin-xlarge) * 2));
-  right: 0;
-  margin: var(--margin-xlarge);
-}
-
-/* Central Canvas Area Textbox for Secuencia */
-#textBox,
-#s-textBox {
-  position: absolute;
-  width: var(--textBox_width);
-  height: var(--textBox_height);
-  background: transparent !important;
-  backdrop-filter: none !important;
-  border: none;
-  box-shadow: none;
-  pointer-events: none;
-  z-index: 5;
-}
-
-#textBoxButtons,
-#s-textBoxButtons {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  pointer-events: auto;
 }
 
 /* Panel and Sidebar Headers */
@@ -1335,72 +1269,6 @@ input[type='color']::-webkit-color-swatch {
   padding-right: 4px;
 }
 
-/* GLYPH SET GRID */
-#glyphSetScrollBox,
-#s-glyphSetScrollBox {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  background: var(--bg-input);
-  border-radius: 6px;
-  padding: 6px;
-  box-sizing: border-box;
-}
-
-#glyphSet,
-#s-glyphSet {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--glyphSet_boxSize), 1fr));
-  gap: 4px;
-  padding-bottom: 20px;
-}
-
-.glyphSet_box {
-  width: 100% !important;
-  height: var(--glyphSet_boxSize) !important;
-  aspect-ratio: 1;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin: 0 !important;
-}
-
-.glyphSet_box:hover {
-  background: var(--border-color);
-  color: var(--text-primary);
-}
-
-.glyphSet_box.active {
-  background: var(--accent) !important;
-  border-color: var(--accent) !important;
-  color: #ffffff !important;
-  font-weight: 700;
-  opacity: 1 !important;
-}
-
-.glyphSet_box.empty {
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.glyphSet_box.missing {
-  background: rgba(242, 78, 30, 0.08);
-  color: var(--danger);
-  font-weight: 600;
-}
-
-.glyphSet_box label {
-  cursor: pointer;
-}
-
 /* Text Input Textarea */
 .textarea-wrapper {
   background: var(--bg-input);
@@ -1431,97 +1299,6 @@ textarea {
   font-size: 11px;
   line-height: 1.4;
   color: var(--text-primary);
-}
-
-/* Floating capsule toolbar in Secuencia */
-.floating-toolbar {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  background: rgba(245, 245, 245, 0.8);
-  /* -webkit- prefix is added automatically by lightningcss (see vite.config.js) */
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 12px;
-  padding: 6px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  z-index: 100;
-  pointer-events: auto;
-}
-
-body.theme-dark .floating-toolbar {
-  background: rgba(44, 44, 44, 0.8);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.toolbar-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0;
-  box-shadow: none;
-}
-
-.toolbar-btn:hover {
-  background: var(--bg-input);
-  color: var(--text-primary);
-}
-
-body.theme-dark .toolbar-btn:hover {
-  background: var(--bg-input);
-}
-
-.toolbar-btn.active {
-  background: var(--bg-panel);
-  border-color: rgba(0, 0, 0, 0.05);
-  color: var(--accent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-body.theme-dark .toolbar-btn.active {
-  border-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.toolbar-btn svg {
-  width: 16px;
-  height: 16px;
-  display: block;
-}
-
-/* Editor canvas container */
-.editor-canvas-container {
-  width: 100%;
-  height: var(--glyphEditor_height);
-  border: 1px solid var(--border-color);
-  background: transparent;
-  border-radius: 6px;
-  flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Empty state message inside Grafema sidebar */
-.empty-state {
-  background: var(--bg-sidebar);
-  border: 1px dashed var(--border-color);
-  padding: 16px 12px;
-  border-radius: 6px;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 10px;
-  line-height: 1.4;
 }
 
 .controls-grid {
@@ -1733,9 +1510,7 @@ kbd {
 }
 
 /* Inset ring for list/grid cells (no external glow that clips) */
-.layer-item:focus-visible,
-.glyphSet_box:focus-visible,
-#scriptList li:focus-visible {
+.layer-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
   box-shadow: none;
@@ -1755,7 +1530,6 @@ textarea:focus-visible {
 /* Buttons — keep outline slightly outside */
 .btn:focus-visible,
 .btn-icon:focus-visible,
-.toolbar-btn:focus-visible,
 .mode-btn:focus-visible,
 .switcher-tab:focus-visible {
   outline: 2px solid var(--accent);
