@@ -387,6 +387,11 @@ function getCoarse(p) {
     case 4:
       n = 0.1 + p.random(0.01);
       break;
+    // Out-of-range coarse (e.g. a legacy saved 0.2) would return undefined
+    // and NaN-poison grain.xoff/yoff, silently killing grain until reload.
+    default:
+      n = 0.23 + p.random(0.03);
+      break;
   }
   return n;
 }

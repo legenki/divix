@@ -195,6 +195,8 @@ export function sondeoSketch(p) {
     scan.action = false;
     params.frame = 0;
     shade.frame = 0;
+    grain.xoff = 0;
+    grain.yoff = 0;
     if (g.result) g.result.clear();
     maapClear();
     scanArea();
@@ -430,6 +432,11 @@ export function sondeoSketch(p) {
       params.frame = 0;
       maask.first = true;
       maask.draw = false;
+      // Legacy saves hold coarse=0.2, outside getCoarse's 1..4 range; xoff/yoff
+      // are runtime noise offsets and may be NaN-poisoned in old saves.
+      grain.coarse = Math.min(4, Math.max(1, Math.round(grain.coarse) || 2));
+      grain.xoff = 0;
+      grain.yoff = 0;
     }
   );
 

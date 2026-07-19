@@ -139,7 +139,7 @@ export const MAAP_STATE = {
 export const GRAIN_STATE = {
   type: "none",
   opacity: 0.25,
-  coarse: 0.2,
+  coarse: 2,
   offset: 0,
   frame: 0,
   xoff: 0,
