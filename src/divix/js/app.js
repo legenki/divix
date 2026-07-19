@@ -560,7 +560,47 @@ export function divixSketch(p) {
   }
 
   // ---- Presets ----
-  function applyPreset(preset) {
+  // Custom-shape presets store geometry either as an inline path (legacy /
+  // user-exported JSON) or as `form.shape.svg` naming a file under
+  // public/assets/divix/svg/. switchForm() reads SHAPE_PATHS.custom /
+  // SHAPE_SIZE.custom, so we must populate those slots before calling it.
+  // Size is the half-extent the importer persists (no further halving).
+  async function loadPresetShape(presetShape) {
+    if (!presetShape?.size) return;
+    let pathData = presetShape.path;
+    if ((!pathData || !String(pathData).trim()) && presetShape.svg) {
+      const url = `${import.meta.env.BASE_URL}assets/divix/svg/${presetShape.svg}`;
+      try {
+        const text = await fetch(url).then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.text();
+        });
+        pathData = extractPathFromSvg(text);
+      } catch (e) {
+        console.warn('[divix] custom SVG load failed:', presetShape.svg, e);
+        return;
+      }
+    }
+    if (!pathData) return;
+    state.SHAPE_PATHS.custom = pathData;
+    state.SHAPE_SIZE.custom.width = presetShape.size.width;
+    state.SHAPE_SIZE.custom.height = presetShape.size.height;
+    // Keep the live form.shape.path in sync for exporters that read it.
+    form.shape.path = pathData;
+  }
+
+  function extractPathFromSvg(svgText) {
+    const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+    const paths = doc.querySelectorAll('path');
+    const parts = [];
+    paths.forEach((el) => {
+      const d = el.getAttribute('d');
+      if (d) parts.push(d);
+    });
+    return parts.join(' ');
+  }
+
+  async function applyPreset(preset) {
     if (!preset) return;
     deepMerge(cnv, preset.cnv);
     deepMerge(form, preset.form);
@@ -569,21 +609,7 @@ export function divixSketch(p) {
     if (preset.palette) deepMerge(palette, preset.palette);
     cnv.frame = preset.cnv?.frame ?? 0;
 
-    // A `custom`-shape preset carries its own SVG path/size payload in
-    // `form.shape`. switchForm() reads geometry from the static
-    // SHAPE_PATHS.custom / SHAPE_SIZE.custom slots (the same slots the live
-    // drag-and-drop importer writes), NOT from the merged `form.shape`, so we
-    // must propagate the preset payload into those slots before switchForm().
-    // Match the reference tool's preset-load convention (preset.js loadPreset):
-    // the path goes in verbatim (form.js wraps it in Path2D), and the stored
-    // size is ALREADY the half-extent the importer persists — it is copied
-    // straight into SHAPE_SIZE.custom with no further halving.
-    const presetShape = preset.form?.shape;
-    if (presetShape?.path && presetShape.size) {
-      state.SHAPE_PATHS.custom = presetShape.path;
-      state.SHAPE_SIZE.custom.width = presetShape.size.width;
-      state.SHAPE_SIZE.custom.height = presetShape.size.height;
-    }
+    await loadPresetShape(preset.form?.shape);
 
     applySplitGrid();
     setupBuffers();
@@ -815,7 +841,7 @@ export function divixSketch(p) {
           palettes = Array.isArray(d) ? d : [];
         })
         .catch((e) => console.warn('[divix] palettes load failed:', e)),
-    ]).finally(() => {
+    ]).finally(async () => {
       // Rewire randomize with the now-loaded palette catalog.
       randomizeCtl = createRandomize({ p, state: fullState, ease: { easeFunctions }, palettes });
 
@@ -825,10 +851,14 @@ export function divixSketch(p) {
 
       const keys = Object.keys(PRESETS);
       if (restored) {
+        // Restored localStorage may point at a custom shape with form.shape.svg
+        // or a legacy inline path — load geometry before first draw.
+        await loadPresetShape(form.shape);
+        formCtl.switchForm();
         syncUIFromState();
       } else if (keys.length) {
         const pick = keys[Math.floor(Math.random() * keys.length)];
-        applyPreset(PRESETS[pick]);
+        await applyPreset(PRESETS[pick]);
         const sel = document.getElementById('dx-preset');
         if (sel) sel.value = pick;
       } else {

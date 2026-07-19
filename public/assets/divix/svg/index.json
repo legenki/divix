@@ -1,0 +1,42 @@
+{
+  "Hype The Type": {
+    "file": "hype-the-type.svg",
+    "size": {
+      "width": 180,
+      "height": 60.91885
+    },
+    "type": "custom"
+  },
+  "Funky Beats": {
+    "file": "funky-beats.svg",
+    "size": {
+      "width": 180.0001,
+      "height": 44.10795
+    },
+    "type": "custom"
+  },
+  "OMG": {
+    "file": "omg.svg",
+    "size": {
+      "width": 180,
+      "height": 49.9543
+    },
+    "type": "custom"
+  },
+  "Unfolding Circles": {
+    "file": "unfolding-circles.svg",
+    "size": {
+      "width": 180,
+      "height": 180
+    },
+    "type": "custom"
+  },
+  "Drop The SVG": {
+    "file": "drop-the-svg.svg",
+    "size": {
+      "width": 179.99995,
+      "height": 179.9999
+    },
+    "type": "custom"
+  }
+}
