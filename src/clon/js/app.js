@@ -160,26 +160,26 @@ export function clonSketch(p) {
     p.resizeCanvas(imgData.width, imgData.height);
     cnv.image.size = `${p.floor(g.imgSource.width)} x ${p.floor(g.imgSource.height)} px`;
 
-    if (g.result !== null) g.result.remove();
+    if (g.result !== null) { try { g.result.remove(); } catch(e){} }
     g.result = p.createGraphics(g.imgSource.width, g.imgSource.height);
     g.result.rectMode(p.CORNERS);
     g.result.ellipseMode(p.CORNERS);
     g.result.pixelDensity(1);
     g.result.noStroke();
 
-    if (g.backup !== null) g.backup.remove();
+    if (g.backup !== null) { try { g.backup.remove(); } catch(e){} }
     g.backup = p.createGraphics(g.imgSource.width, g.imgSource.height);
     g.backup.pixelDensity(1);
     g.backup.noStroke();
 
-    if (g.preview !== null) g.preview.remove();
+    if (g.preview !== null) { try { g.preview.remove(); } catch(e){} }
     g.preview = p.createGraphics(g.imgSource.width, g.imgSource.height);
     g.preview.imageMode(p.CORNERS);
     g.preview.ellipseMode(p.CORNERS);
     g.preview.pixelDensity(1);
     g.preview.noStroke();
 
-    if (g.grid !== null) g.grid.remove();
+    if (g.grid !== null) { try { g.grid.remove(); } catch(e){} }
     g.grid = p.createGraphics(p.width, p.height);
     grid.update = true;
 
@@ -368,7 +368,7 @@ export function clonSketch(p) {
     preview.buffer.x = sizex;
     preview.buffer.y = sizey;
 
-    if (g.buffer !== null) g.buffer.remove();
+    if (g.buffer !== null) { try { g.buffer.remove(); } catch(e){} }
     g.buffer = p.createGraphics(sizex, sizey);
     g.buffer.imageMode(p.CENTER);
     g.buffer.pixelDensity(1);
@@ -412,7 +412,7 @@ export function clonSketch(p) {
   }
 
   function makeGraphicsArea(p) {
-    if (g.area !== null) g.area.remove();
+    if (g.area !== null) { try { g.area.remove(); } catch(e){} }
     g.area = p.createGraphics(area.size.x, area.size.y);
     g.area.pixelDensity(1);
     g.area.noStroke();
@@ -749,7 +749,7 @@ export function clonSketch(p) {
     if (cnv.source) s.image(g.imgSource, 0, 0);
     if (cnv.result) s.image(g.result, 0, 0);
     exportPNG(p, 'clon', s);
-    s.remove();
+    try { s.remove(); } catch(e){}
   }
 
   // --- p5 lifecycle ---

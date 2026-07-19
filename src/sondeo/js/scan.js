@@ -4,26 +4,15 @@ import { map2 } from './map2.js';
 import { scanComplete } from './app.js';
 
 /**
- * Fast strip copy via pixels arrays when shade/grain are off. Avoids the
+ * Fast strip copy via a canvas blit when shade/grain are off. Avoids the
  * intermediate p5.Image allocations from get()/set() on every scan step.
+ * The strip is cleared first because image() alpha-blends over the previous
+ * result, while this path must replace pixels (incl. alpha) like set() did.
  */
 function copyStripPixels(sx, sy, sw, sh) {
-  const src = g.source;
-  const dst = g.result;
-  if (!src || !dst) return false;
-  src.loadPixels();
-  dst.loadPixels();
-  const srcW = src.width;
-  const dstW = dst.width;
-  const sp = src.pixels;
-  const dp = dst.pixels;
-  for (let y = 0; y < sh; y++) {
-    const srcRow = ((sy + y) * srcW + sx) * 4;
-    const dstRow = ((sy + y) * dstW + sx) * 4;
-    const bytes = sw * 4;
-    dp.set(sp.subarray(srcRow, srcRow + bytes), dstRow);
-  }
-  dst.updatePixels();
+  if (!g.source || !g.result) return false;
+  g.result.drawingContext.clearRect(sx, sy, sw, sh);
+  g.result.image(g.source, sx, sy, sw, sh, sx, sy, sw, sh);
   return true;
 }
 
@@ -42,7 +31,10 @@ export function startScanning(p) {
         } else {
           let c = g.source.get(scan.position, scan.area.y1, sw, sh);
           c = modifyScan(p, c);
-          g.result.set(scan.position, scan.area.y1, c);
+          // Clear first: alpha shade mode must replace the strip, not blend
+          // into the previous scan's pixels (see copyStripPixels).
+          g.result.drawingContext.clearRect(scan.position, scan.area.y1, sw, sh);
+          g.result.image(c, scan.position, scan.area.y1);
         }
         scan.position += scan.speed;
       } else {
@@ -61,7 +53,8 @@ export function startScanning(p) {
         } else {
           let c = g.source.get(scan.area.x1, scan.position, sw, sh);
           c = modifyScan(p, c);
-          g.result.set(scan.area.x1, scan.position, c);
+          g.result.drawingContext.clearRect(scan.area.x1, scan.position, sw, sh);
+          g.result.image(c, scan.area.x1, scan.position);
         }
         scan.position += scan.speed;
       } else {

@@ -171,8 +171,10 @@ export function bandadaSketch(p) {
     g.height = g.ctx.height;
     
     if (texture.data) {
+      if (g.texture && g.texture.remove) { try { g.texture.remove(); } catch(e){} }
       g.texture = updateImageAsTexture(cnv.density.base);
     } else {
+      if (g.texture && g.texture.remove) { try { g.texture.remove(); } catch(e){} }
       g.texture = null;
     }
     
