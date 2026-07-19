@@ -171,10 +171,10 @@ export function bandadaSketch(p) {
     g.height = g.ctx.height;
     
     if (texture.data) {
-      if (g.texture && g.texture.remove) { try { g.texture.remove(); } catch(e){} }
+      if (g.texture && g.texture.remove) { try { g.texture.remove(); } catch { /* p5 remove() can throw mid-teardown */ } }
       g.texture = updateImageAsTexture(cnv.density.base);
     } else {
-      if (g.texture && g.texture.remove) { try { g.texture.remove(); } catch(e){} }
+      if (g.texture && g.texture.remove) { try { g.texture.remove(); } catch { /* p5 remove() can throw mid-teardown */ } }
       g.texture = null;
     }
     

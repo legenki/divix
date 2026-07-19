@@ -275,13 +275,13 @@ export function sondeoSketch(p) {
     imageAdjust(loadedImage);
     g.imgSource = loadedImage.get();
   
-    if (g.source != null) { try { g.source.remove(); } catch(e){} }
+    if (g.source != null) { try { g.source.remove(); } catch { /* p5 remove() can throw mid-teardown */ } }
     g.source = p.createGraphics(g.imgSource.width, g.imgSource.height);
     g.source.pixelDensity(1);
     g.source.noStroke();
     g.source.imageMode(p.CENTER);
   
-    if (g.result != null) { try { g.result.remove(); } catch(e){} }
+    if (g.result != null) { try { g.result.remove(); } catch { /* p5 remove() can throw mid-teardown */ } }
     g.result = p.createGraphics(g.imgSource.width, g.imgSource.height);
     g.result.pixelDensity(1);
     g.result.noStroke();
@@ -440,7 +440,7 @@ export function sondeoSketch(p) {
     s.background(cnv.bgResult);
     s.image(g.result, 0, 0);
     exportPNG(p, 'sondeo', s);
-    try { s.remove(); } catch(e){}
+    try { s.remove(); } catch { /* p5 remove() can throw mid-teardown */ }
   }
   
   function doExportMask() {
@@ -462,7 +462,7 @@ export function sondeoSketch(p) {
     s.background(cnv.bgResult);
     s.image(img, 0, 0);
     exportPNG(p, 'sondeo-mask', s);
-    try { s.remove(); } catch(e){}
+    try { s.remove(); } catch { /* p5 remove() can throw mid-teardown */ }
   }
 
   // --- p5 lifecycle ---
