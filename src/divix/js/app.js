@@ -673,12 +673,25 @@ export function divixSketch(p) {
     if (el) el.innerText = msg;
   }
 
+  // Returns the width the right-side panel occupies so the canvas content can
+  // be centered in the remaining free area — matching difuso's -145 approach
+  // but derived from the actual DOM element instead of a magic number.
+  function panelRight() {
+    const aside = document.querySelector('#dx-controls')?.closest('aside');
+    if (!aside) return 0;
+    // How many px the panel eats from the right of the full-viewport canvas.
+    return Math.round(window.innerWidth - aside.getBoundingClientRect().left);
+  }
+
   function blitToVisible() {
     p.clear();
     const res = state.RESOLUTIONS[cnv.ratio];
-    const scale = Math.min((p.width * 0.85) / gDraw.width, (p.height * 0.85) / gDraw.height);
-    drawBackground(res, scale);
-    p.image(gDraw, p.width / 2, p.height / 2, gDraw.width * scale, gDraw.height * scale);
+    const pw = panelRight();
+    const availW = p.width - pw;
+    const scale = Math.min((availW * 0.85) / gDraw.width, (p.height * 0.85) / gDraw.height);
+    drawBackground(res, scale, pw);
+    const cx = availW / 2;
+    p.image(gDraw, cx, p.height / 2, gDraw.width * scale, gDraw.height * scale);
   }
 
   async function withHighResExport(fn) {
@@ -786,14 +799,14 @@ export function divixSketch(p) {
   }
 
   // ---- Visible-canvas background (matches reference drawCanvas fill) ----
-  function drawBackground(res, scale) {
+  function drawBackground(res, scale, pw = 0) {
     if (cnv.color.mode === 'transparent') return;
     p.push();
     p.noStroke();
     if (cnv.color.mode === 'custom') p.fill(cnv.color.custom);
     else p.fill(palette.array[cnv.color.slot] || '#ffffff');
     p.rectMode(p.CENTER);
-    p.rect(p.width / 2, p.height / 2, res.width * scale, res.height * scale);
+    p.rect((p.width - pw) / 2, p.height / 2, res.width * scale, res.height * scale);
     p.pop();
   }
 
