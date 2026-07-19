@@ -678,7 +678,7 @@ export function divixSketch(p) {
     const res = state.RESOLUTIONS[cnv.ratio];
     const scale = Math.min((p.width * 0.85) / gDraw.width, (p.height * 0.85) / gDraw.height);
     drawBackground(res, scale);
-    p.image(gDraw, (p.width - 290) / 2, p.height / 2, gDraw.width * scale, gDraw.height * scale);
+    p.image(gDraw, p.width / 2, p.height / 2, gDraw.width * scale, gDraw.height * scale);
   }
 
   async function withHighResExport(fn) {
