@@ -793,7 +793,7 @@ export function divixSketch(p) {
     if (cnv.color.mode === 'custom') p.fill(cnv.color.custom);
     else p.fill(palette.array[cnv.color.slot] || '#ffffff');
     p.rectMode(p.CENTER);
-    p.rect((p.width - 290) / 2, p.height / 2, res.width * scale, res.height * scale);
+    p.rect(p.width / 2, p.height / 2, res.width * scale, res.height * scale);
     p.pop();
   }
 
