@@ -102,6 +102,21 @@ export function showImageOnCanvas(
   p.pop();
 }
 
+// Draws the scan head line in #0c8ce9 with a softly pulsing glow shadow.
+function drawScanLine(p, x1, y1, x2, y2) {
+  const pulse = 0.5 + 0.5 * Math.sin(p.frameCount * 0.08);
+  const blur  = 6 + pulse * 10;          // 6..16px
+  const alpha = Math.round(120 + pulse * 100); // 120..220
+  const ctx = p.drawingContext;
+  ctx.save();
+  ctx.shadowColor = `rgba(12,140,233,${(alpha / 255).toFixed(2)})`;
+  ctx.shadowBlur  = blur;
+  p.stroke(scan.lineColor);
+  p.strokeWeight(1.5);
+  p.line(x1, y1, x2, y2);
+  ctx.restore();
+}
+
 export function showSourceProgress(p, x, y) {
   p.push();
   p.translate(x, y);
@@ -119,8 +134,7 @@ export function showSourceProgress(p, x, y) {
       scan.line.y2 = scan.position / scan.ratio;
     }
 
-    p.stroke(scan.lineColor);
-    p.line(scan.line.x1, scan.line.y1, scan.line.x2, scan.line.y2);
+    drawScanLine(p, scan.line.x1, scan.line.y1, scan.line.x2, scan.line.y2);
 
     switch (params.aniTab) {
       case 0:
@@ -183,8 +197,7 @@ export function showResultProgress(p, x, y) {
       scan.line.y1 = scan.position / scan.ratio;
       scan.line.y2 = scan.position / scan.ratio;
     }
-    p.stroke(scan.lineColor);
-    p.line(scan.line.x1, scan.line.y1, scan.line.x2, scan.line.y2);
+    drawScanLine(p, scan.line.x1, scan.line.y1, scan.line.x2, scan.line.y2);
   }
 
   if (params.mode === "mask") {

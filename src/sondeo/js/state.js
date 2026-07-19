@@ -40,7 +40,7 @@ export const CNV_STATE = {
   uiSize: -145,
   bgSource: "#FFFFFFFF",
   bgResult: "#FFFFFF00",
-  stroke: "#000000FF"
+  stroke: "#00000000"
 };
 
 export const LAYOUT_STATE = {
@@ -120,7 +120,7 @@ export const SCAN_STATE = {
   area: { x1: 0, y1: 0, x2: 0, y2: 0 },
   frame: { x1: 0, y1: 0, x2: 0, y2: 0 },
   line: { x1: 0, y1: 0, x2: 0, y2: 0 },
-  lineColor: "#FF0000FF"
+  lineColor: "#0c8ce9"
 };
 
 export const MAAP_STATE = {
