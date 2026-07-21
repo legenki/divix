@@ -154,6 +154,24 @@ export function splitFragments(text, maxWords = 4) {
   return out;
 }
 
+/**
+ * Split body copy into sentences so each caption block can carry a different
+ * part of it. Falls back to the whole string when there is no punctuation to
+ * break on, and merges very short tails into the previous sentence so a stray
+ * fragment never becomes its own block.
+ */
+export function splitSentences(text) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return [];
+  const parts = clean.split(/(?<=[.!?。！？])\s+/).filter(Boolean);
+  const out = [];
+  for (const part of parts) {
+    if (out.length && part.length < 24) out[out.length - 1] += ` ${part}`;
+    else out.push(part);
+  }
+  return out.length ? out : [clean];
+}
+
 /** Wrap a caption into lines that fit `cols` characters, for small blocks. */
 export function wrapText(text, charsPerLine) {
   const words = String(text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
@@ -198,7 +216,16 @@ export function composeGrid({
   const nMain = fragments.length ? Math.max(0, Math.min(mainCount, fragments.length)) : 0;
   const nSmall = String(smallText).trim() ? Math.max(0, smallCount) : 0;
 
-  const grid = makeGrid(w, h, nImages + nMain + nSmall);
+  // Headlines are drawn as overlays on top of the imagery, so they claim no
+  // cells; the grid only has to hold the images and captions. The hero and the
+  // mid tiles are counted at their real footprint so a big subject doesn't
+  // crowd everything else off the page.
+  const heroWeight = nImages > 0 ? 8 : 0;      // ~3x3 hero
+  const midWeight = Math.min(2, Math.max(0, nImages - 1)) * 4; // 2x2 each
+  const smallWeight = Math.max(0, nImages - 3);
+  const demand = heroWeight + midWeight + smallWeight + nSmall;
+
+  const grid = makeGrid(w, h, Math.max(1, Math.round(demand / 1.6)));
   const occ = makeOccupancy(grid);
   const blocks = [];
 
@@ -217,28 +244,71 @@ export function composeGrid({
     return true;
   };
 
-  // --- Headlines first: they define the composition's spine and want the
-  // widest slots, so they are placed before images compete for space. ---
-  for (let i = 0; i < nMain; i++) {
-    const text = fragments[i % fragments.length];
-    // Long fragments take a 2-wide slot; short ones stay 1x1 for rhythm.
-    const cw = text.length > 10 || rand() < 0.6 ? 2 : 1;
-    place(cw, 1, () => ({ kind: 'main', text }));
-  }
-
-  // --- Images: a mix of 2x2 hero tiles and 1x1 accents. ---
+  // --- Images first, at deliberately UNEVEN scale. ---
+  // The reference poster works because one subject dominates while others are
+  // small accents; an even spread of same-size tiles reads as a contact sheet.
+  // So sizes are assigned from a fixed ladder rather than sampled randomly:
+  // one hero, a couple of mid tiles, the rest small.
+  const imageBlocks = [];
   for (let i = 0; i < nImages; i++) {
     const entry = images[i % images.length];
-    const big = rand() < 0.45;
-    const cw = big ? 2 : 1;
-    const ch = big ? 2 : 1;
-    place(cw, ch, () => ({ kind: 'image', entry }));
+    let cw, ch;
+    if (i === 0) {
+      // Hero: dominates the page the way the reference's lobster does —
+      // roughly two thirds of the width and half the height.
+      ch = Math.max(3, Math.round(grid.rows * 0.5));
+      cw = Math.max(2, Math.round(grid.cols * 0.66));
+    } else if (i === 1) {
+      // Second subject: clearly secondary but still substantial.
+      ch = 2; cw = 2;
+    } else if (i === 2) {
+      cw = 2; ch = 1;
+    } else {
+      // Accents: deliberately tiny, for the scale jump the reference relies on.
+      cw = 1; ch = 1;
+    }
+    if (place(cw, ch, () => ({ kind: 'image', entry }))) {
+      imageBlocks.push(blocks[blocks.length - 1]);
+    }
+  }
+
+  // --- Headlines: laid OVER the images, not beside them. ---
+  // In the reference, type crosses the subjects — that overlap is the whole
+  // look. Each headline is anchored to an image block and offset so it breaks
+  // across the silhouette's edge, then clamped to stay on the canvas.
+  for (let i = 0; i < nMain; i++) {
+    const text = fragments[i % fragments.length];
+    const host = imageBlocks.length ? imageBlocks[i % imageBlocks.length] : null;
+
+    if (host) {
+      // Straddle the host: start left of centre and sit low in its box, so the
+      // words run across the form rather than floating clear of it.
+      const bw = Math.min(w * 0.72, Math.max(w * 0.42, host.w * 1.25));
+      const bh = Math.max(grid.cellH * 1.1, host.h * 0.42);
+      let x = host.x + host.w * (rand() < 0.5 ? -0.18 : 0.12);
+      let y = host.y + host.h * (0.18 + rand() * 0.5);
+      x = Math.max(0, Math.min(w - bw, x));
+      y = Math.max(0, Math.min(h - bh, y));
+      blocks.push({
+        kind: 'main', text, overlay: true,
+        col: 0, row: 0, cw: 0, ch: 0,
+        x, y, w: bw, h: bh,
+      });
+    } else {
+      // No imagery to sit on — fall back to a packed slot.
+      place(Math.min(2, grid.cols), 1, () => ({ kind: 'main', text }));
+    }
   }
 
   // --- Captions last: they fill the leftover 1x1 gaps, which is exactly the
-  // "text flows into the holes between forms" behaviour the poster wants. ---
+  // "text flows into the holes between forms" behaviour the poster wants.
+  // Each block gets a DIFFERENT sentence of the copy, rotating through it, so
+  // the poster reads as running text broken across the page instead of the
+  // same paragraph stamped repeatedly. ---
+  const sentences = splitSentences(smallText);
   for (let i = 0; i < nSmall; i++) {
-    place(1, 1, () => ({ kind: 'small', text: smallText }));
+    const text = sentences.length ? sentences[i % sentences.length] : smallText;
+    place(1, 1, () => ({ kind: 'small', text }));
   }
 
   return { grid, blocks };

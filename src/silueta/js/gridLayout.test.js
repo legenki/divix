@@ -173,6 +173,48 @@ describe('composeGrid', () => {
     expect(lowest).toBeGreaterThan(grid.rows * 0.66);
   });
 
+  it('gives images strongly uneven scale (a hero plus small accents)', () => {
+    const { blocks } = composeGrid({ ...base, imageCount: 5, rand: lcg(9) });
+    const areas = blocks.filter((b) => b.kind === 'image').map((b) => b.w * b.h);
+    const biggest = Math.max(...areas);
+    const smallest = Math.min(...areas);
+    // The reference look depends on real contrast, not a contact sheet.
+    expect(biggest / smallest).toBeGreaterThan(3);
+  });
+
+  it('lays headlines over the imagery so type crosses the forms', () => {
+    const { blocks } = composeGrid({ ...base, imageCount: 4, mainCount: 2, rand: lcg(6) });
+    const mains = blocks.filter((b) => b.kind === 'main');
+    const imgs = blocks.filter((b) => b.kind === 'image');
+    expect(mains.length).toBeGreaterThan(0);
+    const overlaps = (a, b) =>
+      a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    // Every headline should intersect at least one image block.
+    for (const m of mains) {
+      expect(imgs.some((im) => overlaps(m, im))).toBe(true);
+    }
+  });
+
+  it('keeps overlaid headlines inside the canvas', () => {
+    const { blocks } = composeGrid({ ...base, imageCount: 4, mainCount: 3, rand: lcg(12) });
+    for (const b of blocks.filter((x) => x.kind === 'main')) {
+      expect(b.x).toBeGreaterThanOrEqual(0);
+      expect(b.y).toBeGreaterThanOrEqual(0);
+      expect(b.x + b.w).toBeLessThanOrEqual(base.w + 0.01);
+      expect(b.y + b.h).toBeLessThanOrEqual(base.h + 0.01);
+    }
+  });
+
+  it('gives caption blocks different sentences, not one repeated paragraph', () => {
+    const smallText =
+      'First sentence about extraction. Second sentence about halftone rasterisation. ' +
+      'Third sentence about the responsive grid. Fourth sentence about typography.';
+    const { blocks } = composeGrid({ ...base, smallText, smallCount: 4, rand: lcg(8) });
+    const texts = blocks.filter((b) => b.kind === 'small').map((b) => b.text);
+    expect(texts.length).toBe(4);
+    expect(new Set(texts).size).toBeGreaterThan(1);
+  });
+
   it('uses most of the grid capacity rather than a corner', () => {
     const { grid, blocks } = composeGrid({ ...base, rand: lcg(4) });
     const used = blocks.reduce((n, b) => n + b.cw * b.ch, 0);
