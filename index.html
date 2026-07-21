@@ -13,13 +13,14 @@
 <body class="theme-light">
 
   <!-- Top-Center Tab Switcher Capsule -->
-  <div style="position:fixed; top:16px; left:calc((100vw - 290px) / 2); transform:translateX(-50%); z-index:1000; display:flex; gap:8px;">
+  <div style="position:fixed; top:16px; left:calc((100vw - 350px) / 2); transform:translateX(-50%); z-index:1000; display:flex; gap:8px;">
     <div class="app-switcher" role="tablist">
       <button id="tab-divix" class="switcher-tab active" data-target="divix" role="tab" aria-selected="true" aria-controls="app-divix">DIVIX</button>
       <button id="tab-difuso" class="switcher-tab" data-target="difuso" role="tab" aria-selected="false" aria-controls="app-difuso">DIFUSO</button>
       <button id="tab-bandada" class="switcher-tab" data-target="bandada" role="tab" aria-selected="false" aria-controls="app-bandada">BANDADA</button>
       <button id="tab-sondeo" class="switcher-tab" data-target="sondeo" role="tab" aria-selected="false" aria-controls="app-sondeo">SONDEO</button>
       <button id="tab-clon" class="switcher-tab" data-target="clon" role="tab" aria-selected="false" aria-controls="app-clon">CLON</button>
+      <button id="tab-silueta" class="switcher-tab" data-target="silueta" role="tab" aria-selected="false" aria-controls="app-silueta">SILUETA</button>
     </div>
     <div class="app-switcher" style="padding: 3px;">
       <button id="btn-global-theme" class="switcher-tab" style="padding: 8px; display: flex; align-items: center; justify-content: center;" title="Toggle Theme">
@@ -50,6 +51,10 @@
 
     <div id="app-clon" class="app-view" role="tabpanel" aria-labelledby="tab-clon" style="width:100%; height:100%; display:none;">
       <!--#include file="src/clon/template.html"-->
+    </div>
+
+    <div id="app-silueta" class="app-view" role="tabpanel" aria-labelledby="tab-silueta" style="width:100%; height:100%; display:none;">
+      <!--#include file="src/silueta/template.html"-->
     </div>
   </div>
 
