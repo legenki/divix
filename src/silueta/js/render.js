@@ -94,46 +94,52 @@ export function createRender({ p, state }) {
       pixelateShader.setUniform('u_color', hexToRgb01(render.color));
       drawFullQuad(sil);
     } else {
-      // halftone — reuse difuso's HALFTONE_FRAG uniform set (neutral b/c/s).
+      // halftone — silueta's own darkness-driven dots (same uniform set as
+      // pixelate); dots are already painted in the silhouette color in-shader.
       sil.shader(halftoneShader);
       halftoneShader.setUniform('u_texture', sourceTex);
       halftoneShader.setUniform('u_resolution', [w * density, h * density]);
       halftoneShader.setUniform('u_size', render.granularity * density);
-      halftoneShader.setUniform('u_smooth', 2);
-      halftoneShader.setUniform('u_brightness', 1);
-      halftoneShader.setUniform('u_contrast', 1);
-      halftoneShader.setUniform('u_saturation', render.keepOriginal ? 0 : 1);
-      halftoneShader.setUniform('u_density', density);
-      halftoneShader.setUniform('u_halfscale', [1, 1, 1]);
+      halftoneShader.setUniform('u_flatColor', render.keepOriginal ? 0 : 1);
+      halftoneShader.setUniform('u_color', hexToRgb01(render.color));
       drawFullQuad(sil);
     }
 
-    // Draw the shader output into the P2D buffer, then gate it: walk the
-    // buffer's pixels and zero the alpha wherever the (upsampled) object mask
-    // is off, so the background becomes transparent and the paper shows
-    // through. This per-pixel gate is deterministic and, unlike a
-    // blendMode(MULTIPLY) pass, does not leave the background opaque.
+    // Gate the shader output into the P2D buffer. Rather than blitting `sil`
+    // and post-processing it (drawing the WEBGL canvas into a 2D context
+    // re-composites its cleared background as OPAQUE, which filled the whole
+    // poster), copy pixel-for-pixel: a pixel survives only where the object
+    // mask is on AND the shader actually drew something (sil alpha > 0).
+    // Everything else stays transparent so the paper shows through.
     masked.clear();
-    masked.image(sil, 0, 0, masked.width, masked.height);
+    sil.loadPixels();
+    masked.loadPixels();
+    const src = sil.pixels;
+    const dst = masked.pixels;
+    const pw = masked.width * masked.pixelDensity();
+    const ph = masked.height * masked.pixelDensity();
+    const sw = sil.width * sil.pixelDensity();
+    const sh = sil.height * sil.pixelDensity();
+    const mask = maskData ? maskData.mask : null;
+    const mw = maskData ? maskData.w : 0;
+    const mh = maskData ? maskData.h : 0;
 
-    if (maskData) {
-      const { mask, w: mw, h: mh } = maskData;
-      masked.loadPixels();
-      // masked.pixels is sized at width*density × height*density.
-      const pw = masked.width * masked.pixelDensity();
-      const ph = masked.height * masked.pixelDensity();
-      const px = masked.pixels;
-      for (let y = 0; y < ph; y++) {
-        const my = Math.min(mh - 1, (y / ph * mh) | 0);
-        for (let x = 0; x < pw; x++) {
-          const mx = Math.min(mw - 1, (x / pw * mw) | 0);
-          if (!mask[my * mw + mx]) {
-            px[(y * pw + x) * 4 + 3] = 0; // background → transparent
-          }
-        }
+    for (let y = 0; y < ph; y++) {
+      const sy = Math.min(sh - 1, (y / ph * sh) | 0);
+      const my = mask ? Math.min(mh - 1, (y / ph * mh) | 0) : 0;
+      for (let x = 0; x < pw; x++) {
+        const di = (y * pw + x) * 4;
+        if (mask && !mask[my * mw + Math.min(mw - 1, (x / pw * mw) | 0)]) continue; // outside object
+        const si = (sy * sw + Math.min(sw - 1, (x / pw * sw) | 0)) * 4;
+        const a = src[si + 3];
+        if (!a) continue; // shader drew nothing here (e.g. between halftone dots)
+        dst[di] = src[si];
+        dst[di + 1] = src[si + 1];
+        dst[di + 2] = src[si + 2];
+        dst[di + 3] = a;
       }
-      masked.updatePixels();
     }
+    masked.updatePixels();
 
     return masked;
   }
