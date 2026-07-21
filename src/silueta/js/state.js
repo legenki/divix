@@ -28,17 +28,28 @@ export const extract = {
 export const layout = {
   mode: 'mixed',         // 'mixed' | 'overlay'
   seed: 1234,
-  font: { mode: 'list', name: 'Inter' },
+  // How many blocks of each kind the grid composer places. Images are drawn
+  // from the enabled entries of the media library.
+  counts: { images: 5, main: 2, small: 4 },
   main: {
-    text: 'REMIX LAYOUT.\nSMART GRAPHICS.',
+    text: 'REMIX LAYOUT. SMART GRAPHICS. EDGE DETECTION. VISUAL REBUILD.',
     fontSize: 52,
     lineHeight: 0.9,
     color: '#111111',
+    // Variable-font style; axes not supported by the family are ignored.
+    font: 'Bricolage Grotesque',
+    wght: 700,
+    wdth: 100,
+    opsz: 48,
   },
   small: {
     enabled: true,
-    text: 'Experimental image processing and typography layout engine.',
+    text: 'Experimental image processing and typography layout engine. Silhouettes are extracted from the source photograph, rasterised into pixel and halftone forms, then composed against a responsive grid where type and image negotiate the same space.',
     fontSize: 10,
+    font: 'Roboto Flex',
+    wght: 400,
+    wdth: 100,
+    opsz: 14,
   },
 };
 

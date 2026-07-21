@@ -10,6 +10,12 @@
 //   'layout'  — layout-only params: re-run layout.js, mask unchanged.
 
 import { RATIO_TYPES, EFFECT_TYPES, LAYOUT_MODES } from './state.js';
+import { FONT_LIST } from './fonts.js';
+
+// Font pickers are built from the shared catalog so main and small text can use
+// different families; the axis sliders below them are shown only for axes the
+// selected family actually supports (see app.js refreshVisibility).
+const FONT_OPTIONS = Object.fromEntries(FONT_LIST.map((f) => [f, f]));
 
 export const SECTIONS = [
   {
@@ -29,20 +35,37 @@ export const SECTIONS = [
     ],
   },
   {
-    title: 'Layout',
+    title: 'Composition',
     controls: [
       { id: 'sl-mode', type: 'select', label: 'Main Layout Mode', path: 'layout.mode', options: LAYOUT_MODES, regen: 'layout' },
+      { id: 'sl-count-images', type: 'slider', label: 'Image Blocks', path: 'layout.counts.images', min: 0, max: 16, step: 1, regen: 'layout' },
+      { id: 'sl-count-main', type: 'slider', label: 'Headline Blocks', path: 'layout.counts.main', min: 0, max: 8, step: 1, regen: 'layout' },
+      { id: 'sl-count-small', type: 'slider', label: 'Caption Blocks', path: 'layout.counts.small', min: 0, max: 12, step: 1, regen: 'layout' },
+      { id: 'sl-shuffle', type: 'button', label: 'Shuffle Composition', action: 'shuffle' },
+    ],
+  },
+  {
+    title: 'Main Text',
+    controls: [
       { id: 'sl-main-text', type: 'textarea', label: 'Main Text Content', path: 'layout.main.text', rows: 3, regen: 'layout' },
-      { id: 'sl-main-size', type: 'slider', label: 'Main Font Size', path: 'layout.main.fontSize', min: 40, max: 120, step: 1, regen: 'layout' },
+      { id: 'sl-main-font', type: 'select', label: 'Main Font', path: 'layout.main.font', options: FONT_OPTIONS, regen: 'font' },
+      { id: 'sl-main-size', type: 'slider', label: 'Main Font Size', path: 'layout.main.fontSize', min: 20, max: 160, step: 1, regen: 'layout' },
       { id: 'sl-main-lh', type: 'slider', label: 'Main Line Height', path: 'layout.main.lineHeight', min: 0.7, max: 1.4, step: 0.05, regen: 'layout' },
+      { id: 'sl-main-wght', type: 'slider', label: 'Main Weight', path: 'layout.main.wght', min: 100, max: 1000, step: 1, regen: 'layout' },
+      { id: 'sl-main-wdth', type: 'slider', label: 'Main Width', path: 'layout.main.wdth', min: 25, max: 151, step: 1, regen: 'layout' },
+      { id: 'sl-main-opsz', type: 'slider', label: 'Main Optical Size', path: 'layout.main.opsz', min: 8, max: 144, step: 1, regen: 'layout' },
     ],
   },
   {
     title: 'Small Text',
     controls: [
       { id: 'sl-small-enabled', type: 'check', label: 'Contour-Avoidance Small Text', path: 'layout.small.enabled', regen: 'layout' },
-      { id: 'sl-small-text', type: 'textarea', label: 'Small Text', path: 'layout.small.text', rows: 2, regen: 'layout' },
-      { id: 'sl-small-size', type: 'slider', label: 'Small Font Size', path: 'layout.small.fontSize', min: 8, max: 24, step: 1, regen: 'layout' },
+      { id: 'sl-small-text', type: 'textarea', label: 'Small Text', path: 'layout.small.text', rows: 4, regen: 'layout' },
+      { id: 'sl-small-font', type: 'select', label: 'Small Font', path: 'layout.small.font', options: FONT_OPTIONS, regen: 'font' },
+      { id: 'sl-small-size', type: 'slider', label: 'Small Font Size', path: 'layout.small.fontSize', min: 6, max: 28, step: 1, regen: 'layout' },
+      { id: 'sl-small-wght', type: 'slider', label: 'Small Weight', path: 'layout.small.wght', min: 100, max: 1000, step: 1, regen: 'layout' },
+      { id: 'sl-small-wdth', type: 'slider', label: 'Small Width', path: 'layout.small.wdth', min: 25, max: 151, step: 1, regen: 'layout' },
+      { id: 'sl-small-opsz', type: 'slider', label: 'Small Optical Size', path: 'layout.small.opsz', min: 8, max: 144, step: 1, regen: 'layout' },
     ],
   },
   {

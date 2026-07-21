@@ -1,15 +1,19 @@
-// SILUETA — poster/typography workspace. Orchestrates the three layers:
-// extract.js (mask) → render.js (WEBGL silhouette) → layout.js (text), and
-// composites paper bg → masked silhouette → text onto the visible canvas.
+// SILUETA — poster/typography workspace. Composes a poster on a responsive
+// grid: gridLayout.js packs image / headline / caption blocks into cells,
+// extract.js + render.js turn each image block into a pixelated or halftoned
+// silhouette, and the text blocks are set with variable fonts on a P2D buffer.
 // Structure mirrors difuso/js/app.js (buffers, dirty-loop, panel, presets,
 // export). See docs/superpowers/specs/2026-07-21-silueta-workspace-design.md.
 
 import * as state from './state.js';
 import { SECTIONS } from './controls.js';
 import { extractFromBrightness } from './extract.js';
-import { computeLayout } from './layout.js';
+import { composeGrid, wrapText } from './gridLayout.js';
 import { createRender } from './render.js';
-import { exportSVG } from './svgExport.js';
+import { exportGridSVG } from './svgExport.js';
+import { createMediaLibrary } from './media.js';
+import { buildMediaSection } from './mediaPanel.js';
+import { ensureFont, variationSettings, hasAxis, AXIS_TAGS } from './fonts.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { timestamp } from '../../shared/utils/datetime.js';
@@ -26,22 +30,30 @@ import {
 
 const STORAGE_KEY = 'silueta-tool';
 const ANALYSIS_EDGE = 120; // long-edge px of the mask analysis buffer
-const FONT_FAMILY = 'Inter, system-ui, sans-serif';
+const FALLBACK_FONT = 'system-ui, sans-serif';
+const BLOCK_PAD = 6;       // px inset so blocks don't touch cell edges
 
 const { cnv, render, extract, layout, rec, RESOLUTIONS } = state;
 
 export function siluetaSketch(p) {
   let canvasContainer;
-  let sourceImage = null;   // full-res uploaded/default image
-  let resizedSource = null; // source fit to the silhouette buffer
-  let maskInfo = null;      // { mask, labels, components, w, h }
-  let layoutItems = [];
+  // Packed blocks from gridLayout.composeGrid; each carries its own pixel
+  // geometry (x/y/w/h), so the grid itself doesn't need to be kept around.
+  let blocks = [];
+  // Per-image-block silhouette cache: entry.key -> { masked, w, h, sig }.
+  // Extraction + shader work is the expensive part, so a block is only
+  // re-rendered when its size or the effect parameters actually change.
+  const silCache = new Map();
   let textBuffer = null;    // P2D buffer for text (WEBGL can't use CSS fonts)
   let isReady = false;
   let PRESETS = {};
   const recVideo = { active: false, seconds: 4 };
   const dirty = createDirtyLoop(p);
   const renderer = createRender({ p, state });
+  const media = createMediaLibrary({
+    p,
+    baseUrl: `${import.meta.env.BASE_URL}assets/silueta/media/`,
+  });
 
   const panel = createPanelBuilder({
     state,
@@ -66,68 +78,96 @@ export function siluetaSketch(p) {
     cnv.height = Math.max(2, Math.round((res.height * fit) / 2) * 2);
   }
 
-  // ---- Fit the source into a buffer-sized image (contain). ----
-  function buildResizedSource() {
-    if (!sourceImage) return;
-    const r = Math.min(cnv.width / sourceImage.width, cnv.height / sourceImage.height);
-    let nw = Math.max(2, Math.floor(sourceImage.width * r));
-    let nh = Math.max(2, Math.floor(sourceImage.height * r));
-    nw -= nw % 2; nh -= nh % 2;
-    // Draw the source centered on a white canvas the size of the buffer, so the
-    // mask coordinate space matches the silhouette buffer 1:1.
-    const g = p.createImage(cnv.width, cnv.height);
-    g.loadPixels();
-    for (let i = 0; i < g.pixels.length; i++) g.pixels[i] = 255; // white
-    g.updatePixels();
-    const fitted = p.createImage(nw, nh);
-    fitted.copy(sourceImage, 0, 0, sourceImage.width, sourceImage.height, 0, 0, nw, nh);
-    g.copy(fitted, 0, 0, nw, nh, (cnv.width - nw) >> 1, (cnv.height - nh) >> 1, nw, nh);
-    resizedSource = g;
+  // ---- Grid composition. ----
+  // Packs image/headline/caption blocks into the responsive grid. Changing the
+  // canvas ratio or any block count reshapes the grid (see gridLayout.makeGrid).
+  function runLayout() {
+    const composed = composeGrid({
+      w: cnv.width,
+      h: cnv.height,
+      images: media.active(),
+      imageCount: layout.counts.images,
+      mainText: layout.main.text,
+      smallText: layout.small.text,
+      mainCount: layout.counts.main,
+      smallCount: layout.counts.small,
+      rand: makeRand(layout.seed),
+    });
+    blocks = composed.blocks;
   }
 
-  // ---- Extraction: downscale resizedSource → brightness → mask + components. ----
-  function runExtract() {
-    if (!resizedSource) return;
-    const scale = ANALYSIS_EDGE / Math.max(resizedSource.width, resizedSource.height);
-    const aw = Math.max(1, Math.round(resizedSource.width * scale));
-    const ah = Math.max(1, Math.round(resizedSource.height * scale));
+  // ---- Per-block silhouette. ----
+  // Each image block is extracted and shaded at its own cell size. Results are
+  // cached on a signature of everything that affects the pixels, so dragging an
+  // unrelated slider (or re-drawing a frame) costs nothing.
+  function silhouetteFor(block) {
+    const entry = block.entry;
+    if (!entry?.ready || !entry.img) return null;
+
+    const bw = Math.max(2, Math.round(block.w - BLOCK_PAD * 2));
+    const bh = Math.max(2, Math.round(block.h - BLOCK_PAD * 2));
+    const sig = [
+      bw, bh, render.effect, render.granularity, render.color,
+      render.keepOriginal, extract.threshold, extract.merge, cnv.density.base,
+    ].join('|');
+
+    const hit = silCache.get(entry.key);
+    if (hit && hit.sig === sig) return hit.img;
+
+    // Fit the source into the block, centred on white so the mask's coordinate
+    // space matches the rendered buffer 1:1.
+    const fitScale = Math.min(bw / entry.img.width, bh / entry.img.height);
+    const fw = Math.max(2, Math.floor(entry.img.width * fitScale));
+    const fh = Math.max(2, Math.floor(entry.img.height * fitScale));
+    const plate = p.createImage(bw, bh);
+    plate.loadPixels();
+    for (let i = 0; i < plate.pixels.length; i++) plate.pixels[i] = 255;
+    plate.updatePixels();
+    const fitted = p.createImage(fw, fh);
+    fitted.copy(entry.img, 0, 0, entry.img.width, entry.img.height, 0, 0, fw, fh);
+    plate.copy(fitted, 0, 0, fw, fh, (bw - fw) >> 1, (bh - fh) >> 1, fw, fh);
+
+    // Extract this block's mask at analysis resolution.
+    const scale = ANALYSIS_EDGE / Math.max(bw, bh);
+    const aw = Math.max(1, Math.round(bw * scale));
+    const ah = Math.max(1, Math.round(bh * scale));
     const small = p.createImage(aw, ah);
-    small.copy(resizedSource, 0, 0, resizedSource.width, resizedSource.height, 0, 0, aw, ah);
+    small.copy(plate, 0, 0, bw, bh, 0, 0, aw, ah);
     small.loadPixels();
     const brightness = new Uint8Array(aw * ah);
     for (let i = 0; i < aw * ah; i++) {
       const j = i * 4;
       brightness[i] = (small.pixels[j] * 0.299 + small.pixels[j + 1] * 0.587 + small.pixels[j + 2] * 0.114) | 0;
     }
-    const areaFloor = Math.max(2, Math.round(aw * ah * 0.002));
-    maskInfo = extractFromBrightness(brightness, aw, ah, {
+    const maskInfo = extractFromBrightness(brightness, aw, ah, {
       threshold: extract.threshold,
       merge: extract.merge,
-      areaFloor,
+      areaFloor: Math.max(2, Math.round(aw * ah * 0.002)),
     });
+
+    // Shade it, then snapshot: the renderer reuses one buffer per call, so the
+    // result must be copied before the next block overwrites it.
+    renderer.buildBuffers(bw, bh, cnv.density.base);
     renderer.setMask(maskInfo);
+    const masked = renderer.renderSilhouette(plate);
+    const snapshot = p.createImage(masked.width, masked.height);
+    snapshot.copy(masked, 0, 0, masked.width, masked.height, 0, 0, masked.width, masked.height);
+
+    silCache.set(entry.key, { sig, img: snapshot, mask: maskInfo });
+    return snapshot;
   }
 
-  // ---- Layout. ----
-  function runLayout() {
-    if (!maskInfo) { layoutItems = []; return; }
-    layoutItems = computeLayout({
-      w: cnv.width,
-      h: cnv.height,
-      maskInfo,
-      state: layout,
-      rand: makeRand(layout.seed),
-    });
+  /** Drop cached silhouettes (call when block geometry or effect params change). */
+  function invalidateSilhouettes() {
+    silCache.clear();
   }
 
-  // ---- Full rebuild: size → resize source → extract → buffers → layout. ----
+  // ---- Full rebuild: size → grid → buffers. ----
   function rebuildAll() {
     computeCanvasSize();
-    buildResizedSource();
-    renderer.buildBuffers(cnv.width, cnv.height, cnv.density.base);
     ensureTextBuffer();
-    runExtract();
     runLayout();
+    invalidateSilhouettes();
     dirty.markDirty();
   }
 
@@ -147,11 +187,20 @@ export function siluetaSketch(p) {
     p.rect(0, 0, cnv.width, cnv.height);
     p.pop();
 
-    // Masked silhouette.
-    if (resizedSource) {
-      const masked = renderer.renderSilhouette(resizedSource);
-      p.image(masked, 0, 0, cnv.width, cnv.height);
+    // Image blocks: each silhouette is drawn into its own grid cell. WEBGL's
+    // origin is the canvas centre, so cell coordinates are offset by half.
+    const ox = -cnv.width / 2;
+    const oy = -cnv.height / 2;
+    p.push();
+    p.imageMode(p.CORNER);
+    for (const block of blocks) {
+      if (block.kind !== 'image') continue;
+      const img = silhouetteFor(block);
+      if (!img) continue;
+      p.image(img, ox + block.x + BLOCK_PAD, oy + block.y + BLOCK_PAD,
+        block.w - BLOCK_PAD * 2, block.h - BLOCK_PAD * 2);
     }
+    p.pop();
 
     // Text on top.
     drawText();
@@ -183,37 +232,109 @@ export function siluetaSketch(p) {
     }
   }
 
+  /**
+   * Apply a variable-font style to the buffer's 2D context. p5 has no API for
+   * font-variation-settings, so the axes are set on the underlying context —
+   * this is what makes the same family read as hairline-condensed or black.
+   */
+  function applyFontStyle(g, style, sizePx) {
+    const family = style.font;
+    const ready = document.fonts?.check?.(`12px "${family}"`);
+    const stack = ready ? `"${family}", ${FALLBACK_FONT}` : FALLBACK_FONT;
+    const ctx = g.drawingContext;
+    ctx.font = `${sizePx}px ${stack}`;
+    ctx.fontVariationSettings = variationSettings(family, style) || 'normal';
+  }
+
   function drawText() {
     if (!textBuffer) return;
     const g = textBuffer;
     g.clear();
-    g.textFont(FONT_FAMILY);
-    g.textAlign(p.LEFT, p.BASELINE);
     g.noStroke();
-    for (const it of layoutItems) {
-      if (it.role === 'small' && it.placed === false) continue; // unplaceable caption
-      if (it.role === 'main') {
-        g.fill(layout.main.color);
-        g.textStyle(p.BOLD);
-      } else {
-        g.fill('#333333');
-        g.textStyle(p.NORMAL);
-      }
-      g.textSize(it.size);
-      g.text(it.text, it.x, it.y);
+    g.textAlign(p.LEFT, p.TOP);
+
+    for (const block of blocks) {
+      if (block.kind === 'main') drawMainBlock(g, block);
+      else if (block.kind === 'small') drawSmallBlock(g, block);
     }
+
     // Blit centered onto the WEBGL canvas (origin at center).
     p.image(g, 0, 0, cnv.width, cnv.height);
   }
 
+  /** Headline: shrink-to-fit within the block, set in the main variable font. */
+  function drawMainBlock(g, block) {
+    const maxW = block.w - BLOCK_PAD * 2;
+    const maxH = block.h - BLOCK_PAD * 2;
+    if (maxW <= 4 || maxH <= 4) return;
+
+    // Fit the fragment to the block: start from the requested size and step
+    // down until it fits, so a long phrase in a 1x1 cell stays inside its box.
+    let size = Math.min(layout.main.fontSize, maxH);
+    applyFontStyle(g, layout.main, size);
+    let guard = 0;
+    while (size > 8 && guard < 60 && g.drawingContext.measureText(block.text).width > maxW) {
+      size -= 1;
+      applyFontStyle(g, layout.main, size);
+      guard += 1;
+    }
+
+    g.fill(layout.main.color);
+    g.drawingContext.textBaseline = 'top';
+    g.drawingContext.fillText(
+      block.text,
+      block.x + BLOCK_PAD,
+      block.y + BLOCK_PAD,
+    );
+  }
+
+  /** Caption: wrapped body copy filling the block, in the small variable font. */
+  function drawSmallBlock(g, block) {
+    const maxW = block.w - BLOCK_PAD * 2;
+    const maxH = block.h - BLOCK_PAD * 2;
+    if (maxW <= 4 || maxH <= 4) return;
+
+    const size = layout.small.fontSize;
+    applyFontStyle(g, layout.small, size);
+    const ctx = g.drawingContext;
+    ctx.textBaseline = 'top';
+
+    // Estimate characters per line from the font's actual average advance.
+    const sample = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width / 26 || size * 0.5;
+    const charsPerLine = Math.max(6, Math.floor(maxW / sample));
+    const lineH = size * 1.25;
+    const maxLines = Math.max(1, Math.floor(maxH / lineH));
+    const lines = wrapText(block.text, charsPerLine).slice(0, maxLines);
+
+    g.fill('#333333');
+    lines.forEach((line, i) => {
+      ctx.fillText(line, block.x + BLOCK_PAD, block.y + BLOCK_PAD + i * lineH);
+    });
+  }
+
   // ---- Change dispatch. ----
   function applyChange(ctrl) {
+    if (ctrl.action === 'shuffle') {
+      // New seed = a different packing of the same content.
+      layout.seed = (Math.random() * 0xffffffff) >>> 0;
+      runLayout();
+    }
     switch (ctrl.regen) {
-      case 'canvas': rebuildAll(); break;
-      case 'extract': runExtract(); runLayout(); break;
-      case 'effect': /* fallthrough to render + visibility */
-      case 'render': /* buffer params only */ break;
-      case 'layout': runLayout(); break;
+      case 'canvas':
+        rebuildAll();
+        break;
+      case 'extract':
+      case 'effect':
+      case 'render':
+        // These change the silhouette pixels but not the packing.
+        invalidateSilhouettes();
+        break;
+      case 'font':
+        loadFonts().then(() => dirty.markDirty());
+        break;
+      case 'layout':
+        runLayout();
+        break;
     }
     refreshVisibility();
     dirty.markDirty();
@@ -223,11 +344,31 @@ export function siluetaSketch(p) {
   function refreshVisibility() {
     const colorEl = document.getElementById('sl-sil-color');
     if (colorEl) colorEl.disabled = render.effect === 'none';
+
+    // A variable axis only gets a slider when the chosen family supports it,
+    // so e.g. Syne (weight only) doesn't show dead Width/Optical Size rows.
+    const show = (id, vis) => {
+      const el = document.querySelector(`[data-control-id="${id}"]`);
+      if (el) el.style.display = vis ? '' : 'none';
+    };
+    for (const tag of AXIS_TAGS) {
+      show(`sl-main-${tag}`, hasAxis(layout.main.font, tag));
+      show(`sl-small-${tag}`, hasAxis(layout.small.font, tag));
+    }
   }
 
   function syncUIFromState() {
     panel.syncUIFromState(SECTIONS);
     refreshVisibility();
+  }
+
+  /** Register the selected families so the text buffer can draw with them. */
+  function loadFonts() {
+    return Promise.all(
+      [layout.main.font, layout.small.font].map((f) =>
+        ensureFont(f).catch((e) => console.warn(`[silueta] font "${f}" failed:`, e))
+      )
+    );
   }
 
   // ---- Panel. ----
@@ -241,8 +382,16 @@ export function siluetaSketch(p) {
       onExport: exportPreset,
       onImport: importPreset,
     });
+    buildMediaSection(root, {
+      media,
+      onChange: () => {
+        runLayout();
+        invalidateSilhouettes();
+        dirty.markDirty();
+      },
+    });
     panel.buildSections(root, SECTIONS);
-    openSections(root, [1, 2]); // Silhouette + Layout open by default
+    openSections(root, [1, 3]); // Media Library + Composition open by default
     refreshVisibility();
   }
 
@@ -294,15 +443,15 @@ export function siluetaSketch(p) {
       const d = Math.max(1, Math.round(target / maxEdge));
       cnv.density.base = d;
       p.pixelDensity(d);
-      renderer.buildBuffers(cnv.width, cnv.height, d);
-      renderer.setMask(maskInfo);
+      // Silhouettes are built per block at draw time and keyed on density, so
+      // clearing the cache is what re-renders them at export resolution.
+      invalidateSilhouettes();
       ensureTextBuffer();
       fn(d);
     } finally {
       cnv.density.base = savedBase;
       p.pixelDensity(savedBase);
-      renderer.buildBuffers(cnv.width, cnv.height, savedBase);
-      renderer.setMask(maskInfo);
+      invalidateSilhouettes();
       ensureTextBuffer();
       drawCanvas();
     }
@@ -324,13 +473,23 @@ export function siluetaSketch(p) {
   }
 
   function doExportSVG() {
-    exportSVG({
+    // Ensure every image block has a cached mask to vectorise (drawing
+    // populates the cache; a fresh load may not have drawn yet).
+    for (const b of blocks) {
+      if (b.kind === 'image') silhouetteFor(b);
+    }
+    const withMasks = blocks.map((b) =>
+      b.kind === 'image' ? { ...b, mask: silCache.get(b.entry?.key)?.mask || null } : b
+    );
+    exportGridSVG({
       w: cnv.width,
       h: cnv.height,
-      maskInfo,
+      blocks: withMasks,
       render,
-      layoutItems,
-      fontFamily: FONT_FAMILY,
+      main: layout.main,
+      small: layout.small,
+      pad: BLOCK_PAD,
+      wrap: wrapText,
     });
   }
 
@@ -366,28 +525,29 @@ export function siluetaSketch(p) {
     });
   }
 
+  // Dropping images onto the canvas adds them to the media library, so the
+  // poster grows a new tile instead of replacing the whole composition.
   function bindDragDrop() {
     if (!canvasContainer) return;
     canvasContainer.addEventListener('dragover', (e) => e.preventDefault());
-    canvasContainer.addEventListener('drop', (e) => {
+    canvasContainer.addEventListener('drop', async (e) => {
       e.preventDefault();
-      const file = e.dataTransfer?.files?.[0];
-      if (file && file.type.startsWith('image/')) loadImageFile(file);
-    });
-  }
-
-  function loadImageFile(file) {
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        sourceImage = await p.loadImage(ev.target.result);
-        rebuildAll();
-      } catch (err) {
-        console.warn('[silueta] image load failed:', err);
-        setStatus('Image load failed');
+      const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
+        f.type.startsWith('image/')
+      );
+      if (!files.length) return;
+      for (const file of files) {
+        try {
+          await media.addFile(file);
+        } catch (err) {
+          console.warn('[silueta] image load failed:', err);
+          setStatus('Image load failed');
+        }
       }
-    };
-    reader.readAsDataURL(file);
+      runLayout();
+      invalidateSilhouettes();
+      dirty.markDirty();
+    });
   }
 
   // ---- p5 lifecycle. ----
@@ -410,7 +570,8 @@ export function siluetaSketch(p) {
 
     Promise.all([
       fetch(`${import.meta.env.BASE_URL}assets/silueta/presets.json`).then((r) => r.json()).then((d) => { PRESETS = d; }).catch(() => {}),
-      p.loadImage(`${import.meta.env.BASE_URL}assets/silueta/default.webp`).then((img) => { sourceImage = img; }).catch((e) => console.warn('[silueta] default image load failed:', e)),
+      media.loadDefaults(),
+      loadFonts(),
     ]).finally(() => {
       rebuildAll();
       buildUI();
