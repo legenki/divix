@@ -112,8 +112,10 @@ export function createRender({ p, state }) {
     masked.push();
     masked.image(sil, 0, 0, masked.width, masked.height);
     if (maskImg) {
-      masked.blendMode(p.REMOVE); // destination-out of the inverse == keep inside mask
-      // REMOVE subtracts alpha; to KEEP inside the mask we instead multiply.
+      // MULTIPLY by the white/transparent mask keeps the silhouette where the
+      // mask is opaque and zeroes it (transparent) elsewhere. Browser-verified
+      // in Task 12; a manual alpha-copy fallback is the documented backup if
+      // this blend does not gate correctly on the P2D buffer.
       masked.blendMode(p.MULTIPLY);
       masked.image(maskImg, 0, 0, masked.width, masked.height);
     }
