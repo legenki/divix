@@ -288,7 +288,10 @@ export function siluetaSketch(p) {
     try {
       const maxEdge = Math.max(cnv.width, cnv.height);
       const target = cnv.density.export || 2000;
-      const d = Math.max(1, target / maxEdge);
+      // Whole-number density only: p5 sizes buffer backing stores by
+      // width * density, and a fractional density yields a non-integer row
+      // stride that the pixel-gate in render.js cannot index safely.
+      const d = Math.max(1, Math.round(target / maxEdge));
       cnv.density.base = d;
       p.pixelDensity(d);
       renderer.buildBuffers(cnv.width, cnv.height, d);

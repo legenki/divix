@@ -116,10 +116,14 @@ export function createRender({ p, state }) {
     masked.loadPixels();
     const src = sil.pixels;
     const dst = masked.pixels;
-    const pw = masked.width * masked.pixelDensity();
-    const ph = masked.height * masked.pixelDensity();
-    const sw = sil.width * sil.pixelDensity();
-    const sh = sil.height * sil.pixelDensity();
+    // Row strides come from width * density, rounded to whole pixels: p5 sizes
+    // the backing store that way, and a fractional density (possible during
+    // high-res export) would otherwise give a non-integer stride and overrun
+    // the array (RangeError: offset is out of bounds).
+    const pw = Math.max(1, Math.round(masked.width * masked.pixelDensity()));
+    const ph = Math.max(1, Math.round(masked.height * masked.pixelDensity()));
+    const sw = Math.max(1, Math.round(sil.width * sil.pixelDensity()));
+    const sh = Math.max(1, Math.round(sil.height * sil.pixelDensity()));
     const mask = maskData ? maskData.mask : null;
     const mw = maskData ? maskData.w : 0;
     const mh = maskData ? maskData.h : 0;
@@ -129,8 +133,10 @@ export function createRender({ p, state }) {
       const my = mask ? Math.min(mh - 1, (y / ph * mh) | 0) : 0;
       for (let x = 0; x < pw; x++) {
         const di = (y * pw + x) * 4;
+        if (di + 3 >= dst.length) break;
         if (mask && !mask[my * mw + Math.min(mw - 1, (x / pw * mw) | 0)]) continue; // outside object
         const si = (sy * sw + Math.min(sw - 1, (x / pw * sw) | 0)) * 4;
+        if (si + 3 >= src.length) continue;
         const a = src[si + 3];
         if (!a) continue; // shader drew nothing here (e.g. between halftone dots)
         dst[di] = src[si];
