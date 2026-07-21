@@ -6,8 +6,16 @@
 import { saveSVG } from '../../shared/utils/svgDownload.js';
 import { timestamp } from '../../shared/utils/datetime.js';
 
+// Escape a value for safe insertion into SVG element content OR a quoted
+// attribute value: & < > and both quote characters are handled, so the same
+// helper is safe for `fill="${esc(...)}"` and `>${esc(...)}<`.
 function esc(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**
@@ -27,7 +35,7 @@ export function buildSVG({ w, h, maskInfo, render, layoutItems, fontFamily }) {
     const { mask, w: mw, h: mh } = maskInfo;
     const cell = Math.max(2, render.granularity);
     const fill = render.color;
-    parts.push(`<g fill="${fill}">`);
+    parts.push(`<g fill="${esc(fill)}">`);
     for (let cy = 0; cy < h; cy += cell) {
       for (let cx = 0; cx < w; cx += cell) {
         // Sample the mask at the cell center.

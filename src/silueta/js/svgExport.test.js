@@ -30,4 +30,19 @@ describe('buildSVG', () => {
     // background rect is allowed; ensure no silhouette <rect x= cells
     expect(svg).not.toContain('<rect x=');
   });
+
+  it('escapes special characters in text and attribute values', () => {
+    const svg = buildSVG({
+      w, h, maskInfo,
+      render: { effect: 'pixelate', granularity: 10, color: '"><script>' },
+      layoutItems: [{ role: 'main', x: 4, y: 52, size: 52, text: 'A & B < C >' }],
+      fontFamily: 'Bad"Font',
+    });
+    // Raw injection sequences must not survive into the output.
+    expect(svg).not.toContain('<script>');
+    expect(svg).not.toContain('A & B < C >');
+    // Escaped forms are present instead.
+    expect(svg).toContain('A &amp; B &lt; C &gt;');
+    expect(svg).toContain('&quot;');
+  });
 });
