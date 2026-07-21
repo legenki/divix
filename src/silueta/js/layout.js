@@ -29,18 +29,28 @@ export function cellIsMasked(maskInfo, grid, col, row) {
  * Place one small-caption item. When `enabled`, if the requested cell is masked
  * it searches outward (increasing Chebyshev radius) for the nearest unmasked
  * cell and lands there. When disabled, stays on the requested cell.
+ *
+ * The returned `placed` flag reports whether the caption ended on an unmasked
+ * cell. It is false only when avoidance was requested but the whole reachable
+ * grid is masked (a dense silhouette): the item then falls back to the
+ * requested cell, and the caller can choose to drop or dim it. `placed` is
+ * true whenever avoidance is disabled or a free cell was found.
  */
 export function placeSmallText({ maskInfo, grid, col, row, enabled, text, size }) {
   let tc = col, tr = row;
+  let placed = true;
   if (enabled && cellIsMasked(maskInfo, grid, col, row)) {
+    placed = false;
     outer:
-    for (let radius = 1; radius < Math.max(grid.cols, grid.rows); radius++) {
+    // Farthest Chebyshev distance from any origin to any in-grid cell is
+    // max(cols,rows)-1, so radius must be allowed to reach it (<=, not <).
+    for (let radius = 1; radius <= Math.max(grid.cols, grid.rows); radius++) {
       for (let dr = -radius; dr <= radius; dr++) {
         for (let dc = -radius; dc <= radius; dc++) {
           if (Math.max(Math.abs(dr), Math.abs(dc)) !== radius) continue; // ring only
           const nc = col + dc, nr = row + dr;
           if (nc < 0 || nr < 0 || nc >= grid.cols || nr >= grid.rows) continue;
-          if (!cellIsMasked(maskInfo, grid, nc, nr)) { tc = nc; tr = nr; break outer; }
+          if (!cellIsMasked(maskInfo, grid, nc, nr)) { tc = nc; tr = nr; placed = true; break outer; }
         }
       }
     }
@@ -53,6 +63,7 @@ export function placeSmallText({ maskInfo, grid, col, row, enabled, text, size }
     y: tr * grid.cellH + size,
     size,
     text,
+    placed,
   };
 }
 

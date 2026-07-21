@@ -42,11 +42,22 @@ describe('placeSmallText (contour avoidance)', () => {
     const item = placeSmallText({ maskInfo, grid: g, col: 1, row: 1, enabled: true, text: 'x', size: 10 });
     // Should have moved off (1,1); its target cell must be unmasked.
     expect(cellIsMasked(maskInfo, g, item.col, item.row)).toBe(false);
+    expect(item.placed).toBe(true);
   });
 
   it('when disabled, stays on the requested cell even if masked', () => {
     const item = placeSmallText({ maskInfo, grid: g, col: 1, row: 1, enabled: false, text: 'x', size: 10 });
     expect(item.col).toBe(1);
+    expect(item.row).toBe(1);
+    expect(item.placed).toBe(true); // avoidance off → always "placed"
+  });
+
+  it('flags placed=false when the whole grid is masked and avoidance is on', () => {
+    const fullMask = new Uint8Array(w * h).fill(1); // every cell masked
+    const info = { mask: fullMask, w, h };
+    const item = placeSmallText({ maskInfo: info, grid: g, col: 1, row: 1, enabled: true, text: 'x', size: 10 });
+    expect(item.placed).toBe(false);   // no free cell exists
+    expect(item.col).toBe(1);          // falls back to the requested cell
     expect(item.row).toBe(1);
   });
 });
