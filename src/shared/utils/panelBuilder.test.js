@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
-import { getByPath, setByPath, buildPresetSection } from '../ui/panelBuilder.js';
+import { describe, it, expect, vi } from 'vitest';
+import { getByPath, setByPath, buildPresetSection, createPanelBuilder } from '../ui/panelBuilder.js';
 
 describe('getByPath', () => {
   it('reads a top-level key', () => {
@@ -90,5 +90,21 @@ describe('buildPresetSection preset split', () => {
       onOpenPaywall: null,
     });
     expect(root.querySelector('.pro-preset-note')).not.toBeNull();
+  });
+});
+
+describe('textarea control', () => {
+  it('renders a textarea and writes state on input', () => {
+    const state = { layout: { main: { text: 'HELLO' } } };
+    const applyChange = vi.fn();
+    const builder = createPanelBuilder({ state, applyChange, refreshVisibility: () => {} });
+    const row = builder.buildControl({ id: 'sl-main-text', type: 'textarea', label: 'Main Text', path: 'layout.main.text' });
+    const ta = row.querySelector('textarea');
+    expect(ta).not.toBeNull();
+    expect(ta.value).toBe('HELLO');
+    ta.value = 'WORLD';
+    ta.dispatchEvent(new window.Event('input'));
+    expect(state.layout.main.text).toBe('WORLD');
+    expect(applyChange).toHaveBeenCalled();
   });
 });

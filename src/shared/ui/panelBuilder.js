@@ -223,6 +223,24 @@ export function createPanelBuilder({
         applyChange(ctrl);
       });
 
+    } else if (ctrl.type === 'textarea') {
+      const header = el('div', { className: 'parameter-header' },
+        el('span', { className: 'parameter-label', textContent: ctrl.label }),
+      );
+      const input = el('textarea', {
+        class: 'grafema-text-input',
+        id: ctrl.id,
+        rows: String(ctrl.rows || 3),
+        style: 'resize:vertical; min-height:52px; font:inherit;',
+      });
+      input.value = String(val);
+      row.appendChild(header);
+      row.appendChild(input);
+      input.addEventListener('input', (e) => {
+        setByPath(state, ctrl.path, e.target.value);
+        applyChange(ctrl);
+      });
+
     } else if (ctrl.type === 'button') {
       // Action button: no state path; the workspace dispatches on ctrl.id
       // inside its applyChange.
@@ -297,7 +315,7 @@ export function createPanelBuilder({
           el.value = val;
           const num = document.getElementById(`${ctrl.id}-num`);
           if (num) num.value = val;
-        } else if (ctrl.type === 'select' || ctrl.type === 'text') {
+        } else if (ctrl.type === 'select' || ctrl.type === 'text' || ctrl.type === 'textarea') {
           el.value = val;
         } else if (ctrl.type === 'check') {
           el.checked = val;
