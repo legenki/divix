@@ -13,7 +13,7 @@ import { createRender } from './render.js';
 import { exportGridSVG } from './svgExport.js';
 import { createMediaLibrary } from './media.js';
 import { buildMediaSection } from './mediaPanel.js';
-import { ensureFont, variationSettings, hasAxis, AXIS_TAGS } from './fonts.js';
+import { ensureFont, hasAxis, AXIS_TAGS } from './fonts.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { timestamp } from '../../shared/utils/datetime.js';
@@ -59,7 +59,7 @@ export function siluetaSketch(p) {
     state,
     applyChange,
     refreshVisibility,
-    onSliderInput: () => dirty.markDirty(),
+    onSliderInput: () => requestRepaint(),
   });
 
   // ---- Deterministic PRNG (LCG) seeded from layout.seed for reproducibility. ----
@@ -233,17 +233,56 @@ export function siluetaSketch(p) {
   }
 
   /**
-   * Apply a variable-font style to the buffer's 2D context. p5 has no API for
-   * font-variation-settings, so the axes are set on the underlying context —
-   * this is what makes the same family read as hairline-condensed or black.
+   * Apply a variable-font style to the buffer's 2D context.
+   *
+   * Weight and width go through the CSS font shorthand (`700 condensed 48px …`)
+   * because that is what canvas 2D honours: it selects an instance from the
+   * range declared on the FontFace. `fontVariationSettings` alone does NOT
+   * work here — verified in-browser, every weight rendered identical ink — so
+   * it is used only for `opsz`, which has no shorthand equivalent.
    */
   function applyFontStyle(g, style, sizePx) {
     const family = style.font;
     const ready = document.fonts?.check?.(`12px "${family}"`);
-    const stack = ready ? `"${family}", ${FALLBACK_FONT}` : FALLBACK_FONT;
     const ctx = g.drawingContext;
-    ctx.font = `${sizePx}px ${stack}`;
-    ctx.fontVariationSettings = variationSettings(family, style) || 'normal';
+
+    const weight = hasAxis(family, 'wght') ? Math.round(style.wght ?? 400) : 400;
+    // Stretch must be a KEYWORD here: canvas 2D rejects a percentage such as
+    // `100%`, and one invalid token invalidates the whole font string — the
+    // context then silently falls back to 10px sans-serif (observed).
+    const stretch = hasAxis(family, 'wdth') ? stretchKeyword(style.wdth) : '';
+
+    if (ready) {
+      // Quote the family and DON'T append a fallback stack: a fallback makes
+      // no difference once the face is loaded, and keeping the string minimal
+      // avoids further parse failures.
+      ctx.font = `${weight} ${stretch} ${sizePx}px "${family}"`.replace(/\s+/g, ' ').trim();
+      // If anything was still rejected, fall back explicitly rather than
+      // rendering at the browser's 10px default.
+      if (!ctx.font.includes(`${sizePx}px`)) {
+        ctx.font = `${weight} ${sizePx}px "${family}"`;
+      }
+    } else {
+      ctx.font = `${weight} ${sizePx}px ${FALLBACK_FONT}`;
+    }
+
+    // opsz has no shorthand equivalent, so it goes through the axis property.
+    const opsz = hasAxis(family, 'opsz') && style.opsz != null ? `"opsz" ${style.opsz}` : '';
+    ctx.fontVariationSettings = opsz || 'normal';
+  }
+
+  /** Map a wdth axis percentage onto the CSS font-stretch keyword scale. */
+  function stretchKeyword(wdth) {
+    const v = Number(wdth);
+    if (!Number.isFinite(v) || Math.abs(v - 100) < 6) return '';
+    if (v < 56) return 'ultra-condensed';
+    if (v < 69) return 'extra-condensed';
+    if (v < 81) return 'condensed';
+    if (v < 94) return 'semi-condensed';
+    if (v < 113) return 'semi-expanded';
+    if (v < 138) return 'expanded';
+    if (v < 175) return 'extra-expanded';
+    return 'ultra-expanded';
   }
 
   function drawText() {
@@ -262,30 +301,64 @@ export function siluetaSketch(p) {
     p.image(g, 0, 0, cnv.width, cnv.height);
   }
 
-  /** Headline: shrink-to-fit within the block, set in the main variable font. */
+  /**
+   * Wrap text to a pixel width using the context's REAL metrics (not a
+   * character-count estimate), so a line can never overhang its block.
+   * A single word longer than the box is broken mid-word rather than
+   * bleeding past the edge.
+   */
+  function wrapToWidth(ctx, text, maxW) {
+    const words = String(text).replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (ctx.measureText(next).width <= maxW) {
+        line = next;
+        continue;
+      }
+      if (line) lines.push(line);
+      // Hard-break a word that cannot fit on a line of its own.
+      let rest = word;
+      while (ctx.measureText(rest).width > maxW && rest.length > 1) {
+        let cut = rest.length;
+        while (cut > 1 && ctx.measureText(rest.slice(0, cut)).width > maxW) cut -= 1;
+        lines.push(rest.slice(0, cut));
+        rest = rest.slice(cut);
+      }
+      line = rest;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  /** Headline: wrapped and shrink-to-fit so it always stays inside its block. */
   function drawMainBlock(g, block) {
     const maxW = block.w - BLOCK_PAD * 2;
     const maxH = block.h - BLOCK_PAD * 2;
     if (maxW <= 4 || maxH <= 4) return;
 
-    // Fit the fragment to the block: start from the requested size and step
-    // down until it fits, so a long phrase in a 1x1 cell stays inside its box.
-    let size = Math.min(layout.main.fontSize, maxH);
-    applyFontStyle(g, layout.main, size);
+    const ctx = g.drawingContext;
+    const lh = layout.main.lineHeight;
+
+    // Shrink until the wrapped block fits the box in BOTH axes. Wrapping keeps
+    // long phrases inside the width; this loop keeps them inside the height.
+    let size = Math.max(8, Math.min(layout.main.fontSize, maxH));
+    let lines = [];
     let guard = 0;
-    while (size > 8 && guard < 60 && g.drawingContext.measureText(block.text).width > maxW) {
-      size -= 1;
+    while (guard < 80) {
       applyFontStyle(g, layout.main, size);
+      lines = wrapToWidth(ctx, block.text, maxW);
+      if (lines.length * size * lh <= maxH || size <= 8) break;
+      size -= 1;
       guard += 1;
     }
 
     g.fill(layout.main.color);
-    g.drawingContext.textBaseline = 'top';
-    g.drawingContext.fillText(
-      block.text,
-      block.x + BLOCK_PAD,
-      block.y + BLOCK_PAD,
-    );
+    ctx.textBaseline = 'top';
+    lines.forEach((line, i) => {
+      ctx.fillText(line, block.x + BLOCK_PAD, block.y + BLOCK_PAD + i * size * lh);
+    });
   }
 
   /** Caption: wrapped body copy filling the block, in the small variable font. */
@@ -299,12 +372,11 @@ export function siluetaSketch(p) {
     const ctx = g.drawingContext;
     ctx.textBaseline = 'top';
 
-    // Estimate characters per line from the font's actual average advance.
-    const sample = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width / 26 || size * 0.5;
-    const charsPerLine = Math.max(6, Math.floor(maxW / sample));
-    const lineH = size * 1.25;
+    // Wrap on real metrics so no line overhangs the block, then clip to the
+    // number of lines that actually fit its height.
+    const lineH = size * layout.small.lineHeight;
     const maxLines = Math.max(1, Math.floor(maxH / lineH));
-    const lines = wrapText(block.text, charsPerLine).slice(0, maxLines);
+    const lines = wrapToWidth(ctx, block.text, maxW).slice(0, maxLines);
 
     g.fill('#333333');
     lines.forEach((line, i) => {
@@ -337,8 +409,22 @@ export function siluetaSketch(p) {
         break;
     }
     refreshVisibility();
-    dirty.markDirty();
+    requestRepaint();
     saveState();
+  }
+
+  /**
+   * Force exactly one repaint. markDirty() alone is not enough: the sketch is
+   * paused via noLoop() after each idle frame, and waking it with loop() can
+   * miss a frame, so a slider change would update state without repainting
+   * (observed with the weight slider — the buffer was never redrawn).
+   * redraw() always paints, so the panel and canvas stay in step.
+   */
+  function requestRepaint() {
+    dirty.markDirty();
+    if (typeof p.redraw === 'function' && !recVideo.active) {
+      try { p.redraw(); } catch { /* instance may not be ready yet */ }
+    }
   }
 
   function refreshVisibility() {

@@ -46,6 +46,7 @@ export const layout = {
     enabled: true,
     text: 'Experimental image processing and typography layout engine. Silhouettes are extracted from the source photograph, rasterised into pixel and halftone forms, then composed against a responsive grid where type and image negotiate the same space.',
     fontSize: 10,
+    lineHeight: 1.25,
     font: 'Roboto Flex',
     wght: 400,
     wdth: 100,

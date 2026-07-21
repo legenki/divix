@@ -83,12 +83,23 @@ const _registered = new Set();
 /**
  * Fetch a catalog family and register it in document.fonts so the P2D text
  * buffer can select it by name. Safe to call repeatedly.
+ *
+ * The weight/stretch RANGES must be declared in the descriptor. Registering a
+ * variable TTF without them pins the face to one static instance: canvas 2D
+ * then renders every weight identically (verified — 200 and 800 produced
+ * byte-identical ink), because there is no range for the browser to
+ * interpolate within.
  * @returns {Promise<string>} the family name, once usable
  */
 export async function ensureFont(family) {
   if (_registered.has(family)) return family;
   const buffer = await loadFontBuffer(family);
-  const face = new FontFace(family, buffer);
+  const wght = axisRange(family, 'wght');
+  const wdth = axisRange(family, 'wdth');
+  const descriptors = {};
+  if (wght) descriptors.weight = `${wght[0]} ${wght[2]}`;
+  if (wdth) descriptors.stretch = `${wdth[0]}% ${wdth[2]}%`;
+  const face = new FontFace(family, buffer, descriptors);
   await face.load();
   document.fonts.add(face);
   _registered.add(family);

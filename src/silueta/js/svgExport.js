@@ -85,12 +85,19 @@ export function buildGridSVG({ w, h, blocks = [], render, main, small, pad = 6, 
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`);
   parts.push(`<rect width="${w}" height="${h}" fill="#ffffff"/>`);
 
+  // Weight is emitted as font-weight as well as a variation setting: editors
+  // and browsers honour the presentation attribute reliably, while
+  // font-variation-settings carries the axes that have no attribute (opsz).
   const axisStyle = (s) => {
     const axes = [];
     for (const tag of ['wght', 'wdth', 'opsz']) {
       if (s?.[tag] != null) axes.push(`"${tag}" ${s[tag]}`);
     }
-    return axes.length ? ` font-variation-settings="${esc(axes.join(', '))}"` : '';
+    let out = '';
+    if (s?.wght != null) out += ` font-weight="${Math.round(s.wght)}"`;
+    if (s?.wdth != null) out += ` font-stretch="${Math.round(s.wdth)}%"`;
+    if (axes.length) out += ` font-variation-settings="${esc(axes.join(', '))}"`;
+    return out;
   };
 
   for (const b of blocks) {
@@ -121,17 +128,27 @@ export function buildGridSVG({ w, h, blocks = [], render, main, small, pad = 6, 
       }
       parts.push('</g>');
     } else if (b.kind === 'main') {
-      // Mirror the canvas shrink-to-fit with an average-advance estimate.
-      const est = Math.max(6, Math.min(main.fontSize, bh));
-      const size = Math.min(est, (bw / Math.max(1, b.text.length)) * 1.9);
-      parts.push(
-        `<text x="${bx.toFixed(1)}" y="${(by + size * 0.85).toFixed(1)}" ` +
-        `font-family="${esc(main.font)}" font-size="${size.toFixed(1)}" ` +
-        `fill="${esc(main.color)}"${axisStyle(main)}>${esc(b.text)}</text>`
-      );
+      // Mirror the canvas: wrap, then shrink until the wrapped block fits the
+      // box in both axes, so vector output matches what was on screen.
+      const lh = main.lineHeight || 1;
+      let size = Math.max(8, Math.min(main.fontSize, bh));
+      let lines = [];
+      for (let guard = 0; guard < 80; guard++) {
+        const charsPerLine = Math.max(2, Math.floor(bw / (size * 0.55)));
+        lines = wrap ? wrap(b.text, charsPerLine) : [b.text];
+        if (lines.length * size * lh <= bh || size <= 8) break;
+        size -= 1;
+      }
+      lines.forEach((line, i) => {
+        parts.push(
+          `<text x="${bx.toFixed(1)}" y="${(by + size * 0.85 + i * size * lh).toFixed(1)}" ` +
+          `font-family="${esc(main.font)}" font-size="${size.toFixed(1)}" ` +
+          `fill="${esc(main.color)}"${axisStyle(main)}>${esc(line)}</text>`
+        );
+      });
     } else if (b.kind === 'small') {
       const size = small.fontSize;
-      const lineH = size * 1.25;
+      const lineH = size * (small.lineHeight || 1.25);
       const charsPerLine = Math.max(6, Math.floor(bw / (size * 0.5)));
       const maxLines = Math.max(1, Math.floor(bh / lineH));
       const lines = (wrap ? wrap(b.text, charsPerLine) : [b.text]).slice(0, maxLines);
