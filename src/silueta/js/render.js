@@ -24,7 +24,7 @@ export function createRender({ p, state }) {
   let masked = null;   // P2D buffer holding the final masked silhouette (RGBA)
   let pixelateShader = null;
   let halftoneShader = null;
-  let maskImg = null;  // p5.Image built from the extraction mask (for gating)
+  let maskData = null; // { mask: Uint8Array, w, h } — the extraction mask (for gating)
 
   function hideGraphics(g) {
     const els = [g?.elt, g?.canvas, g?._renderer?.canvas];
@@ -50,22 +50,14 @@ export function createRender({ p, state }) {
   }
 
   /**
-   * Build a p5.Image (white where object, transparent where background) from a
-   * flat mask, sized to the mask's own resolution. Used as the gate.
+   * Store the extraction mask for gating. Kept as the raw low-res typed array
+   * (not a p5.Image) so renderSilhouette can gate by writing alpha directly —
+   * a deterministic per-pixel mask that does not depend on p5 blend-mode
+   * semantics (an earlier blendMode(MULTIPLY) gate left the background opaque).
    */
   function setMask(maskInfo) {
     const { mask, w: mw, h: mh } = maskInfo;
-    maskImg = p.createImage(mw, mh);
-    maskImg.loadPixels();
-    for (let i = 0; i < mw * mh; i++) {
-      const on = mask[i] ? 255 : 0;
-      const j = i * 4;
-      maskImg.pixels[j] = 255;
-      maskImg.pixels[j + 1] = 255;
-      maskImg.pixels[j + 2] = 255;
-      maskImg.pixels[j + 3] = on;
-    }
-    maskImg.updatePixels();
+    maskData = { mask, w: mw, h: mh };
   }
 
   function drawFullQuad(buf) {
@@ -116,24 +108,33 @@ export function createRender({ p, state }) {
       drawFullQuad(sil);
     }
 
-    // Gate with the mask: draw the shader output, then keep only where the mask
-    // is opaque (destination-in). masked ends up transparent on the background.
+    // Draw the shader output into the P2D buffer, then gate it: walk the
+    // buffer's pixels and zero the alpha wherever the (upsampled) object mask
+    // is off, so the background becomes transparent and the paper shows
+    // through. This per-pixel gate is deterministic and, unlike a
+    // blendMode(MULTIPLY) pass, does not leave the background opaque.
     masked.clear();
-    masked.push();
     masked.image(sil, 0, 0, masked.width, masked.height);
-    if (maskImg) {
-      // MULTIPLY by the white/transparent mask keeps the silhouette where the
-      // mask is opaque and zeroes it (transparent) elsewhere. Browser-verified
-      // in Task 12; a manual alpha-copy fallback is the documented backup if
-      // this blend does not gate correctly on the P2D buffer.
-      masked.blendMode(p.MULTIPLY);
-      masked.image(maskImg, 0, 0, masked.width, masked.height);
-    }
-    masked.pop();
-    masked.blendMode(p.BLEND);
 
-    // For a flat silhouette (effect !== none, keepOriginal false) recolor is
-    // already baked by the shader; MULTIPLY by white mask preserves it.
+    if (maskData) {
+      const { mask, w: mw, h: mh } = maskData;
+      masked.loadPixels();
+      // masked.pixels is sized at width*density × height*density.
+      const pw = masked.width * masked.pixelDensity();
+      const ph = masked.height * masked.pixelDensity();
+      const px = masked.pixels;
+      for (let y = 0; y < ph; y++) {
+        const my = Math.min(mh - 1, (y / ph * mh) | 0);
+        for (let x = 0; x < pw; x++) {
+          const mx = Math.min(mw - 1, (x / pw * mw) | 0);
+          if (!mask[my * mw + mx]) {
+            px[(y * pw + x) * 4 + 3] = 0; // background → transparent
+          }
+        }
+      }
+      masked.updatePixels();
+    }
+
     return masked;
   }
 
