@@ -36,6 +36,7 @@ export function siluetaSketch(p) {
   let resizedSource = null; // source fit to the silhouette buffer
   let maskInfo = null;      // { mask, labels, components, w, h }
   let layoutItems = [];
+  let textBuffer = null;    // P2D buffer for text (WEBGL can't use CSS fonts)
   let isReady = false;
   let PRESETS = {};
   const recVideo = { active: false, seconds: 4 };
@@ -124,6 +125,7 @@ export function siluetaSketch(p) {
     computeCanvasSize();
     buildResizedSource();
     renderer.buildBuffers(cnv.width, cnv.height, cnv.density.base);
+    ensureTextBuffer();
     runExtract();
     runLayout();
     dirty.markDirty();
@@ -156,26 +158,52 @@ export function siluetaSketch(p) {
     p.pop();
   }
 
+  // Text is rendered on a 2D (P2D) buffer, not directly on the WEBGL canvas:
+  // p5's WEBGL text needs a loaded p5.Font (a CSS family string like 'Inter'
+  // is rejected), whereas a 2D graphics buffer accepts CSS font strings and
+  // the browser's own fonts — including CJK glyphs the poster mixes in. The
+  // buffer is then blitted over the silhouette. It is (re)created to match the
+  // canvas size in rebuildAll via ensureTextBuffer().
+  function ensureTextBuffer() {
+    const density = cnv.density.base;
+    if (
+      textBuffer &&
+      textBuffer.width === cnv.width &&
+      textBuffer.height === cnv.height &&
+      textBuffer.pixelDensity() === density
+    ) return;
+    if (textBuffer && typeof textBuffer.remove === 'function') {
+      try { textBuffer.remove(); } catch { /* instance-mode remove may throw */ }
+    }
+    textBuffer = p.createGraphics(cnv.width, cnv.height); // P2D
+    textBuffer.pixelDensity(density);
+    const els = [textBuffer.elt, textBuffer.canvas];
+    for (const el of els) {
+      if (el?.style) { el.style.display = 'none'; el.setAttribute?.('aria-hidden', 'true'); }
+    }
+  }
+
   function drawText() {
-    p.push();
-    p.textFont('Inter');
-    p.textAlign(p.LEFT, p.BASELINE);
-    // Convert top-left canvas coords to WEBGL center-origin.
-    const ox = -cnv.width / 2;
-    const oy = -cnv.height / 2;
+    if (!textBuffer) return;
+    const g = textBuffer;
+    g.clear();
+    g.textFont(FONT_FAMILY);
+    g.textAlign(p.LEFT, p.BASELINE);
+    g.noStroke();
     for (const it of layoutItems) {
       if (it.role === 'small' && it.placed === false) continue; // unplaceable caption
       if (it.role === 'main') {
-        p.fill(layout.main.color);
-        p.textStyle(p.BOLD);
+        g.fill(layout.main.color);
+        g.textStyle(p.BOLD);
       } else {
-        p.fill('#333333');
-        p.textStyle(p.NORMAL);
+        g.fill('#333333');
+        g.textStyle(p.NORMAL);
       }
-      p.textSize(it.size);
-      p.text(it.text, ox + it.x, oy + it.y);
+      g.textSize(it.size);
+      g.text(it.text, it.x, it.y);
     }
-    p.pop();
+    // Blit centered onto the WEBGL canvas (origin at center).
+    p.image(g, 0, 0, cnv.width, cnv.height);
   }
 
   // ---- Change dispatch. ----
@@ -265,12 +293,14 @@ export function siluetaSketch(p) {
       p.pixelDensity(d);
       renderer.buildBuffers(cnv.width, cnv.height, d);
       renderer.setMask(maskInfo);
+      ensureTextBuffer();
       fn(d);
     } finally {
       cnv.density.base = savedBase;
       p.pixelDensity(savedBase);
       renderer.buildBuffers(cnv.width, cnv.height, savedBase);
       renderer.setMask(maskInfo);
+      ensureTextBuffer();
       drawCanvas();
     }
   }
