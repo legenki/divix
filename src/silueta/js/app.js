@@ -14,6 +14,7 @@ import { exportGridSVG } from './svgExport.js';
 import { createMediaLibrary } from './media.js';
 import { buildMediaSection } from './mediaPanel.js';
 import { ensureFont, hasAxis, AXIS_TAGS } from './fonts.js';
+import { rasterizeSVG } from './stamp.js';
 
 import { createPersistence } from '../../shared/utils/persistence.js';
 import { timestamp } from '../../shared/utils/datetime.js';
@@ -390,6 +391,9 @@ export function siluetaSketch(p) {
       // New seed = a different packing of the same content.
       layout.seed = (Math.random() * 0xffffffff) >>> 0;
       runLayout();
+    } else if (ctrl.action === 'uploadShape') {
+      document.getElementById('sl-shape-input')?.click();
+      return; // the file dialog drives the rest
     }
     switch (ctrl.regen) {
       case 'canvas':
@@ -431,12 +435,23 @@ export function siluetaSketch(p) {
     const colorEl = document.getElementById('sl-sil-color');
     if (colorEl) colorEl.disabled = render.effect === 'none';
 
-    // A variable axis only gets a slider when the chosen family supports it,
-    // so e.g. Syne (weight only) doesn't show dead Width/Optical Size rows.
     const show = (id, vis) => {
       const el = document.querySelector(`[data-control-id="${id}"]`);
       if (el) el.style.display = vis ? '' : 'none';
     };
+    // Nothing is stamped in Original mode, and the SVG loader is only
+    // meaningful once "Custom SVG" is the selected shape.
+    const stamped = render.effect !== 'none';
+    show('sl-shape', stamped);
+    show('sl-shape-upload', stamped && render.shape === 'custom');
+    const label = document.getElementById('sl-shape-name');
+    if (label) {
+      label.style.display = stamped && render.shape === 'custom' ? 'block' : 'none';
+      label.textContent = render.shapeName || 'no file — using a square';
+    }
+
+    // A variable axis only gets a slider when the chosen family supports it,
+    // so e.g. Syne (weight only) doesn't show dead Width/Optical Size rows.
     for (const tag of AXIS_TAGS) {
       show(`sl-main-${tag}`, hasAxis(layout.main.font, tag));
       show(`sl-small-${tag}`, hasAxis(layout.small.font, tag));
@@ -477,6 +492,32 @@ export function siluetaSketch(p) {
       },
     });
     panel.buildSections(root, SECTIONS);
+
+    // Filename label + hidden file input for the SVG loader. Both are created
+    // here rather than in template.html because panelBuilder has no control
+    // type for them, and building them alongside the button keeps the loader
+    // working no matter how the panel is rebuilt.
+    const uploadRow = root.querySelector('[data-control-id="sl-shape-upload"]');
+    if (uploadRow && !document.getElementById('sl-shape-name')) {
+      const label = document.createElement('span');
+      label.id = 'sl-shape-name';
+      label.className = 'color-code';
+      label.style.cssText = 'display:block;margin-top:6px;';
+      uploadRow.appendChild(label);
+
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.id = 'sl-shape-input';
+      input.accept = '.svg,image/svg+xml';
+      input.style.display = 'none';
+      input.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) loadShapeFile(file);
+        e.target.value = '';
+      });
+      uploadRow.appendChild(input);
+    }
+
     openSections(root, [1, 3]); // Media Library + Composition open by default
     refreshVisibility();
   }
@@ -599,6 +640,29 @@ export function siluetaSketch(p) {
       getCanvas: () => p.canvas,
       getSize: () => ({ w: Math.floor(cnv.width * cnv.density.base), h: Math.floor(cnv.height * cnv.density.base) }),
     }).finally(() => { layout.seed = baseSeed; runLayout(); dirty.markDirty(); });
+  }
+
+  /** Read an uploaded SVG, rasterise it to a stamp and re-render with it. */
+  function loadShapeFile(file) {
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const img = await rasterizeSVG({ p, svgText: ev.target.result });
+        renderer.setStamp(img);
+        render.shape = 'custom';
+        render.shapeName = file.name;
+        invalidateSilhouettes();
+        syncUIFromState();
+        requestRepaint();
+        saveState();
+        setStatus('');
+      } catch (err) {
+        console.warn('[silueta] SVG shape failed:', err);
+        setStatus(err.message || 'SVG shape failed');
+      }
+    };
+    reader.onerror = () => setStatus('Could not read that file');
+    reader.readAsText(file);
   }
 
   function bindFooter() {

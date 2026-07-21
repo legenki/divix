@@ -5,6 +5,7 @@
 // memory: p.pixelDensity() must match the buffer's density or the shader tiles).
 
 import { PIXELATE_FRAG, HALFTONE_FRAG, DITHER_VERT } from './shaders.js';
+import { shapeIndex, blankStamp } from './stamp.js';
 
 function hexToRgb01(hex) {
   const h = String(hex).replace('#', '');
@@ -25,6 +26,8 @@ export function createRender({ p, state }) {
   let pixelateShader = null;
   let halftoneShader = null;
   let maskData = null; // { mask: Uint8Array, w, h } — the extraction mask (for gating)
+  let stampImg = null; // rasterised custom-shape stamp (alpha = coverage)
+  let fallbackStamp = null; // 1x1 opaque texture; u_stamp must always be bound
 
   function hideGraphics(g) {
     const els = [g?.elt, g?.canvas, g?._renderer?.canvas];
@@ -60,6 +63,18 @@ export function createRender({ p, state }) {
     maskData = { mask, w: mw, h: mh };
   }
 
+  /** Install the rasterised custom-shape stamp (null clears it). */
+  function setStamp(img) {
+    stampImg = img || null;
+  }
+
+  /** The texture to bind to u_stamp — never null, or sampling is undefined. */
+  function currentStamp() {
+    if (stampImg) return stampImg;
+    if (!fallbackStamp) fallbackStamp = blankStamp(p);
+    return fallbackStamp;
+  }
+
   function drawFullQuad(buf) {
     buf.push();
     buf.rectMode(p.CORNER);
@@ -92,6 +107,8 @@ export function createRender({ p, state }) {
       pixelateShader.setUniform('u_size', render.granularity * density);
       pixelateShader.setUniform('u_flatColor', render.keepOriginal ? 0 : 1);
       pixelateShader.setUniform('u_color', hexToRgb01(render.color));
+      pixelateShader.setUniform('u_shape', shapeIndex(render.shape));
+      pixelateShader.setUniform('u_stamp', currentStamp());
       drawFullQuad(sil);
     } else {
       // halftone — silueta's own darkness-driven dots (same uniform set as
@@ -102,6 +119,8 @@ export function createRender({ p, state }) {
       halftoneShader.setUniform('u_size', render.granularity * density);
       halftoneShader.setUniform('u_flatColor', render.keepOriginal ? 0 : 1);
       halftoneShader.setUniform('u_color', hexToRgb01(render.color));
+      halftoneShader.setUniform('u_shape', shapeIndex(render.shape));
+      halftoneShader.setUniform('u_stamp', currentStamp());
       drawFullQuad(sil);
     }
 
@@ -159,5 +178,5 @@ export function createRender({ p, state }) {
     sil = null; masked = null;
   }
 
-  return { buildBuffers, setMask, renderSilhouette, dispose, get size() { return sil ? { w: sil.width, h: sil.height } : null; } };
+  return { buildBuffers, setMask, setStamp, renderSilhouette, dispose, get size() { return sil ? { w: sil.width, h: sil.height } : null; } };
 }

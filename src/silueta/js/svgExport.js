@@ -115,13 +115,17 @@ export function buildGridSVG({ w, h, blocks = [], render, main, small, pad = 6, 
           const mx = Math.min(mw - 1, Math.floor(((cx + cell / 2) / bw) * mw));
           const my = Math.min(mh - 1, Math.floor(((cy + cell / 2) / bh) * mh));
           if (!mask[my * mw + mx]) continue;
-          if (render.effect === 'halftone') {
+          // Match the canvas stamp. A custom SVG shape has no single vector
+          // equivalent here, so it falls back to a circle — the closest
+          // primitive — rather than silently emitting nothing.
+          const square = render.shape === 'square';
+          if (square) {
             parts.push(
-              `<circle cx="${(bx + cx + cell / 2).toFixed(1)}" cy="${(by + cy + cell / 2).toFixed(1)}" r="${(cell * 0.42).toFixed(1)}"/>`
+              `<rect x="${(bx + cx).toFixed(1)}" y="${(by + cy).toFixed(1)}" width="${cell}" height="${cell}"/>`
             );
           } else {
             parts.push(
-              `<rect x="${(bx + cx).toFixed(1)}" y="${(by + cy).toFixed(1)}" width="${cell}" height="${cell}"/>`
+              `<circle cx="${(bx + cx + cell / 2).toFixed(1)}" cy="${(by + cy + cell / 2).toFixed(1)}" r="${(cell * 0.42).toFixed(1)}"/>`
             );
           }
         }

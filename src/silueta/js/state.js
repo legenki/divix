@@ -18,6 +18,9 @@ export const render = {
   granularity: 11,       // px block/dot size, 10..28
   color: '#B8B8B8',      // flat silhouette color (used when effect !== 'none')
   keepOriginal: false,   // keep source texture/color inside cells
+  // Stamp drawn in each cell: 'circle' | 'square' | 'custom' (uploaded SVG).
+  shape: 'circle',
+  shapeName: '',         // filename of the uploaded SVG, for the panel label
 };
 
 export const extract = {

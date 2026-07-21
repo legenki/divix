@@ -11,6 +11,7 @@
 
 import { RATIO_TYPES, EFFECT_TYPES, LAYOUT_MODES } from './state.js';
 import { FONT_LIST } from './fonts.js';
+import { SHAPE_TYPES } from './stamp.js';
 
 // Font pickers are built from the shared catalog so main and small text can use
 // different families; the axis sliders below them are shown only for axes the
@@ -29,6 +30,9 @@ export const SECTIONS = [
     title: 'Silhouette',
     controls: [
       { id: 'sl-effect', type: 'select', label: 'Visual Effect', path: 'render.effect', options: EFFECT_TYPES, regen: 'effect' },
+      // Cell stamp. Hidden for 'none' (nothing is stamped in Original mode).
+      { id: 'sl-shape', type: 'select', label: 'Shape', path: 'render.shape', options: SHAPE_TYPES, regen: 'render' },
+      { id: 'sl-shape-upload', type: 'button', label: 'Load SVG Shape', action: 'uploadShape' },
       { id: 'sl-granularity', type: 'slider', label: 'Processing Granularity (px)', path: 'render.granularity', min: 10, max: 28, step: 1, regen: 'render' },
       // sl-sil-color: DISABLED (not hidden) when render.effect === 'none' (app.js refreshVisibility).
       { id: 'sl-sil-color', type: 'color', label: 'Silhouette Color', path: 'render.color', regen: 'render' },
