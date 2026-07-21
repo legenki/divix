@@ -26,6 +26,13 @@ export function createRender({ p, state }) {
   let halftoneShader = null;
   let maskImg = null;  // p5.Image built from the extraction mask (for gating)
 
+  function hideGraphics(g) {
+    const els = [g?.elt, g?.canvas, g?._renderer?.canvas];
+    for (const el of els) {
+      if (el?.style) { el.style.display = 'none'; el.setAttribute?.('aria-hidden', 'true'); }
+    }
+  }
+
   function buildBuffers(w, h, density) {
     dispose();
     sil = p.createGraphics(w, h, p.WEBGL);
@@ -37,6 +44,9 @@ export function createRender({ p, state }) {
     masked = p.createGraphics(w, h); // P2D
     masked.pixelDensity(density);
     masked.noStroke();
+
+    hideGraphics(sil);
+    hideGraphics(masked);
   }
 
   /**
