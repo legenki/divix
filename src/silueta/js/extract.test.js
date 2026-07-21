@@ -33,6 +33,17 @@ describe('dilate', () => {
     expect(out[1 * W + 2]).toBe(1);   // right
     expect(out[0 * W + 0]).toBe(0);   // diagonal not grown (4-neighborhood)
   });
+
+  it('does not wrap across rows/edges for a boundary pixel', () => {
+    const mask = new Uint8Array(W * H);
+    mask[0] = 1; // object pixel at the top-left corner (0,0)
+    const out = dilate(mask, W, H);
+    expect(out[0]).toBe(1);            // self
+    expect(out[0 * W + 1]).toBe(1);    // right neighbor (1,0)
+    expect(out[1 * W + 0]).toBe(1);    // down neighbor (0,1)
+    // No left/up neighbor exists; must not wrap to the previous row's end.
+    expect(out[0 * W + (W - 1)]).toBe(0); // (3,0) — would light up if left-guard wrapped
+  });
 });
 
 describe('connectedComponents', () => {
