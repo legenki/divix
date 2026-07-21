@@ -56,6 +56,7 @@ const workspaces = [
   { name: 'bandada', load: () => import('../bandada/js/app.js').then((m) => m.bandadaSketch), containerId: 'bandada-canvas', animated: true, shortcut: 'KeyB' },
   { name: 'sondeo',  load: () => import('../sondeo/js/app.js').then((m) => m.sondeoSketch),   containerId: 'sondeo-canvas',  animated: true, shortcut: 'KeyS', needsNoise: true },
   { name: 'clon',    load: () => import('../clon/js/app.js').then((m) => m.clonSketch),       containerId: 'clon-canvas',    animated: true, shortcut: 'KeyC' },
+  { name: 'silueta', load: () => import('../silueta/js/app.js').then((m) => m.siluetaSketch), containerId: 'silueta-canvas', animated: true, shortcut: 'KeyL' },
 ].map((w) => ({ ...w, instance: null, pending: null, lastActive: 0 }));
 
 const workspaceByName = new Map(workspaces.map((w) => [w.name, w]));

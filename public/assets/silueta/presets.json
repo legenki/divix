@@ -1,0 +1,17 @@
+{
+  "pixelMixed": {
+    "render": { "effect": "pixelate", "granularity": 12, "color": "#B8B8B8", "keepOriginal": false },
+    "extract": { "threshold": 233, "merge": true },
+    "layout": { "mode": "mixed", "main": { "text": "REMIX LAYOUT.\nSMART GRAPHICS.", "fontSize": 52, "lineHeight": 0.9 }, "small": { "enabled": true } }
+  },
+  "halftoneMixed": {
+    "render": { "effect": "halftone", "granularity": 18, "color": "#587282", "keepOriginal": false },
+    "extract": { "threshold": 233, "merge": true },
+    "layout": { "mode": "mixed", "main": { "text": "PIXEL ART.\n网点 对齐.", "fontSize": 56, "lineHeight": 0.9 }, "small": { "enabled": true } }
+  },
+  "pixelOverlay": {
+    "render": { "effect": "pixelate", "granularity": 16, "color": "#687282", "keepOriginal": true },
+    "extract": { "threshold": 233, "merge": true },
+    "layout": { "mode": "overlay", "main": { "text": "SMART\nGRAPHICS", "fontSize": 61, "lineHeight": 0.9 }, "small": { "enabled": true } }
+  }
+}
