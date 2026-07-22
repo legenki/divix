@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   makeGrid, fits, findSlot, splitFragments, wrapText, composeGrid,
+  classifyCopy, rankByExpressiveness,
 } from './gridLayout.js';
 
 // Deterministic PRNG so every assertion is stable.
@@ -100,6 +101,54 @@ describe('wrapText', () => {
   });
 });
 
+describe('classifyCopy', () => {
+  it('sets short phrases large and long sentences small', () => {
+    const { headlines, captions } = classifyCopy(
+      'REMIX LAYOUT. Silhouettes are extracted from the source photograph and rasterised into forms.'
+    );
+    expect(headlines).toContain('REMIX LAYOUT.');
+    expect(captions.join(' ')).toContain('Silhouettes are extracted');
+  });
+
+  it('always yields something to set large', () => {
+    const { headlines } = classifyCopy(
+      'Every sentence here is far too long to be a headline on its own terms.'
+    );
+    expect(headlines.length).toBeGreaterThan(0);
+  });
+
+  it('always yields something to set small', () => {
+    const { captions } = classifyCopy('BIG. LOUD. SHORT.');
+    expect(captions.length).toBeGreaterThan(0);
+  });
+
+  it('returns nothing for blank copy', () => {
+    expect(classifyCopy('   ')).toEqual({ headlines: [], captions: [] });
+  });
+});
+
+describe('rankByExpressiveness', () => {
+  it('puts the sparsest silhouette first', () => {
+    const blob = { key: 'blob', coverage: 0.85 };
+    const spindly = { key: 'spindly', coverage: 0.18 };
+    const mid = { key: 'mid', coverage: 0.5 };
+    const out = rankByExpressiveness([blob, mid, spindly]);
+    expect(out.map((e) => e.key)).toEqual(['spindly', 'mid', 'blob']);
+  });
+
+  it('keeps original order when coverage is unknown', () => {
+    const a = { key: 'a' }, b = { key: 'b' }, c = { key: 'c' };
+    expect(rankByExpressiveness([a, b, c]).map((e) => e.key)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('does not mutate the input array', () => {
+    const list = [{ key: 'a', coverage: 0.9 }, { key: 'b', coverage: 0.1 }];
+    const copy = [...list];
+    rankByExpressiveness(list);
+    expect(list).toEqual(copy);
+  });
+});
+
 describe('composeGrid', () => {
   const base = {
     w: 960, h: 1280, images: IMAGES,
@@ -195,6 +244,22 @@ describe('composeGrid', () => {
     }
   });
 
+  it('never overlaps one headline with another', () => {
+    // Type crossing imagery is the look; type crossing type is unreadable.
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const { blocks } = composeGrid({ ...base, imageCount: 4, mainCount: 4, rand: lcg(seed) });
+      const mains = blocks.filter((b) => b.kind === 'main');
+      for (let i = 0; i < mains.length; i++) {
+        for (let j = i + 1; j < mains.length; j++) {
+          const a = mains[i], b = mains[j];
+          const overlap =
+            a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+          expect(overlap).toBe(false);
+        }
+      }
+    }
+  });
+
   it('keeps overlaid headlines inside the canvas', () => {
     const { blocks } = composeGrid({ ...base, imageCount: 4, mainCount: 3, rand: lcg(12) });
     for (const b of blocks.filter((x) => x.kind === 'main')) {
@@ -213,6 +278,37 @@ describe('composeGrid', () => {
     const texts = blocks.filter((b) => b.kind === 'small').map((b) => b.text);
     expect(texts.length).toBe(4);
     expect(new Set(texts).size).toBeGreaterThan(1);
+  });
+
+  it('drives both roles from one field in auto-copy mode', () => {
+    const { blocks } = composeGrid({
+      ...base, mainText: '', smallText: '',
+      autoCopy: 'REMIX LAYOUT. SMART GRAPHICS. Silhouettes are extracted from the source photograph and rasterised into pixel forms.',
+      rand: lcg(3),
+    });
+    const mains = blocks.filter((b) => b.kind === 'main').map((b) => b.text);
+    const smalls = blocks.filter((b) => b.kind === 'small').map((b) => b.text);
+    expect(mains.length).toBeGreaterThan(0);
+    expect(smalls.length).toBeGreaterThan(0);
+    // The short phrase shouts, the long sentence whispers.
+    expect(mains.join(' ')).toMatch(/REMIX LAYOUT|SMART GRAPHICS/);
+    expect(smalls.join(' ')).toContain('Silhouettes are extracted');
+  });
+
+  it('clusters captions tight against the headlines', () => {
+    const { blocks } = composeGrid({ ...base, imageCount: 4, mainCount: 2, smallCount: 4, rand: lcg(5) });
+    const mains = blocks.filter((b) => b.kind === 'main');
+    const smalls = blocks.filter((b) => b.kind === 'small' && b.overlay);
+    expect(smalls.length).toBeGreaterThan(0);
+    // Every clustered caption should sit within roughly a headline's height of one.
+    for (const s of smalls) {
+      const near = mains.some((m) => {
+        const gapX = Math.max(0, Math.max(m.x - (s.x + s.w), s.x - (m.x + m.w)));
+        const gapY = Math.max(0, Math.max(m.y - (s.y + s.h), s.y - (m.y + m.h)));
+        return gapX < m.w && gapY < m.h + s.h;
+      });
+      expect(near).toBe(true);
+    }
   });
 
   it('uses most of the grid capacity rather than a corner', () => {

@@ -83,11 +83,15 @@ export function siluetaSketch(p) {
   // Packs image/headline/caption blocks into the responsive grid. Changing the
   // canvas ratio or any block count reshapes the grid (see gridLayout.makeGrid).
   function runLayout() {
+    measureCoverage();
     const composed = composeGrid({
       w: cnv.width,
       h: cnv.height,
       images: media.active(),
       imageCount: layout.counts.images,
+      // Auto mode hands the composer one body of copy and lets it decide what
+      // is set large; manual mode keeps the two explicit fields.
+      autoCopy: layout.autoCopy ? layout.autoText : '',
       mainText: layout.main.text,
       smallText: layout.small.text,
       mainCount: layout.counts.main,
@@ -156,6 +160,36 @@ export function siluetaSketch(p) {
 
     silCache.set(entry.key, { sig, img: snapshot, mask: maskInfo });
     return snapshot;
+  }
+
+  /**
+   * Measure how much of its own bounding box each image's subject fills, and
+   * cache it on the entry as `coverage` (0..1). gridLayout ranks the hero by
+   * this: a sparse, spindly outline rewards being shown large, a solid blob
+   * does not. Measured once per image at a fixed small resolution — it depends
+   * only on the photo and the threshold, not on block geometry, so it must be
+   * known before layout picks the hero.
+   */
+  function measureCoverage() {
+    const EDGE = 64;
+    for (const entry of media.all()) {
+      if (!entry.ready || !entry.img) continue;
+      if (entry.coverage != null && entry.coverageThreshold === extract.threshold) continue;
+      const scale = EDGE / Math.max(entry.img.width, entry.img.height);
+      const aw = Math.max(1, Math.round(entry.img.width * scale));
+      const ah = Math.max(1, Math.round(entry.img.height * scale));
+      const small = p.createImage(aw, ah);
+      small.copy(entry.img, 0, 0, entry.img.width, entry.img.height, 0, 0, aw, ah);
+      small.loadPixels();
+      let on = 0;
+      for (let i = 0; i < aw * ah; i++) {
+        const j = i * 4;
+        const lum = small.pixels[j] * 0.299 + small.pixels[j + 1] * 0.587 + small.pixels[j + 2] * 0.114;
+        if (lum < extract.threshold) on += 1;
+      }
+      entry.coverage = on / (aw * ah);
+      entry.coverageThreshold = extract.threshold;
+    }
   }
 
   /** Drop cached silhouettes (call when block geometry or effect params change). */
@@ -400,6 +434,11 @@ export function siluetaSketch(p) {
         rebuildAll();
         break;
       case 'extract':
+        // The threshold also changes each subject's coverage, which decides
+        // which image becomes the hero — so the packing is recomputed too.
+        invalidateSilhouettes();
+        runLayout();
+        break;
       case 'effect':
       case 'render':
         // These change the silhouette pixels but not the packing.

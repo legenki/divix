@@ -155,6 +155,44 @@ export function splitFragments(text, maxWords = 4) {
 }
 
 /**
+ * Split one body of copy into headline fragments and caption sentences.
+ *
+ * The rule mirrors how the reference poster reads: SHORT, punchy phrases are
+ * set large, and the longer explanatory sentences are set small. That means a
+ * single text field can drive both roles — the author writes copy, the
+ * algorithm decides what shouts and what whispers, while the sizes themselves
+ * stay under manual control.
+ *
+ * @param {string} text
+ * @param {number} [maxHeadlineWords=4] longest phrase still eligible to shout
+ * @returns {{ headlines: string[], captions: string[] }}
+ */
+export function classifyCopy(text, maxHeadlineWords = 4) {
+  const sentences = splitSentences(text);
+  const headlines = [];
+  const captions = [];
+  for (const sentence of sentences) {
+    const words = sentence.split(' ').filter(Boolean);
+    if (words.length <= maxHeadlineWords) headlines.push(sentence);
+    else captions.push(sentence);
+  }
+  // A body of copy with no short phrase still needs something to set large:
+  // promote the shortest sentence and cut it down to a display-length phrase.
+  if (!headlines.length && captions.length) {
+    let shortestIdx = 0;
+    for (let i = 1; i < captions.length; i++) {
+      if (captions[i].length < captions[shortestIdx].length) shortestIdx = i;
+    }
+    const [promoted] = captions.splice(shortestIdx, 1);
+    headlines.push(promoted.split(' ').slice(0, maxHeadlineWords).join(' '));
+  }
+  // Conversely, all-short copy leaves nothing for the captions; reuse the
+  // headlines rather than rendering empty caption blocks.
+  if (!captions.length && headlines.length) captions.push(...headlines);
+  return { headlines, captions };
+}
+
+/**
  * Split body copy into sentences so each caption block can carry a different
  * part of it. Falls back to the whole string when there is no punctuation to
  * break on, and merges very short tails into the previous sentence so a stray
@@ -191,6 +229,36 @@ export function wrapText(text, charsPerLine) {
 }
 
 /**
+ * Score how interesting a silhouette is, so the most striking subject becomes
+ * the hero instead of whichever image happened to be first in the library.
+ *
+ * The measure is SPARSENESS: what fraction of the entry's bounding box the
+ * mask actually fills. A crab or seahorse has limbs and gaps, so it covers
+ * little of its box and scores high; a mussel or urchin is a solid blob that
+ * nearly fills its box and scores low. Shown large, the spindly subject reads
+ * as a drawing while the blob reads as a smudge — which is exactly the
+ * distinction the reference poster makes with its lobster.
+ *
+ * Entries without a computed mask keep their original order (score 0), so
+ * ranking degrades gracefully before extraction has run.
+ *
+ * @param {Array} images entries, optionally carrying { coverage } in 0..1
+ * @returns {Array} a new array, most expressive first
+ */
+export function rankByExpressiveness(images) {
+  return images
+    .map((entry, index) => {
+      const coverage = typeof entry?.coverage === 'number' ? entry.coverage : null;
+      // Sparser (lower coverage) = more expressive. Unknown coverage scores 0
+      // so it sorts after anything measured, but keeps a stable relative order.
+      const score = coverage == null ? 0 : 1 - coverage;
+      return { entry, index, score };
+    })
+    .sort((a, b) => (b.score - a.score) || (a.index - b.index))
+    .map((x) => x.entry);
+}
+
+/**
  * Build the block list for a poster.
  *
  * @param {object} opts
@@ -198,8 +266,10 @@ export function wrapText(text, charsPerLine) {
  * @param {number} opts.h canvas height
  * @param {Array}  opts.images  active media entries ({ key, img, w, h })
  * @param {number} opts.imageCount how many image blocks to place
- * @param {string} opts.mainText headline copy
- * @param {string} opts.smallText caption copy
+ * @param {string} opts.mainText headline copy (ignored when autoCopy is set)
+ * @param {string} opts.smallText caption copy (ignored when autoCopy is set)
+ * @param {string} [opts.autoCopy] one body of copy the algorithm splits into
+ *   headline phrases and caption sentences by length; sizes stay manual
  * @param {number} opts.mainCount how many headline blocks
  * @param {number} opts.smallCount how many caption blocks
  * @param {() => number} opts.rand deterministic PRNG in [0,1)
@@ -207,14 +277,19 @@ export function wrapText(text, charsPerLine) {
  */
 export function composeGrid({
   w, h, images = [], imageCount = 5,
-  mainText = '', smallText = '',
+  mainText = '', smallText = '', autoCopy = '',
   mainCount = 2, smallCount = 4,
   rand = Math.random,
 }) {
-  const fragments = splitFragments(mainText);
+  // Auto mode: one field decides which copy shouts and which whispers.
+  const auto = String(autoCopy).trim() ? classifyCopy(autoCopy) : null;
+  const fragments = auto ? auto.headlines : splitFragments(mainText);
+  const captionSource = auto ? auto.captions : splitSentences(smallText);
+  const hasCaptions = captionSource.length > 0;
+
   const nImages = images.length ? Math.max(0, Math.min(imageCount, 24)) : 0;
   const nMain = fragments.length ? Math.max(0, Math.min(mainCount, fragments.length)) : 0;
-  const nSmall = String(smallText).trim() ? Math.max(0, smallCount) : 0;
+  const nSmall = hasCaptions ? Math.max(0, smallCount) : 0;
 
   // Headlines are drawn as overlays on top of the imagery, so they claim no
   // cells; the grid only has to hold the images and captions. The hero and the
@@ -225,7 +300,10 @@ export function composeGrid({
   const smallWeight = Math.max(0, nImages - 3);
   const demand = heroWeight + midWeight + smallWeight + nSmall;
 
-  const grid = makeGrid(w, h, Math.max(1, Math.round(demand / 1.6)));
+  // Divide by a larger factor than the block count implies: this composition
+  // wants FEWER, BIGGER cells (a hero plus accents), where a fine grid would
+  // shrink every subject towards the same modest size.
+  const grid = makeGrid(w, h, Math.max(1, Math.round(demand / 2.4)));
   const occ = makeOccupancy(grid);
   const blocks = [];
 
@@ -249,15 +327,22 @@ export function composeGrid({
   // small accents; an even spread of same-size tiles reads as a contact sheet.
   // So sizes are assigned from a fixed ladder rather than sampled randomly:
   // one hero, a couple of mid tiles, the rest small.
+  // The hero is the most EXPRESSIVE silhouette, not simply the first image:
+  // a spindly crab or seahorse rewards being shown large, while a plain oval
+  // (mussel, urchin) reads better small. rankByExpressiveness puts the most
+  // interesting outline first; see its docs for the measure.
+  const ordered = rankByExpressiveness(images);
+
   const imageBlocks = [];
   for (let i = 0; i < nImages; i++) {
-    const entry = images[i % images.length];
+    const entry = ordered[i % ordered.length];
     let cw, ch;
     if (i === 0) {
-      // Hero: dominates the page the way the reference's lobster does —
-      // roughly two thirds of the width and half the height.
-      ch = Math.max(3, Math.round(grid.rows * 0.5));
-      cw = Math.max(2, Math.round(grid.cols * 0.66));
+      // Hero: dominates the page the way the reference's lobster does. Sized
+      // as a share of the WHOLE grid rather than a fixed cell count, so it
+      // stays dominant however finely the grid was subdivided.
+      ch = Math.max(3, Math.round(grid.rows * 0.42));
+      cw = Math.max(2, Math.round(grid.cols * 0.72));
     } else if (i === 1) {
       // Second subject: clearly secondary but still substantial.
       ch = 2; cw = 2;
@@ -276,6 +361,7 @@ export function composeGrid({
   // In the reference, type crosses the subjects — that overlap is the whole
   // look. Each headline is anchored to an image block and offset so it breaks
   // across the silhouette's edge, then clamped to stay on the canvas.
+  const headlineBlocks = [];
   for (let i = 0; i < nMain; i++) {
     const text = fragments[i % fragments.length];
     const host = imageBlocks.length ? imageBlocks[i % imageBlocks.length] : null;
@@ -289,26 +375,104 @@ export function composeGrid({
       let y = host.y + host.h * (0.18 + rand() * 0.5);
       x = Math.max(0, Math.min(w - bw, x));
       y = Math.max(0, Math.min(h - bh, y));
-      blocks.push({
+
+      // Headlines may cross imagery, but never each other — two overlapping
+      // headlines are unreadable, not editorial. Resolving against one
+      // neighbour can push a block into another, so sweep repeatedly until the
+      // slot is clear of all of them.
+      const hits = (ty) =>
+        headlineBlocks.find(
+          (prev) =>
+            x < prev.x + prev.w && x + bw > prev.x &&
+            ty < prev.y + prev.h && ty + bh > prev.y
+        );
+      let placed = false;
+      for (let guard = 0; guard < 24; guard++) {
+        const clash = hits(y);
+        if (!clash) { placed = true; break; }
+        const below = clash.y + clash.h + bh * 0.12;
+        const above = clash.y - bh * 1.12;
+        // Prefer below; if that would go off-canvas try above.
+        if (below + bh <= h) {
+          y = below;
+        } else if (above >= 0) {
+          y = above;
+        } else {
+          // No valid vertical slot — abandon overlay, fall back to grid.
+          placed = false;
+          break;
+        }
+      }
+      if (!placed) {
+        // Can't resolve collision: skip overlay for this headline to avoid
+        // unreadable stacking. Fall back to a grid cell instead.
+        place(Math.min(2, grid.cols), 1, () => ({ kind: 'main', text }));
+        if (blocks.length && blocks[blocks.length - 1].kind === 'main') {
+          headlineBlocks.push(blocks[blocks.length - 1]);
+        }
+        continue;
+      }
+      y = Math.max(0, Math.min(h - bh, y));
+
+      const block = {
         kind: 'main', text, overlay: true,
         col: 0, row: 0, cw: 0, ch: 0,
         x, y, w: bw, h: bh,
-      });
+      };
+      blocks.push(block);
+      headlineBlocks.push(block);
+      // Mark the grid cells this overlay covers as occupied so that subsequent
+      // place() calls (fallback grid blocks, captions) don't land in the same
+      // visual area and cause headline-vs-headline overlap in the test.
+      const c0 = Math.floor(x / grid.cellW);
+      const r0 = Math.floor(y / grid.cellH);
+      const c1 = Math.min(grid.cols - 1, Math.ceil((x + bw) / grid.cellW) - 1);
+      const r1 = Math.min(grid.rows - 1, Math.ceil((y + bh) / grid.cellH) - 1);
+      for (let r = Math.max(0, r0); r <= r1; r++) {
+        for (let c = Math.max(0, c0); c <= c1; c++) {
+          occ[r][c] = true;
+        }
+      }
     } else {
       // No imagery to sit on — fall back to a packed slot.
-      place(Math.min(2, grid.cols), 1, () => ({ kind: 'main', text }));
+      if (place(Math.min(2, grid.cols), 1, () => ({ kind: 'main', text }))) {
+        headlineBlocks.push(blocks[blocks.length - 1]);
+      }
     }
   }
 
-  // --- Captions last: they fill the leftover 1x1 gaps, which is exactly the
-  // "text flows into the holes between forms" behaviour the poster wants.
-  // Each block gets a DIFFERENT sentence of the copy, rotating through it, so
-  // the poster reads as running text broken across the page instead of the
-  // same paragraph stamped repeatedly. ---
-  const sentences = splitSentences(smallText);
+  // --- Captions: tucked TIGHT against the headlines. ---
+  // In the reference the small text hugs the big words — sitting right above,
+  // below or beside them to form a cluster — rather than living in its own
+  // column. Each caption is therefore anchored to a headline and nudged just
+  // outside its box; only the leftovers fall back to free grid cells.
+  const captionW = Math.max(grid.cellW * 0.95, w * 0.16);
+  const captionH = Math.max(grid.cellH * 0.9, h * 0.1);
+
   for (let i = 0; i < nSmall; i++) {
-    const text = sentences.length ? sentences[i % sentences.length] : smallText;
-    place(1, 1, () => ({ kind: 'small', text }));
+    const text = captionSource[i % captionSource.length];
+    const anchor = headlineBlocks.length ? headlineBlocks[i % headlineBlocks.length] : null;
+
+    if (anchor && i < headlineBlocks.length * 2) {
+      // Alternate sides so a headline picks up copy above and beside it,
+      // building the tight cluster the reference shows.
+      const below = i >= headlineBlocks.length;
+      let x = below
+        ? anchor.x + anchor.w * 0.05
+        : anchor.x + anchor.w * 0.62;
+      let y = below
+        ? anchor.y + anchor.h * 0.98
+        : anchor.y - captionH * 0.92;
+      x = Math.max(0, Math.min(w - captionW, x));
+      y = Math.max(0, Math.min(h - captionH, y));
+      blocks.push({
+        kind: 'small', text, overlay: true,
+        col: 0, row: 0, cw: 0, ch: 0,
+        x, y, w: captionW, h: captionH,
+      });
+    } else {
+      place(1, 1, () => ({ kind: 'small', text }));
+    }
   }
 
   return { grid, blocks };

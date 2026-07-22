@@ -45,6 +45,8 @@ export const SECTIONS = [
       { id: 'sl-count-images', type: 'slider', label: 'Image Blocks', path: 'layout.counts.images', min: 0, max: 16, step: 1, regen: 'layout' },
       { id: 'sl-count-main', type: 'slider', label: 'Headline Blocks', path: 'layout.counts.main', min: 0, max: 8, step: 1, regen: 'layout' },
       { id: 'sl-count-small', type: 'slider', label: 'Caption Blocks', path: 'layout.counts.small', min: 0, max: 12, step: 1, regen: 'layout' },
+      { id: 'sl-auto-copy', type: 'check', label: 'Auto-Split Copy (big vs small)', path: 'layout.autoCopy', regen: 'layout' },
+      { id: 'sl-auto-text', type: 'textarea', label: 'Copy', path: 'layout.autoText', rows: 5, regen: 'layout' },
       { id: 'sl-shuffle', type: 'button', label: 'Shuffle Composition', action: 'shuffle' },
     ],
   },

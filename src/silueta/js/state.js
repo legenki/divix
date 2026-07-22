@@ -34,6 +34,12 @@ export const layout = {
   // How many blocks of each kind the grid composer places. Images are drawn
   // from the enabled entries of the media library.
   counts: { images: 5, main: 2, small: 4 },
+  // Auto copy: when on, `autoText` is the single source of words and the
+  // algorithm decides which phrases are set large and which small (short
+  // phrases shout, long sentences whisper). Sizes stay manual either way.
+  autoCopy: true,
+  autoText:
+    'REMIX LAYOUT. SMART GRAPHICS. EDGE DETECTION. Silhouettes are extracted from the source photograph, rasterised into pixel and halftone forms, then composed against a responsive grid where type and image negotiate the same space. VISUAL REBUILD. Experimental image processing and typography layout engine.',
   main: {
     text: 'REMIX LAYOUT. SMART GRAPHICS. EDGE DETECTION. VISUAL REBUILD.',
     fontSize: 52,
