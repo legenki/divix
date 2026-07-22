@@ -41,10 +41,17 @@ export function siluetaSketch(p) {
   // Packed blocks from gridLayout.composeGrid; each carries its own pixel
   // geometry (x/y/w/h), so the grid itself doesn't need to be kept around.
   let blocks = [];
-  // Per-image-block silhouette cache: entry.key -> { masked, w, h, sig }.
-  // Extraction + shader work is the expensive part, so a block is only
-  // re-rendered when its size or the effect parameters actually change.
-  const silCache = new Map();
+  // Per-image-block silhouette cache, split into two levels:
+  //   maskCache: entry.key -> { plate, maskInfo, sig }
+  //     sig = [bw, bh, threshold, merge, density]
+  //     Expensive: JS extraction + connected-components. Only re-runs when
+  //     the image, size, threshold, or density changes.
+  //   shaderCache: entry.key -> { canvas, sig }
+  //     sig = [bw, bh, effect, granularity, color, keepOriginal, shape, density]
+  //     Cheap: runs the GPU shader. Re-runs when color/effect/granularity change
+  //     but WITHOUT re-extracting the mask, so color changes are instant.
+  const maskCache = new Map();
+  const shaderCache = new Map();
   let textBuffer = null;    // P2D buffer for text (WEBGL can't use CSS fonts)
   let isReady = false;
   let PRESETS = {};
@@ -102,67 +109,71 @@ export function siluetaSketch(p) {
   }
 
   // ---- Per-block silhouette. ----
-  // Each image block is extracted and shaded at its own cell size. Results are
-  // cached on a signature of everything that affects the pixels, so dragging an
-  // unrelated slider (or re-drawing a frame) costs nothing.
+  // Two-level cache so color/effect changes never re-run the expensive extraction.
   function silhouetteFor(block) {
     const entry = block.entry;
     if (!entry?.ready || !entry.img) return null;
 
     const bw = Math.max(2, Math.round(block.w - BLOCK_PAD * 2));
     const bh = Math.max(2, Math.round(block.h - BLOCK_PAD * 2));
-    const sig = [
-      bw, bh, render.effect, render.granularity, render.color,
-      render.keepOriginal, extract.threshold, extract.merge, cnv.density.base,
-    ].join('|');
+    const density = cnv.density.base;
 
-    const hit = silCache.get(entry.key);
-    if (hit && hit.sig === sig) return hit.img;
+    // Level 1 — mask: expensive JS extraction. Key on geometry + extract params only.
+    const maskSig = [bw, bh, extract.threshold, extract.merge, density].join('|');
+    let maskHit = maskCache.get(entry.key);
+    if (!maskHit || maskHit.sig !== maskSig) {
+      const fitScale = Math.min(bw / entry.img.width, bh / entry.img.height);
+      const fw = Math.max(2, Math.floor(entry.img.width * fitScale));
+      const fh = Math.max(2, Math.floor(entry.img.height * fitScale));
+      const plate = p.createImage(bw, bh);
+      plate.loadPixels();
+      for (let i = 0; i < plate.pixels.length; i++) plate.pixels[i] = 255;
+      plate.updatePixels();
+      const fitted = p.createImage(fw, fh);
+      fitted.copy(entry.img, 0, 0, entry.img.width, entry.img.height, 0, 0, fw, fh);
+      plate.copy(fitted, 0, 0, fw, fh, (bw - fw) >> 1, (bh - fh) >> 1, fw, fh);
 
-    // Fit the source into the block, centred on white so the mask's coordinate
-    // space matches the rendered buffer 1:1.
-    const fitScale = Math.min(bw / entry.img.width, bh / entry.img.height);
-    const fw = Math.max(2, Math.floor(entry.img.width * fitScale));
-    const fh = Math.max(2, Math.floor(entry.img.height * fitScale));
-    const plate = p.createImage(bw, bh);
-    plate.loadPixels();
-    for (let i = 0; i < plate.pixels.length; i++) plate.pixels[i] = 255;
-    plate.updatePixels();
-    const fitted = p.createImage(fw, fh);
-    fitted.copy(entry.img, 0, 0, entry.img.width, entry.img.height, 0, 0, fw, fh);
-    plate.copy(fitted, 0, 0, fw, fh, (bw - fw) >> 1, (bh - fh) >> 1, fw, fh);
-
-    // Extract this block's mask at analysis resolution.
-    const scale = ANALYSIS_EDGE / Math.max(bw, bh);
-    const aw = Math.max(1, Math.round(bw * scale));
-    const ah = Math.max(1, Math.round(bh * scale));
-    const small = p.createImage(aw, ah);
-    small.copy(plate, 0, 0, bw, bh, 0, 0, aw, ah);
-    small.loadPixels();
-    const brightness = new Uint8Array(aw * ah);
-    for (let i = 0; i < aw * ah; i++) {
-      const j = i * 4;
-      brightness[i] = (small.pixels[j] * 0.299 + small.pixels[j + 1] * 0.587 + small.pixels[j + 2] * 0.114) | 0;
+      const scale = ANALYSIS_EDGE / Math.max(bw, bh);
+      const aw = Math.max(1, Math.round(bw * scale));
+      const ah = Math.max(1, Math.round(bh * scale));
+      const small = p.createImage(aw, ah);
+      small.copy(plate, 0, 0, bw, bh, 0, 0, aw, ah);
+      small.loadPixels();
+      const brightness = new Uint8Array(aw * ah);
+      for (let i = 0; i < aw * ah; i++) {
+        const j = i * 4;
+        brightness[i] = (small.pixels[j] * 0.299 + small.pixels[j + 1] * 0.587 + small.pixels[j + 2] * 0.114) | 0;
+      }
+      const maskInfo = extractFromBrightness(brightness, aw, ah, {
+        threshold: extract.threshold,
+        merge: extract.merge,
+        areaFloor: Math.max(2, Math.round(aw * ah * 0.002)),
+      });
+      maskHit = { sig: maskSig, plate, maskInfo };
+      maskCache.set(entry.key, maskHit);
+      shaderCache.delete(entry.key); // mask changed → shader result stale
     }
-    const maskInfo = extractFromBrightness(brightness, aw, ah, {
-      threshold: extract.threshold,
-      merge: extract.merge,
-      areaFloor: Math.max(2, Math.round(aw * ah * 0.002)),
-    });
 
-    // Shade and mask. renderSilhouette returns an HTMLCanvasElement (the GPU
-    // composite is faster than the old per-pixel JS loop). Wrap it in a p5.Image
-    // so the rest of the draw path can use p.image() as before.
-    renderer.buildBuffers(bw, bh, cnv.density.base);
-    renderer.setMask(maskInfo);
-    const outCanvas = renderer.renderSilhouette(plate);
-    const pw = outCanvas.width;
-    const ph = outCanvas.height;
-    const snapshot = p.createImage(pw, ph);
-    snapshot.drawingContext.drawImage(outCanvas, 0, 0);
+    // Level 2 — shader: GPU composite. Re-runs when visual params change but
+    // mask is already computed, so this path costs only one GPU draw call.
+    const shaderSig = [
+      bw, bh, render.effect, render.granularity, render.color,
+      render.keepOriginal, render.shape, density,
+    ].join('|');
+    let shaderHit = shaderCache.get(entry.key);
+    if (!shaderHit || shaderHit.sig !== shaderSig) {
+      renderer.buildBuffers(bw, bh, density);
+      renderer.setMask(maskHit.maskInfo);
+      const outCanvas = renderer.renderSilhouette(maskHit.plate);
+      const pw = outCanvas.width;
+      const ph = outCanvas.height;
+      const snapshot = p.createImage(pw, ph);
+      snapshot.drawingContext.drawImage(outCanvas, 0, 0);
+      shaderHit = { sig: shaderSig, img: snapshot, mask: maskHit.maskInfo };
+      shaderCache.set(entry.key, shaderHit);
+    }
 
-    silCache.set(entry.key, { sig, img: snapshot, mask: maskInfo });
-    return snapshot;
+    return shaderHit.img;
   }
 
   /**
@@ -195,9 +206,15 @@ export function siluetaSketch(p) {
     }
   }
 
-  /** Drop cached silhouettes (call when block geometry or effect params change). */
+  /** Drop all cached silhouettes — call when geometry, images, or extract params change. */
   function invalidateSilhouettes() {
-    silCache.clear();
+    maskCache.clear();
+    shaderCache.clear();
+  }
+
+  /** Drop only the shader-output cache — call when color/effect/granularity change. */
+  function invalidateShaderCache() {
+    shaderCache.clear();
   }
 
   // ---- Full rebuild: size → grid → buffers. ----
@@ -437,15 +454,18 @@ export function siluetaSketch(p) {
         rebuildAll();
         break;
       case 'extract':
-        // The threshold also changes each subject's coverage, which decides
-        // which image becomes the hero — so the packing is recomputed too.
+        // Threshold also changes coverage → hero selection, so re-layout too.
         invalidateSilhouettes();
         runLayout();
         break;
       case 'effect':
+        // Effect type change: need full shader rebuild (shape visibility too).
+        invalidateShaderCache();
+        break;
       case 'render':
-        // These change the silhouette pixels but not the packing.
-        invalidateSilhouettes();
+        // Color / granularity / shape / keepOriginal: mask unchanged, only
+        // re-run the GPU shader. This makes color dragging instant.
+        invalidateShaderCache();
         break;
       case 'font':
         loadFonts().then(() => dirty.markDirty());
@@ -456,7 +476,7 @@ export function siluetaSketch(p) {
     }
     refreshVisibility();
     requestRepaint();
-    saveState();
+    saveStateDebounced();
   }
 
   /**
@@ -581,6 +601,8 @@ export function siluetaSketch(p) {
     if (data.layout) deepMerge(layout, data.layout);
     if (data.rec) deepMerge(rec, data.rec);
   });
+  // Debounced save: avoids writing localStorage on every color-picker input event.
+  const saveStateDebounced = debounce(saveState, 400);
 
   function applyPreset(preset) {
     if (!preset) return;
@@ -648,7 +670,7 @@ export function siluetaSketch(p) {
       if (b.kind === 'image') silhouetteFor(b);
     }
     const withMasks = blocks.map((b) =>
-      b.kind === 'image' ? { ...b, mask: silCache.get(b.entry?.key)?.mask || null } : b
+      b.kind === 'image' ? { ...b, mask: shaderCache.get(b.entry?.key)?.mask || null } : b
     );
     exportGridSVG({
       w: cnv.width,
