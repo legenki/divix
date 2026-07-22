@@ -41,17 +41,14 @@ export function siluetaSketch(p) {
   // Packed blocks from gridLayout.composeGrid; each carries its own pixel
   // geometry (x/y/w/h), so the grid itself doesn't need to be kept around.
   let blocks = [];
-  // Per-image-block silhouette cache, split into two levels:
-  //   maskCache: entry.key -> { plate, maskInfo, sig }
-  //     sig = [bw, bh, threshold, merge, density]
-  //     Expensive: JS extraction + connected-components. Only re-runs when
-  //     the image, size, threshold, or density changes.
-  //   shaderCache: entry.key -> { canvas, sig }
-  //     sig = [bw, bh, effect, granularity, color, keepOriginal, shape, density]
-  //     Cheap: runs the GPU shader. Re-runs when color/effect/granularity change
-  //     but WITHOUT re-extracting the mask, so color changes are instant.
+  // Two-level per-block cache:
+  //   maskCache  key=[bw,bh,threshold,merge,density]  → {plate, maskInfo}
+  //     Rebuilt only when image/size/threshold change. Expensive (JS extraction).
+  //   renderCache key=[bw,bh,effect,granularity,color,keepOriginal,shape,density]
+  //     → HTMLCanvasElement (masked shader output)
+  //     Rebuilt only when visual params change. One GPU draw call, no new contexts.
   const maskCache = new Map();
-  const shaderCache = new Map();
+  const renderCache = new Map();
   let textBuffer = null;    // P2D buffer for text (WEBGL can't use CSS fonts)
   let isReady = false;
   let PRESETS = {};
@@ -109,7 +106,6 @@ export function siluetaSketch(p) {
   }
 
   // ---- Per-block silhouette. ----
-  // Two-level cache so color/effect changes never re-run the expensive extraction.
   function silhouetteFor(block) {
     const entry = block.entry;
     if (!entry?.ready || !entry.img) return null;
@@ -118,13 +114,14 @@ export function siluetaSketch(p) {
     const bh = Math.max(2, Math.round(block.h - BLOCK_PAD * 2));
     const density = cnv.density.base;
 
-    // Level 1 — mask: expensive JS extraction. Key on geometry + extract params only.
+    // Level 1 — mask extraction. Only rebuilt when geometry/threshold changes.
     const maskSig = [bw, bh, extract.threshold, extract.merge, density].join('|');
     let maskHit = maskCache.get(entry.key);
     if (!maskHit || maskHit.sig !== maskSig) {
       const fitScale = Math.min(bw / entry.img.width, bh / entry.img.height);
       const fw = Math.max(2, Math.floor(entry.img.width * fitScale));
       const fh = Math.max(2, Math.floor(entry.img.height * fitScale));
+      // Build white plate with image centered (mask coords must match render coords).
       const plate = p.createImage(bw, bh);
       plate.loadPixels();
       for (let i = 0; i < plate.pixels.length; i++) plate.pixels[i] = 255;
@@ -132,7 +129,7 @@ export function siluetaSketch(p) {
       const fitted = p.createImage(fw, fh);
       fitted.copy(entry.img, 0, 0, entry.img.width, entry.img.height, 0, 0, fw, fh);
       plate.copy(fitted, 0, 0, fw, fh, (bw - fw) >> 1, (bh - fh) >> 1, fw, fh);
-
+      // Downscale for extraction — analysis resolution is enough for the mask.
       const scale = ANALYSIS_EDGE / Math.max(bw, bh);
       const aw = Math.max(1, Math.round(bw * scale));
       const ah = Math.max(1, Math.round(bh * scale));
@@ -145,35 +142,28 @@ export function siluetaSketch(p) {
         brightness[i] = (small.pixels[j] * 0.299 + small.pixels[j + 1] * 0.587 + small.pixels[j + 2] * 0.114) | 0;
       }
       const maskInfo = extractFromBrightness(brightness, aw, ah, {
-        threshold: extract.threshold,
-        merge: extract.merge,
+        threshold: extract.threshold, merge: extract.merge,
         areaFloor: Math.max(2, Math.round(aw * ah * 0.002)),
       });
       maskHit = { sig: maskSig, plate, maskInfo };
       maskCache.set(entry.key, maskHit);
-      shaderCache.delete(entry.key); // mask changed → shader result stale
+      renderCache.delete(entry.key);
     }
 
-    // Level 2 — shader: GPU composite. Re-runs when visual params change but
-    // mask is already computed, so this path costs only one GPU draw call.
-    const shaderSig = [
+    // Level 2 — shader + mask composite. One GPU draw via the shared WEBGL context.
+    // Returns HTMLCanvasElement — drawn directly via drawingContext, no p5.Image copy.
+    const renderSig = [
       bw, bh, render.effect, render.granularity, render.color,
       render.keepOriginal, render.shape, density,
     ].join('|');
-    let shaderHit = shaderCache.get(entry.key);
-    if (!shaderHit || shaderHit.sig !== shaderSig) {
-      renderer.buildBuffers(bw, bh, density);
-      renderer.setMask(maskHit.maskInfo);
-      const outCanvas = renderer.renderSilhouette(maskHit.plate);
-      const pw = outCanvas.width;
-      const ph = outCanvas.height;
-      const snapshot = p.createImage(pw, ph);
-      snapshot.drawingContext.drawImage(outCanvas, 0, 0);
-      shaderHit = { sig: shaderSig, img: snapshot, mask: maskHit.maskInfo };
-      shaderCache.set(entry.key, shaderHit);
+    let renderHit = renderCache.get(entry.key);
+    if (!renderHit || renderHit.sig !== renderSig) {
+      const canvas = renderer.renderBlock(maskHit.plate, maskHit.maskInfo, bw, bh, density);
+      renderHit = { sig: renderSig, canvas, mask: maskHit.maskInfo };
+      renderCache.set(entry.key, renderHit);
     }
 
-    return shaderHit.img;
+    return renderHit.canvas;
   }
 
   /**
@@ -206,15 +196,15 @@ export function siluetaSketch(p) {
     }
   }
 
-  /** Drop all cached silhouettes — call when geometry, images, or extract params change. */
+  /** Full invalidation — geometry, images, or extract params changed. */
   function invalidateSilhouettes() {
     maskCache.clear();
-    shaderCache.clear();
+    renderCache.clear();
   }
 
-  /** Drop only the shader-output cache — call when color/effect/granularity change. */
-  function invalidateShaderCache() {
-    shaderCache.clear();
+  /** Visual-only invalidation — color/effect/granularity changed, mask is still good. */
+  function invalidateRenderCache() {
+    renderCache.clear();
   }
 
   // ---- Full rebuild: size → grid → buffers. ----
@@ -230,11 +220,9 @@ export function siluetaSketch(p) {
   function drawCanvas() {
     p.clear();
     p.push();
-    // WEBGL origin is canvas center; shift left to center in the free area left
-    // of the 290px panel (same discipline as difuso).
     p.translate(-145, 0);
 
-    // Paper background.
+    // White paper background.
     p.push();
     p.fill(255);
     p.noStroke();
@@ -242,24 +230,42 @@ export function siluetaSketch(p) {
     p.rect(0, 0, cnv.width, cnv.height);
     p.pop();
 
-    // Image blocks: each silhouette is drawn into its own grid cell. WEBGL's
-    // origin is the canvas centre, so cell coordinates are offset by half.
-    const ox = -cnv.width / 2;
-    const oy = -cnv.height / 2;
-    p.push();
-    p.imageMode(p.CORNER);
+    // All images + text go into the P2D textBuffer so we can use native 2D
+    // drawImage for the silhouette canvases — no p5.Image wrapping, no per-block
+    // WebGL texture upload. One p.image(textBuffer) blit at the end.
+    drawComposite();
+    p.pop();
+  }
+
+  function drawComposite() {
+    if (!textBuffer) return;
+    const g = textBuffer;
+    g.clear();
+    const ctx = g.drawingContext;
+
+    // 1 — image blocks via native 2D drawImage (HTMLCanvasElement → 2D ctx).
+    const density = g.pixelDensity();
     for (const block of blocks) {
       if (block.kind !== 'image') continue;
-      const img = silhouetteFor(block);
-      if (!img) continue;
-      p.image(img, ox + block.x + BLOCK_PAD, oy + block.y + BLOCK_PAD,
-        block.w - BLOCK_PAD * 2, block.h - BLOCK_PAD * 2);
+      const canvas = silhouetteFor(block);
+      if (!canvas) continue;
+      ctx.drawImage(
+        canvas,
+        (block.x + BLOCK_PAD) * density, (block.y + BLOCK_PAD) * density,
+        (block.w - BLOCK_PAD * 2) * density, (block.h - BLOCK_PAD * 2) * density,
+      );
     }
-    p.pop();
 
-    // Text on top.
-    drawText();
-    p.pop();
+    // 2 — text blocks on top (same buffer, same 2D context).
+    g.noStroke();
+    g.textAlign(p.LEFT, p.TOP);
+    for (const block of blocks) {
+      if (block.kind === 'main') drawMainBlock(g, block);
+      else if (block.kind === 'small') drawSmallBlock(g, block);
+    }
+
+    // 3 — single blit onto the WEBGL canvas.
+    p.image(g, 0, 0, cnv.width, cnv.height);
   }
 
   // Text is rendered on a 2D (P2D) buffer, not directly on the WEBGL canvas:
@@ -338,22 +344,6 @@ export function siluetaSketch(p) {
     if (v < 138) return 'expanded';
     if (v < 175) return 'extra-expanded';
     return 'ultra-expanded';
-  }
-
-  function drawText() {
-    if (!textBuffer) return;
-    const g = textBuffer;
-    g.clear();
-    g.noStroke();
-    g.textAlign(p.LEFT, p.TOP);
-
-    for (const block of blocks) {
-      if (block.kind === 'main') drawMainBlock(g, block);
-      else if (block.kind === 'small') drawSmallBlock(g, block);
-    }
-
-    // Blit centered onto the WEBGL canvas (origin at center).
-    p.image(g, 0, 0, cnv.width, cnv.height);
   }
 
   /**
@@ -459,13 +449,9 @@ export function siluetaSketch(p) {
         runLayout();
         break;
       case 'effect':
-        // Effect type change: need full shader rebuild (shape visibility too).
-        invalidateShaderCache();
-        break;
       case 'render':
-        // Color / granularity / shape / keepOriginal: mask unchanged, only
-        // re-run the GPU shader. This makes color dragging instant.
-        invalidateShaderCache();
+        // Color / granularity / shape / effect — mask unchanged, only re-run shader.
+        invalidateRenderCache();
         break;
       case 'font':
         loadFonts().then(() => dirty.markDirty());
@@ -670,7 +656,7 @@ export function siluetaSketch(p) {
       if (b.kind === 'image') silhouetteFor(b);
     }
     const withMasks = blocks.map((b) =>
-      b.kind === 'image' ? { ...b, mask: shaderCache.get(b.entry?.key)?.mask || null } : b
+      b.kind === 'image' ? { ...b, mask: renderCache.get(b.entry?.key)?.mask || null } : b
     );
     exportGridSVG({
       w: cnv.width,
