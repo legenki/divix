@@ -150,13 +150,16 @@ export function siluetaSketch(p) {
       areaFloor: Math.max(2, Math.round(aw * ah * 0.002)),
     });
 
-    // Shade it, then snapshot: the renderer reuses one buffer per call, so the
-    // result must be copied before the next block overwrites it.
+    // Shade and mask. renderSilhouette returns an HTMLCanvasElement (the GPU
+    // composite is faster than the old per-pixel JS loop). Wrap it in a p5.Image
+    // so the rest of the draw path can use p.image() as before.
     renderer.buildBuffers(bw, bh, cnv.density.base);
     renderer.setMask(maskInfo);
-    const masked = renderer.renderSilhouette(plate);
-    const snapshot = p.createImage(masked.width, masked.height);
-    snapshot.copy(masked, 0, 0, masked.width, masked.height, 0, 0, masked.width, masked.height);
+    const outCanvas = renderer.renderSilhouette(plate);
+    const pw = outCanvas.width;
+    const ph = outCanvas.height;
+    const snapshot = p.createImage(pw, ph);
+    snapshot.drawingContext.drawImage(outCanvas, 0, 0);
 
     silCache.set(entry.key, { sig, img: snapshot, mask: maskInfo });
     return snapshot;

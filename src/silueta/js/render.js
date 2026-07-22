@@ -1,8 +1,7 @@
-// SILUETA — silhouette render layer (WEBGL). Textures the source image, runs the
-// pixelate/halftone/original shader into an offscreen buffer, then gates the
-// result with the (upsampled) object mask so background is transparent.
-// Buffer/pixel-density discipline mirrors difuso (see the difuso pixel-density
-// memory: p.pixelDensity() must match the buffer's density or the shader tiles).
+// SILUETA — silhouette render layer. Each image block is processed through a
+// lightweight pipeline: WEBGL shader (pixelate/halftone) → 2D canvas alpha-mask
+// via destination-in composite. The mask step replaces the old per-pixel JS loop
+// (which iterated ~10M pixels on density-2 canvases) with a single GPU composite.
 
 import { PIXELATE_FRAG, HALFTONE_FRAG, DITHER_VERT } from './shaders.js';
 import { shapeIndex, blankStamp } from './stamp.js';
@@ -17,17 +16,19 @@ function hexToRgb01(hex) {
 
 /**
  * @param {object} deps { p, state }
- * @returns render controller with buildShaders/render/dispose.
+ * @returns render controller with buildBuffers/setMask/renderSilhouette/dispose.
  */
 export function createRender({ p, state }) {
   const { render } = state;
-  let sil = null;      // WEBGL shader-output buffer
-  let masked = null;   // P2D buffer holding the final masked silhouette (RGBA)
+  let sil = null;          // WEBGL shader-output buffer (reused, resized on demand)
+  let maskCanvas = null;   // offscreen 2D canvas holding the upscaled mask (for composite)
+  let maskCtx = null;
   let pixelateShader = null;
   let halftoneShader = null;
-  let maskData = null; // { mask: Uint8Array, w, h } — the extraction mask (for gating)
-  let stampImg = null; // rasterised custom-shape stamp (alpha = coverage)
-  let fallbackStamp = null; // 1x1 opaque texture; u_stamp must always be bound
+  let maskData = null;     // { mask: Uint8Array, w, h }
+  let stampImg = null;
+  let fallbackStamp = null;
+  let bufW = 0, bufH = 0, bufDensity = 0; // track current buffer dimensions
 
   function hideGraphics(g) {
     const els = [g?.elt, g?.canvas, g?._renderer?.canvas];
@@ -36,39 +37,34 @@ export function createRender({ p, state }) {
     }
   }
 
-  function buildBuffers(w, h, density) {
-    dispose();
+  // Resize the WEBGL buffer only when the dimensions actually change.
+  function ensureBuffers(w, h, density) {
+    if (sil && bufW === w && bufH === h && bufDensity === density) return;
+    if (sil) {
+      try { sil.remove(); } catch { /* ok */ }
+    }
     sil = p.createGraphics(w, h, p.WEBGL);
     sil.pixelDensity(density);
     sil.noStroke();
     pixelateShader = sil.createShader(DITHER_VERT, PIXELATE_FRAG);
     halftoneShader = sil.createShader(DITHER_VERT, HALFTONE_FRAG);
-
-    masked = p.createGraphics(w, h); // P2D
-    masked.pixelDensity(density);
-    masked.noStroke();
-
     hideGraphics(sil);
-    hideGraphics(masked);
+    bufW = w; bufH = h; bufDensity = density;
   }
 
-  /**
-   * Store the extraction mask for gating. Kept as the raw low-res typed array
-   * (not a p5.Image) so renderSilhouette can gate by writing alpha directly —
-   * a deterministic per-pixel mask that does not depend on p5 blend-mode
-   * semantics (an earlier blendMode(MULTIPLY) gate left the background opaque).
-   */
+  // Keep API compat — callers still pass buildBuffers() before renderSilhouette().
+  function buildBuffers(w, h, density) {
+    ensureBuffers(w, h, density);
+  }
+
   function setMask(maskInfo) {
-    const { mask, w: mw, h: mh } = maskInfo;
-    maskData = { mask, w: mw, h: mh };
+    maskData = maskInfo;
+    maskCanvas = null; // invalidate cached upscaled mask
+    maskCtx = null;
   }
 
-  /** Install the rasterised custom-shape stamp (null clears it). */
-  function setStamp(img) {
-    stampImg = img || null;
-  }
+  function setStamp(img) { stampImg = img || null; }
 
-  /** The texture to bind to u_stamp — never null, or sampling is undefined. */
   function currentStamp() {
     if (stampImg) return stampImg;
     if (!fallbackStamp) fallbackStamp = blankStamp(p);
@@ -82,19 +78,57 @@ export function createRender({ p, state }) {
     buf.pop();
   }
 
+  // Build (or reuse) an upscaled mask ImageData at pixel-density resolution.
+  // This is the expensive step, but it only runs when maskData changes (setMask).
+  function getMaskCanvas(pw, ph) {
+    if (maskCanvas && maskCanvas.width === pw && maskCanvas.height === ph) {
+      return maskCanvas;
+    }
+    maskCanvas = document.createElement('canvas');
+    maskCanvas.width = pw;
+    maskCanvas.height = ph;
+    maskCtx = maskCanvas.getContext('2d');
+
+    if (!maskData) {
+      // No mask: fill entirely white (everything visible).
+      maskCtx.fillStyle = '#fff';
+      maskCtx.fillRect(0, 0, pw, ph);
+    } else {
+      const { mask, w: mw, h: mh } = maskData;
+      const img = maskCtx.createImageData(pw, ph);
+      const d = img.data;
+      for (let y = 0; y < ph; y++) {
+        const my = Math.min(mh - 1, ((y / ph) * mh) | 0);
+        for (let x = 0; x < pw; x++) {
+          const mx = Math.min(mw - 1, ((x / pw) * mw) | 0);
+          const on = mask[my * mw + mx] ? 255 : 0;
+          const i = (y * pw + x) * 4;
+          d[i] = d[i + 1] = d[i + 2] = 255;
+          d[i + 3] = on;
+        }
+      }
+      maskCtx.putImageData(img, 0, 0);
+    }
+    return maskCanvas;
+  }
+
   /**
-   * Render the current silhouette into `masked` (P2D, RGBA with transparent bg).
-   * @param {p5.Image} sourceTex  resized source image (fits the buffer)
-   * @returns {p5.Graphics} the masked buffer (caller blits it to the canvas)
+   * Run the silhouette effect for the current block and return an HTMLCanvasElement
+   * (or null) that the caller can draw via p.drawingContext.drawImage().
+   *
+   * Masking is done with destination-in composite — the GPU handles it in one
+   * pass instead of a per-pixel JS loop.
    */
   function renderSilhouette(sourceTex) {
-    const w = sil.width, h = sil.height;
+    const w = sil.width;
+    const h = sil.height;
     const density = sil.pixelDensity();
+    const pw = Math.max(1, Math.round(w * density));
+    const ph = Math.max(1, Math.round(h * density));
 
+    // 1 — run shader (or plain blit for 'none') into the WEBGL buffer.
     sil.clear();
-
     if (render.effect === 'none') {
-      // Pass-through: draw the source as-is (still gets mask-gated below).
       sil.push();
       sil.texture(sourceTex);
       sil.rectMode(p.CORNER);
@@ -103,7 +137,7 @@ export function createRender({ p, state }) {
     } else if (render.effect === 'pixelate') {
       sil.shader(pixelateShader);
       pixelateShader.setUniform('u_texture', sourceTex);
-      pixelateShader.setUniform('u_resolution', [w * density, h * density]);
+      pixelateShader.setUniform('u_resolution', [pw, ph]);
       pixelateShader.setUniform('u_size', render.granularity * density);
       pixelateShader.setUniform('u_flatColor', render.keepOriginal ? 0 : 1);
       pixelateShader.setUniform('u_color', hexToRgb01(render.color));
@@ -111,11 +145,9 @@ export function createRender({ p, state }) {
       pixelateShader.setUniform('u_stamp', currentStamp());
       drawFullQuad(sil);
     } else {
-      // halftone — silueta's own darkness-driven dots (same uniform set as
-      // pixelate); dots are already painted in the silhouette color in-shader.
       sil.shader(halftoneShader);
       halftoneShader.setUniform('u_texture', sourceTex);
-      halftoneShader.setUniform('u_resolution', [w * density, h * density]);
+      halftoneShader.setUniform('u_resolution', [pw, ph]);
       halftoneShader.setUniform('u_size', render.granularity * density);
       halftoneShader.setUniform('u_flatColor', render.keepOriginal ? 0 : 1);
       halftoneShader.setUniform('u_color', hexToRgb01(render.color));
@@ -124,59 +156,28 @@ export function createRender({ p, state }) {
       drawFullQuad(sil);
     }
 
-    // Gate the shader output into the P2D buffer. Rather than blitting `sil`
-    // and post-processing it (drawing the WEBGL canvas into a 2D context
-    // re-composites its cleared background as OPAQUE, which filled the whole
-    // poster), copy pixel-for-pixel: a pixel survives only where the object
-    // mask is on AND the shader actually drew something (sil alpha > 0).
-    // Everything else stays transparent so the paper shows through.
-    masked.clear();
-    sil.loadPixels();
-    masked.loadPixels();
-    const src = sil.pixels;
-    const dst = masked.pixels;
-    // Row strides come from width * density, rounded to whole pixels: p5 sizes
-    // the backing store that way, and a fractional density (possible during
-    // high-res export) would otherwise give a non-integer stride and overrun
-    // the array (RangeError: offset is out of bounds).
-    const pw = Math.max(1, Math.round(masked.width * masked.pixelDensity()));
-    const ph = Math.max(1, Math.round(masked.height * masked.pixelDensity()));
-    const sw = Math.max(1, Math.round(sil.width * sil.pixelDensity()));
-    const sh = Math.max(1, Math.round(sil.height * sil.pixelDensity()));
-    const mask = maskData ? maskData.mask : null;
-    const mw = maskData ? maskData.w : 0;
-    const mh = maskData ? maskData.h : 0;
+    // 2 — composite mask via destination-in on a plain 2D canvas.
+    // Grab the shader output from the WebGL canvas, stamp the mask on top.
+    const out = document.createElement('canvas');
+    out.width = pw;
+    out.height = ph;
+    const ctx = out.getContext('2d');
+    ctx.drawImage(sil.canvas, 0, 0, pw, ph);
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(getMaskCanvas(pw, ph), 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
 
-    for (let y = 0; y < ph; y++) {
-      const sy = Math.min(sh - 1, (y / ph * sh) | 0);
-      const my = mask ? Math.min(mh - 1, (y / ph * mh) | 0) : 0;
-      for (let x = 0; x < pw; x++) {
-        const di = (y * pw + x) * 4;
-        if (di + 3 >= dst.length) break;
-        if (mask && !mask[my * mw + Math.min(mw - 1, (x / pw * mw) | 0)]) continue; // outside object
-        const si = (sy * sw + Math.min(sw - 1, (x / pw * sw) | 0)) * 4;
-        if (si + 3 >= src.length) continue;
-        const a = src[si + 3];
-        if (!a) continue; // shader drew nothing here (e.g. between halftone dots)
-        dst[di] = src[si];
-        dst[di + 1] = src[si + 1];
-        dst[di + 2] = src[si + 2];
-        dst[di + 3] = a;
-      }
-    }
-    masked.updatePixels();
-
-    return masked;
+    return out; // HTMLCanvasElement — caller uses drawingContext.drawImage()
   }
 
   function dispose() {
-    for (const g of [sil, masked]) {
-      if (g && typeof g.remove === 'function') {
-        try { g.remove(); } catch { /* instance-mode remove may throw */ }
-      }
-    }
-    sil = null; masked = null;
+    if (sil) { try { sil.remove(); } catch { /* ok */ } sil = null; }
+    bufW = 0; bufH = 0; bufDensity = 0;
+    maskCanvas = null; maskCtx = null;
   }
 
-  return { buildBuffers, setMask, setStamp, renderSilhouette, dispose, get size() { return sil ? { w: sil.width, h: sil.height } : null; } };
+  return {
+    buildBuffers, setMask, setStamp, renderSilhouette, dispose,
+    get size() { return sil ? { w: sil.width, h: sil.height } : null; },
+  };
 }

@@ -30,10 +30,15 @@ export const SECTIONS = [
     title: 'Silhouette',
     controls: [
       { id: 'sl-effect', type: 'select', label: 'Visual Effect', path: 'render.effect', options: EFFECT_TYPES, regen: 'effect' },
+      // Extraction (threshold + merge) sits directly under Visual Effect so the
+      // user can tune what gets extracted without scrolling to a separate section.
+      { id: 'sl-threshold', type: 'slider', label: 'Brightness Threshold', path: 'extract.threshold', min: 0, max: 255, step: 1, regen: 'extract' },
+      { id: 'sl-merge', type: 'check', label: 'Merge Nearby Blobs', path: 'extract.merge', regen: 'extract' },
+      { id: 'sl-keep-original', type: 'check', label: 'Keep Original Colors', path: 'render.keepOriginal', regen: 'render' },
       // Cell stamp. Hidden for 'none' (nothing is stamped in Original mode).
-      { id: 'sl-shape', type: 'select', label: 'Shape', path: 'render.shape', options: SHAPE_TYPES, regen: 'render' },
+      { id: 'sl-shape', type: 'select', label: 'Cell Shape', path: 'render.shape', options: SHAPE_TYPES, regen: 'render' },
       { id: 'sl-shape-upload', type: 'button', label: 'Load SVG Shape', action: 'uploadShape' },
-      { id: 'sl-granularity', type: 'slider', label: 'Processing Granularity (px)', path: 'render.granularity', min: 10, max: 28, step: 1, regen: 'render' },
+      { id: 'sl-granularity', type: 'slider', label: 'Cell Size (px)', path: 'render.granularity', min: 10, max: 28, step: 1, regen: 'render' },
       // sl-sil-color: DISABLED (not hidden) when render.effect === 'none' (app.js refreshVisibility).
       { id: 'sl-sil-color', type: 'color', label: 'Silhouette Color', path: 'render.color', regen: 'render' },
     ],
@@ -73,14 +78,6 @@ export const SECTIONS = [
       { id: 'sl-small-wght', type: 'slider', label: 'Small Weight', path: 'layout.small.wght', min: 100, max: 1000, step: 1, regen: 'layout' },
       { id: 'sl-small-wdth', type: 'slider', label: 'Small Width', path: 'layout.small.wdth', min: 25, max: 151, step: 1, regen: 'layout' },
       { id: 'sl-small-opsz', type: 'slider', label: 'Small Optical Size', path: 'layout.small.opsz', min: 8, max: 144, step: 1, regen: 'layout' },
-    ],
-  },
-  {
-    title: 'Extraction',
-    controls: [
-      { id: 'sl-keep-original', type: 'check', label: 'Keep Original Image Content', path: 'render.keepOriginal', regen: 'render' },
-      { id: 'sl-threshold', type: 'slider', label: 'Brightness Threshold', path: 'extract.threshold', min: 0, max: 255, step: 1, regen: 'extract' },
-      { id: 'sl-merge', type: 'check', label: 'Cross-line Connected Component Merge', path: 'extract.merge', regen: 'extract' },
     ],
   },
   {
